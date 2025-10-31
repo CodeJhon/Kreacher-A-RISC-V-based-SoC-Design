@@ -1,8 +1,8 @@
 module ALU(
     input a,b,
-    output c
+    output y
 );
 
-assign c = a&b;
+assign y = a&b;
 
 endmodule
