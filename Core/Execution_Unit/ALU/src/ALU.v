@@ -7,6 +7,7 @@ module ALU(
 
 `include "../ALU_CONSTANTS.vh"
 
+
 reg [31:0] internal_alu_result;
 assign alu_result = internal_alu_result;
 
