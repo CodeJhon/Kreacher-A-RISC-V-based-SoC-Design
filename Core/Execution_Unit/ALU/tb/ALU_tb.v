@@ -32,7 +32,6 @@ ALU uut (
 );
 
 initial begin
-
     // Test ADD
     opa = 32'd15;
     opb = 32'd10;
