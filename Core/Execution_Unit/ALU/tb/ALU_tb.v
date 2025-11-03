@@ -32,17 +32,35 @@ ALU uut (
 );
 
 initial begin
-    // Test ADD
     opa = 32'd15;
     opb = 32'd10;
     sel_operation = ADD;
     #10; // wait for result
-
-    // Test SUBSTRACT
+    
     opa = 32'd20;
     opb = 32'd5;
     sel_operation = SUBSTRACT;
     #10;
+   
+    opa = 32'hFFFFFFF3;
+    opb = 32'd5;
+    sel_operation = SET_LESS_THAN_SIGNED;
+    #10;
+    
+    opa = 32'd20;
+    opb = 32'd5;
+    sel_operation = SET_LESS_THAN_UNSIGNED;
+    #10;
+    
+    opa = 32'hffffffff;    // Operand A
+    opb = 32'd3;
+    sel_operation = SHIFT_LEFT_LOGICAL;
+    #10;
+    
+    opa = 32'hffffffff;    // Operand A
+    opb = 32'd3;
+    sel_operation = SHIFT_RIGHT_LOGICAL;
+    #10;      
 
     // Test default (should output 0)
     sel_operation = 5'b11111;
