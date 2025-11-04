@@ -1,7 +1,7 @@
 module ALU(
     input signed [31:0] opa,
     input signed [31:0] opb,
-    input [4:0] sel_operation,
+    input [3:0] sel_operation,
     output signed [31:0] alu_result
 );
 
