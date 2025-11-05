@@ -51,17 +51,17 @@ always@(posedge clk)begin
     else begin
         if(we)begin
             case(sel_writer_bus)
-                SEL_BUS_A: begin
+                `SEL_BUS_A: begin
                     T1 <= A_write_T1;
                     PC <= A_write_PC;
                     if(A_addr_regfile != 5'd0) regfile[A_addr_regfile] <= A_write_regfile;
                 end
-                SEL_BUS_B: begin
+                `SEL_BUS_B: begin
                     T1 <= B_write_T1;
                     PC <= B_write_PC;
                     if(B_addr_regfile != 5'd0) regfile[B_addr_regfile] <= B_write_regfile;
                 end
-                SEL_ALU_OUT:  T1 <= ALU_write_T1;
+                `SEL_ALU_OUT:  T1 <= ALU_write_T1;
                 default:;
             endcase
         end

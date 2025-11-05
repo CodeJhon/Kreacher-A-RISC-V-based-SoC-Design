@@ -2,15 +2,15 @@
 `ifndef ALU_CONSTANTS_VH
 `define ALU_CONSTANTS_VH
 
-localparam ALU_ADD                             = 5'b0000;
-localparam ALU_SUB                             = 5'b0001;
-localparam ALU_SLT                             = 5'b0010;
-localparam ALU_SLTU                            = 5'b0011;
-localparam ALU_AND                             = 5'b0100;
-localparam ALU_OR                              = 5'b0101;
-localparam ALU_XOR                             = 5'b0110;
-localparam ALU_SLL                             = 5'b0111;
-localparam ALU_SRL                             = 5'b1000;
-localparam ALU_SRA                             = 5'b1001;
+`define ALU_ADD   5'b00000
+`define ALU_SUB   5'b00001
+`define ALU_SLT   5'b00010
+`define ALU_SLTU  5'b00011
+`define ALU_AND   5'b00100
+`define ALU_OR    5'b00101
+`define ALU_XOR   5'b00110
+`define ALU_SLL   5'b00111
+`define ALU_SRL   5'b01000
+`define ALU_SRA   5'b01001
 
 `endif
