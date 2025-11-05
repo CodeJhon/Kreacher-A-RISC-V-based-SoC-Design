@@ -23,7 +23,7 @@ always@(opa,opb,sel_operation) begin
         ALU_SRL:                internal_alu_result = opa >> opb[4:0];
         ALU_SRA:                internal_alu_result = opa >>> opb[4:0];
         
-        default:                internal_alu_result = 32'd0;
+        default:;
     endcase
 end
 
