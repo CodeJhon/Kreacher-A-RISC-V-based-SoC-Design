@@ -22,14 +22,14 @@ always@(regfile_source, PC_source,T1_source,sel_source,sel_destination)begin
         `SEL_REGFILE:     bus_source = regfile_source;
         `SEL_PC:          bus_source = PC_source;
         `SEL_T1:          bus_source = T1_source;
-        default:        bus_source = 32'd0;
+        default:          bus_source = 32'd0;
     endcase
     case(sel_destination)
         `SEL_REGFILE:    regfile_destination = bus_source;
         `SEL_PC:         PC_destination      = bus_source;
         `SEL_T1:         T1_destination      = bus_source;
         `SEL_OPERAND:    operand     = bus_source;
-        default: ; // do nothing
+        default:; 
     endcase 
 end
 

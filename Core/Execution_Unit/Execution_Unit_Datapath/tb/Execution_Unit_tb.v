@@ -12,7 +12,7 @@ reg we;
 // Control signals
 reg [1:0] sel_writer_bus;
 reg [2:0] sel_source;
-reg [2:3] sel_destination;
+reg [2:0] sel_destination;
 reg [1:0] sel_opa;
 reg [1:0] sel_opb;
 reg [3:0] sel_operation;
@@ -38,27 +38,39 @@ Execution_Unit_Datapath uut (
 
 // Example clock generation
 initial begin
-    clk = 0;
+    clk = 1;
     forever #5 clk = ~clk; // 100 MHz clock
 end
 
 // Example stimulus
 initial begin
+    #1;
     //Initial values
     reset = 1;
     we = 0;
     #20 reset = 0; // Release reset
+    we = 1; 
     
     // All registers must be resetted at this point
-    // Example operation: X5 = X5 + 50 -> X5 = 50
+    // Example operation: 
+    // X5 -> A -> ALU
+    // imm -> A -> ALU
     sel_operation = `ALU_ADD;
     sel_writer_bus = `SEL_ALU_OUT;
     sel_source = `SEL_REGFILE;
-    sel_destination = `SEL_OPERAND;
     A_addr_regfile = 5'd5;
+    sel_destination = `SEL_OPERAND;
     sel_opa = `OP_BUS;
     sel_opb = `OP_IMM;
     imm = 32'd50;
+    #10;
+    
+    //Example operation:
+    // T1 -> A -> X5
+    sel_writer_bus = `SEL_BUS_A;
+    sel_source = `SEL_T1;
+    sel_destination = `SEL_REGFILE;
+    A_addr_regfile = 5'd5;
     
     #10;
     
