@@ -50,7 +50,7 @@ wire    [31:0] B_read_regfile;
 wire    [31:0] B_bus_operand;
 
 
-always@(A_bus_operand,B_bus_operand,sel_opa,sel_opb)begin
+always@(A_bus_operand,B_bus_operand,imm,sel_opa,sel_opb)begin
     case(sel_opa)
         `OP_BUS:              ALU_opa = A_bus_operand;
         `OP_K_NEXT_INSTR:     ALU_opa = K_next_instr;

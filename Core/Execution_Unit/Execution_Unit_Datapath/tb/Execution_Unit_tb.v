@@ -71,6 +71,27 @@ initial begin
     sel_source = `SEL_T1;
     sel_destination = `SEL_REGFILE;
     A_addr_regfile = 5'd5;
+    #10;
+    
+    // Example operation: 
+    // X5 -> A -> ALU
+    // imm -> A -> ALU
+    sel_operation = `ALU_ADD;
+    sel_writer_bus = `SEL_ALU_OUT;
+    sel_source = `SEL_REGFILE;
+    A_addr_regfile = 5'd6;
+    sel_destination = `SEL_OPERAND;
+    sel_opa = `OP_BUS;
+    sel_opb = `OP_IMM;
+    imm = 32'd30;
+    #10;
+    
+    //Example operation:
+    // T1 -> A -> X5
+    sel_writer_bus = `SEL_BUS_A;
+    sel_source = `SEL_T1;
+    sel_destination = `SEL_REGFILE;
+    A_addr_regfile = 5'd6;
     
     #10;
     
