@@ -17,7 +17,7 @@ module Execution_Unit_Datapath(
     input [4:0]  B_addr_regfile
     );
 
-`include "../ALU_CONSTANTS.vh"
+`include "./EXEC_CONSTANTS.vh"
 
 //Hardwired (fixed) signals for ALU operands (K)
 wire [31:0] K_next_instr = 32'd4;

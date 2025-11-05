@@ -5,7 +5,7 @@ module ALU(
     output signed [31:0] alu_result
 );
 
-`include "../ALU_CONSTANTS.vh"
+`include "./ALU_CONSTANTS.vh"
 
 reg signed [31:0] internal_alu_result;
 assign alu_result = internal_alu_result;

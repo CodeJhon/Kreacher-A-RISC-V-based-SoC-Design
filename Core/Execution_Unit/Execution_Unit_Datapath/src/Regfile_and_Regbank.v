@@ -25,7 +25,7 @@ module Regfile_and_Regbank(
     output      [31:0] B_read_regfile
     );
 
-`include "../EXEC_CONSTANTS.vh"
+`include "./EXEC_CONSTANTS.vh"
 
 reg [31:0] regfile [30:0];//X0 not implemented here but in the assign statement
 integer i;

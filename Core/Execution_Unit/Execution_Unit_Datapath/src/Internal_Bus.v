@@ -12,7 +12,7 @@ module Internal_Bus(
     output reg [31:0] T1_destination
     );
 
-`include "../EXEC_CONSTANTS.vh"
+`include "./EXEC_CONSTANTS.vh"
 reg [31:0] bus_source;
 
 always@(regfile_source, PC_source,T1_source,sel_source,sel_destination)begin
