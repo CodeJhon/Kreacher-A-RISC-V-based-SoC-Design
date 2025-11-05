@@ -1,3 +1,5 @@
+`include "./EXEC_CONSTANTS.vh"
+
 module Regfile_and_Regbank(
     input clk,
     input reset,
@@ -24,8 +26,6 @@ module Regfile_and_Regbank(
     input       [31:0] B_write_regfile,
     output      [31:0] B_read_regfile
     );
-
-`include "./EXEC_CONSTANTS.vh"
 
 reg [31:0] regfile [30:0];//X0 not implemented here but in the assign statement
 integer i;

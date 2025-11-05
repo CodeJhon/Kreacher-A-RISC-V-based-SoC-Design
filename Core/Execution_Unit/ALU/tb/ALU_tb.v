@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+`include "./ALU_CONSTANTS.vh"
+
 module ALU_tb;
 
 localparam ALU_ADD                             = 5'b0000;

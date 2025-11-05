@@ -1,3 +1,5 @@
+`include "./EXEC_CONSTANTS.vh"
+
 module Execution_Unit_Datapath(
     input clk,
     input reset,
@@ -16,8 +18,6 @@ module Execution_Unit_Datapath(
     input [4:0]  A_addr_regfile,
     input [4:0]  B_addr_regfile
     );
-
-`include "./EXEC_CONSTANTS.vh"
 
 //Hardwired (fixed) signals for ALU operands (K)
 wire [31:0] K_next_instr = 32'd4;
@@ -52,7 +52,7 @@ wire    [31:0] B_bus_operand;
 always@(A_bus_operand,B_bus_operand,sel_opa,sel_opb)begin
     case(sel_opa)
         OP_BUS:             ALU_opa = A_bus_operand;
-        OP_K_NEXT_ISTR:     ALU_opa = K_next_instr;
+        OP_K_NEXT_INSTR:     ALU_opa = K_next_instr;
         default:; 
     endcase
     case(sel_opb)
