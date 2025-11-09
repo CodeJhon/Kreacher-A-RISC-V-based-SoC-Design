@@ -7,13 +7,13 @@ module Regfile_and_Regbank(
     input we,                
     
     //Data input sources
-    input [31:0] A_write,
-    input [31:0] B_write,
+    input [31:0] A_wr,
+    input [31:0] B_wr,
     input [31:0] ALU_wr_T1,
     
     //Data outputs
-    output [31:0] A_read,
-    output [31:0] B_read,
+    output reg [31:0] A_rd,
+    output reg [31:0] B_rd,
     
     //Control
     input ALU_wr_en,
@@ -33,86 +33,111 @@ module Regfile_and_Regbank(
     );
 
 localparam REGFILE_WIDTH = 32;
-localparam EXTRA_REGS = 0; // Starting from T2 
-localparam AMOUNT_REGISTERS = REGFILE_WIDTH + EXTRA_REGS + 2; // PC and T1 included here
+localparam TEMP_REGS = 1;  
 
 //Registers
-reg [31:0] regbank [AMOUNT_REGISTERS-1:1];//X0 not implemented here but in the assign statement
+reg [31:0] regfile [REGFILE_WIDTH-1:1];//X0 not implemented here but in the assign statement
+reg [31:0] PC;  
+reg [31:0] T1; 
+
 integer i;
 
-//Internal signals
-reg [1:0] sel_in [AMOUNT_REGISTERS-1:1]; 
+//Internal Data signals
+reg [31:0] regfile_in [REGFILE_WIDTH-1:1];
+reg [31:0] PC_in;
+reg [31:0] T1_in;
 
-reg [31:0] reg_in [AMOUNT_REGISTERS-1:1];
-
-reg [31:0] A_read;
-reg [31:0] B_read;
+//Internal Control signals
+reg [1:0] sel_regfile [REGFILE_WIDTH-1:1]; 
+reg [1:0] sel_T1;
+reg [1:0] sel_PC;
 
 //Mux in
 always@(*)begin
-    for(i=1;i<=AMOUNT_REGISTERS-2;i=i+1)begin //Muxes for registers X1, X2, ..., XN, PC
-        case(sel_in[i])
-            2'b00: reg_in[i] = A_write;
-            2'b01: reg_in[i] = B_write;
-            default:; //Retain. reg_in[i] = reg_in[i]
+    //Muxes for regfile X1, X2, ..., XN--------------------------------
+    for(i=1;i<=REGFILE_WIDTH-1;i=i+1)begin 
+        case(sel_regfile[i])
+            2'b00: regfile_in[i] = A_wr;
+            2'b01: regfile_in[i] = B_wr;
+            default:; //Retain. 
         endcase  
     end
-    //Mux for T1
-    case(sel_in[AMOUNT_REGISTERS-1])
-        2'b00: reg_in[AMOUNT_REGISTERS-1] = A_write;
-        2'b01: reg_in[AMOUNT_REGISTERS-1] = B_write;
-        2'b11: reg_in[AMOUNT_REGISTERS-1] = ALU_wr_T1;
-        default:; //Retain. reg_in[i] = reg_in[i]
+    //Mux for PC --------------------------------------------------------
+    case(sel_PC)
+        2'b00: PC_in = A_wr;
+        2'b01: PC_in = B_wr;
+        default:; //Retain. 
+    endcase      
+    //Mux for T1--------------------------------------------------------
+    case(sel_T1)
+        2'b00: T1_in = A_wr;
+        2'b01: T1_in = B_wr;
+        2'b11: T1_in = ALU_wr_T1;
+        default:; //Retain. 
     endcase
 end
 
 //Mux out
 always@(*)begin
     case(A_sel_rd_device)
-        `INTERNAL_BUS:  A_read = regbank[A_addr_rd_regfile]; 
-        `PC:            A_read = regbank[AMOUNT_REGISTERS-2];
-        `T1:            A_read = regbank[AMOUNT_REGISTERS-1];
+        `INTERNAL_BUS:  A_rd = regfile[A_addr_rd_regfile]; 
+        `PC:            A_rd = PC;
+        `T1:            A_rd = T1;
         default:;//Retain
-    end
+    endcase
     case(B_sel_rd_device)
-        `INTERNAL_BUS:  B_read = regbank[B_addr_rd_regfile]; 
-        `PC:            B_read = regbank[AMOUNT_REGISTERS-2];
-        `T1:            B_read = regbank[AMOUNT_REGISTERS-1];
+        `INTERNAL_BUS:  B_rd = regfile[B_addr_rd_regfile]; 
+        `PC:            B_rd = PC;
+        `T1:            B_rd = T1;
         default:;//Retain
-    end
+    endcase
 end
 
 //Register logic
 always@(posedge clk)begin
-    for(i=1;i<=AMOUNT_REGISTERS-1;i=i+1)begin
-        if(reset)   regbank[i] <= 32'd0;
-        else if(we) regbank[i] <= reg_in[i];
+    if(reset)begin
+        for(i=1;i<=REGFILE_WIDTH-1;i=i+1)begin
+            regfile[i] <= 32'd0;
+        end
+        PC <= 32'd0;
+        T1 <= 32'd0;
     end
+    else if(we)begin
+        for(i=1;i<=REGFILE_WIDTH-1;i=i+1)begin
+            regfile[i] <= regfile_in[i];
+        end
+        PC <= PC_in;
+        T1 <= T1_in;
+    end   
 end
 
 //Internal control for writing logic
-always@(A_addr_wr_regfile,B_addr_wr_regfile,_A_sel_wr_device,B_sel_wr_device)begin
-    //Default
-    for(i=1;i<=AMOUNT_REGISTERS-1;i=i+1)begin
-        sel_in[i] = 2'b10;
+always@(A_addr_wr_regfile,B_addr_wr_regfile,A_sel_wr_device,B_sel_wr_device,ALU_wr_en)begin
+    //Default: Retain
+    for(i=1;i<=REGFILE_WIDTH-1;i=i+1)begin
+        sel_regfile[i] = 2'b10;
     end
+    sel_PC = 2'b10;
+    sel_T1 = 2'b10;
     
+    //Case: Driven by A
     case(A_sel_wr_device)
-        `INTERNAL_BUS: sel_in[A_addr_wr_regfile] = 2'b00;
-        `T1:           sel_in[AMOUNT_REGISTERS-1] = 2'b00;
-        `PC:           sel_in[AMOUNT_REGISTERS-2] = 2'b00;
+        `INTERNAL_BUS: sel_regfile[A_addr_wr_regfile] = 2'b00;
+        `T1:                                   sel_T1 = 2'b00;
+        `PC:                                   sel_PC = 2'b00;
         default:; 
     endcase
     
+    //Case Driven by B
     case(B_sel_wr_device)
-        `INTERNAL_BUS: sel_in[B_addr_wr_regfile] = 2'b01;
-        `T1:           sel_in[AMOUNT_REGISTERS-1] = 2'b01;
-        `PC:           sel_in[AMOUNT_REGISTERS-2] = 2'b01;
+        `INTERNAL_BUS: sel_regfile[B_addr_wr_regfile] = 2'b01;
+        `T1:                                   sel_T1 = 2'b01;
+        `PC:                                   sel_PC = 2'b01;
         default:;
     endcase
     
-    //T1 in case of written by ALU
-    if(ALU_wr_en) sel_in[AMOUNT_REGISTERS-1] = 2'b11;
+    //Special case: T1 written by ALU
+    if(ALU_wr_en) sel_T1 = 2'b11;
     
 end
     
