@@ -1,9 +1,10 @@
 `include "./EXEC_CONSTANTS.vh"
 
 module Regfile_and_Regbank(
+    //Global
     input clk,
     input reset,
-    input we,
+    input we,                
     
     //Data input sources
     input [31:0] A_write,
@@ -15,7 +16,7 @@ module Regfile_and_Regbank(
     output [31:0] B_read,
     
     //Control
-    input ALU_wr_en;
+    input ALU_wr_en,
     
     input [4:0] A_addr_wr_regfile,
     input [4:0] B_addr_wr_regfile,
@@ -36,14 +37,13 @@ localparam EXTRA_REGS = 0; // Starting from T2
 localparam AMOUNT_REGISTERS = REGFILE_WIDTH + EXTRA_REGS + 2; // PC and T1 included here
 
 //Registers
-reg [31:0] regfile [AMOUNT_REGISTERS-1:1];//X0 not implemented here but in the assign statement
+reg [31:0] regbank [AMOUNT_REGISTERS-1:1];//X0 not implemented here but in the assign statement
 integer i;
 
 //Internal signals
 reg [1:0] sel_in [AMOUNT_REGISTERS-1:1]; 
 
 reg [31:0] reg_in [AMOUNT_REGISTERS-1:1];
-reg [31:0] reg_out [AMOUNT_REGISTERS-1:1];
 
 reg [31:0] A_read;
 reg [31:0] B_read;
@@ -69,15 +69,15 @@ end
 //Mux out
 always@(*)begin
     case(A_sel_rd_device)
-        `INTERNAL_BUS:  A_read = reg_out[A_addr_rd_regfile]; 
-        `PC:            A_read = reg_out[AMOUNT_REGISTERS-2];
-        `T1:            A_read = reg_out[AMOUNT_REGISTERS-1];
+        `INTERNAL_BUS:  A_read = regbank[A_addr_rd_regfile]; 
+        `PC:            A_read = regbank[AMOUNT_REGISTERS-2];
+        `T1:            A_read = regbank[AMOUNT_REGISTERS-1];
         default:;//Retain
     end
     case(B_sel_rd_device)
-        `INTERNAL_BUS:  B_read = reg_out[B_addr_rd_regfile]; 
-        `PC:            B_read = reg_out[AMOUNT_REGISTERS-2];
-        `T1:            B_read = reg_out[AMOUNT_REGISTERS-1];
+        `INTERNAL_BUS:  B_read = regbank[B_addr_rd_regfile]; 
+        `PC:            B_read = regbank[AMOUNT_REGISTERS-2];
+        `T1:            B_read = regbank[AMOUNT_REGISTERS-1];
         default:;//Retain
     end
 end
@@ -85,8 +85,8 @@ end
 //Register logic
 always@(posedge clk)begin
     for(i=1;i<=AMOUNT_REGISTERS-1;i=i+1)begin
-        if(reset)   reg_out[i] <= 32'd0;
-        else if(we) reg_out[i] <= reg_in[i];
+        if(reset)   regbank[i] <= 32'd0;
+        else if(we) regbank[i] <= reg_in[i];
     end
 end
 
