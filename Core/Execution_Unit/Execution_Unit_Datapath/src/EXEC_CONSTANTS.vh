@@ -3,14 +3,12 @@
 `define EXEC_CONSTANTS_VH
 
 // Selecting source / destination
-`define SEL_REGFILE    3'b000
-`define SEL_PC         3'b001
-`define SEL_T1         3'b010
-`define SEL_OPERAND    3'b011
+`define SEL_REGBANK    2'b00
+`define SEL_ALU        2'b01
 
 // Select devices of regbank (for writing/reading)
 `define NONE              2'b00
-`define INTERNAL_BUS      2'b01
+`define REGFILE           2'b01
 `define PC                2'b10
 `define T1                2'b11
 

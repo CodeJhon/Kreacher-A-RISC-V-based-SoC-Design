@@ -1,34 +1,30 @@
 `include "./EXEC_CONSTANTS.vh"
 
 module Internal_Bus(
-    input [31:0] regfile_source,
-    input [31:0] PC_source,
-    input [31:0] T1_source,
+    //Sources
+    input [31:0] regbank_source,
     
-    input [2:0] sel_source,
-    input [2:0] sel_destination,
+    //Destinations
+    output reg [31:0] regbank_dest,
+    output reg [31:0] ALU_dest,
     
-    output reg [31:0] operand,
-    output reg [31:0] regfile_destination,
-    output reg [31:0] PC_destination,
-    output reg [31:0] T1_destination
+    //Control
+    input [1:0] sel_source,
+    input [1:0] sel_destination
+    
     );
 
 reg [31:0] bus_source;
 
-always@(regfile_source, PC_source,T1_source,sel_source,sel_destination)begin
-    bus_source = 32'd0;
+always@(rebank_source,sel_source,sel_destination)begin    
+    bus_source = 32'd0; //Default
     case(sel_source)
-        `SEL_REGFILE:     bus_source = regfile_source;
-        `SEL_PC:          bus_source = PC_source;
-        `SEL_T1:          bus_source = T1_source;
+        `SEL_REGBANK:     bus_source = regbank_source;
         default:          bus_source = 32'd0;
     endcase
     case(sel_destination)
-        `SEL_REGFILE:    regfile_destination = bus_source;
-        `SEL_PC:         PC_destination      = bus_source;
-        `SEL_T1:         T1_destination      = bus_source;
-        `SEL_OPERAND:    operand     = bus_source;
+        `SEL_REGBANK:    regbank_dest = bus_source;
+        `SEL_ALU:        ALU_dest     = bus_source;
         default:; 
     endcase 
 end

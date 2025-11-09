@@ -65,58 +65,36 @@ end
 
 // Instantiate the Regfile_and_Regbank module
 Regfile_and_Regbank U_Regfile_and_Regbank (
+    // Global
     .clk(clk),
     .reset(reset),
     .we(we),
-    .sel_writer_bus(sel_writer_bus),
-
-    .ALU_write_T1(ALU_write_T1),
-    .A_write_T1(A_write_T1),
-    .A_read_T1(A_read_T1),
-    .B_write_T1(B_write_T1),
-    .B_read_T1(B_read_T1),
-
-    .A_write_PC(A_write_PC),
-    .A_read_PC(A_read_PC),
-    .B_write_PC(B_write_PC),
-    .B_read_PC(B_read_PC),
-
-    .A_addr_regfile(A_addr_regfile),
-    .A_write_regfile(A_write_regfile),
-    .A_read_regfile(A_read_regfile),
-
-    .B_addr_regfile(B_addr_regfile),
-    .B_write_regfile(B_write_regfile),
-    .B_read_regfile(B_read_regfile)
+    
+    // Data input sources
+    .A_wr(),
+    .B_wr(),
+    .ALU_wr_T1(),
+    
+    // Data outputs
+    .A_rd(),
+    .B_rd(),
+    
+    // Control
+    .ALU_wr_en(),
+    
+    .A_addr_wr_regfile(),
+    .B_addr_wr_regfile(),
+    
+    .A_addr_rd_regfile(),
+    .B_addr_rd_regfile(),
+    
+    .A_sel_wr_device(),
+    .B_sel_wr_device(),
+    
+    .A_sel_rd_device(),
+    .B_sel_rd_device()
 );
 
-Internal_Bus Bus_A(
-    .regfile_source(A_read_regfile),
-    .PC_source(A_read_PC),
-    .T1_source(A_read_T1),
-    
-    .sel_source(sel_source),
-    .sel_destination(sel_destination),
-    
-    .operand(A_bus_operand),//ALU
-    .regfile_destination(A_write_regfile),
-    .PC_destination(A_write_PC),
-    .T1_destination(A_write_T1)
-);
-
-Internal_Bus Bus_B(
-    .regfile_source(B_read_regfile),
-    .PC_source(B_read_PC),
-    .T1_source(B_read_T1),
-    
-    .sel_source(sel_source),
-    .sel_destination(sel_destination),
-    
-    .operand(B_bus_operand),//ALU
-    .regfile_destination(B_write_regfile),
-    .PC_destination(B_write_PC),
-    .T1_destination(B_write_T1)
-);
 
 ALU U_ALU(
     .opa(ALU_opa),

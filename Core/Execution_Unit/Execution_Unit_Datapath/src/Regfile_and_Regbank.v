@@ -80,13 +80,19 @@ end
 //Mux out
 always@(*)begin
     case(A_sel_rd_device)
-        `INTERNAL_BUS:  A_rd = regfile[A_addr_rd_regfile]; 
+        `REGFILE: begin  
+            if(A_addr_rd_regfile == 5'd0) A_rd = 32'd0;//X0 hardcoded as 0
+            else A_rd = regfile[A_addr_rd_regfile];
+         end 
         `PC:            A_rd = PC;
         `T1:            A_rd = T1;
         default:;//Retain
     endcase
     case(B_sel_rd_device)
-        `INTERNAL_BUS:  B_rd = regfile[B_addr_rd_regfile]; 
+        `REGFILE: begin
+            if(B_addr_rd_regfile == 5'd0) B_rd = 32'd0;//X0 hardcoded as 0
+            else B_rd = regfile[B_addr_rd_regfile];
+        end   
         `PC:            B_rd = PC;
         `T1:            B_rd = T1;
         default:;//Retain
@@ -122,7 +128,7 @@ always@(A_addr_wr_regfile,B_addr_wr_regfile,A_sel_wr_device,B_sel_wr_device,ALU_
     
     //Case: Driven by A
     case(A_sel_wr_device)
-        `INTERNAL_BUS: sel_regfile[A_addr_wr_regfile] = 2'b00;
+        `REGFILE: sel_regfile[A_addr_wr_regfile] = 2'b00;
         `T1:                                   sel_T1 = 2'b00;
         `PC:                                   sel_PC = 2'b00;
         default:; 
@@ -130,7 +136,7 @@ always@(A_addr_wr_regfile,B_addr_wr_regfile,A_sel_wr_device,B_sel_wr_device,ALU_
     
     //Case Driven by B
     case(B_sel_wr_device)
-        `INTERNAL_BUS: sel_regfile[B_addr_wr_regfile] = 2'b01;
+        `REGFILE: sel_regfile[B_addr_wr_regfile] = 2'b01;
         `T1:                                   sel_T1 = 2'b01;
         `PC:                                   sel_PC = 2'b01;
         default:;
