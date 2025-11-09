@@ -2,17 +2,7 @@
 `ifndef EXEC_CONSTANTS_VH
 `define EXEC_CONSTANTS_VH
 
-// Selecting source / destination
-`define SEL_REGBANK    2'b00
-`define SEL_ALU        2'b01
-
-// Select devices of regbank (for writing/reading)
-`define NONE              2'b00
-`define REGFILE           2'b01
-`define PC                2'b10
-`define T1                2'b11
-
-// Select ALU operands
+// 1. Select ALU operands
 // general
 `define OP_BUS             2'b00
 // OPA
@@ -20,5 +10,15 @@
 `define OP_K_LUI           2'b10
 // OPB
 `define OP_IMM             2'b01
+
+// 2. Selecting source / destination
+`define SEL_REGBANK    2'b00
+`define SEL_ALU        2'b01
+
+// 3. Select devices of regbank (for writing/reading)
+`define NONE              2'b00
+`define REGFILE           2'b01
+`define PC                2'b10
+`define T1                2'b11
 
 `endif

@@ -10,19 +10,19 @@ module Internal_Bus(
     
     //Control
     input [1:0] sel_source,
-    input [1:0] sel_destination
+    input [1:0] sel_dest
     
     );
 
 reg [31:0] bus_source;
 
-always@(rebank_source,sel_source,sel_destination)begin    
+always@(regbank_source,sel_source,sel_dest)begin    
     bus_source = 32'd0; //Default
     case(sel_source)
         `SEL_REGBANK:     bus_source = regbank_source;
         default:          bus_source = 32'd0;
     endcase
-    case(sel_destination)
+    case(sel_dest)
         `SEL_REGBANK:    regbank_dest = bus_source;
         `SEL_ALU:        ALU_dest     = bus_source;
         default:; 

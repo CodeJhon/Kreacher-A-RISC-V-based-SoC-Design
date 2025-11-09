@@ -12,7 +12,7 @@ reg we;
 // Control signals
 reg [1:0] sel_writer_bus;
 reg [2:0] sel_source;
-reg [2:0] sel_destination;
+reg [2:0] sel_dest;
 reg [1:0] sel_opa;
 reg [1:0] sel_opb;
 reg [3:0] sel_operation;
@@ -27,7 +27,7 @@ Execution_Unit_Datapath uut (
     .we(we),
     .sel_writer_bus(sel_writer_bus),
     .sel_source(sel_source),
-    .sel_destination(sel_destination),
+    .sel_dest(sel_dest),
     .sel_opa(sel_opa),
     .sel_opb(sel_opb),
     .sel_operation(sel_operation),
@@ -57,7 +57,7 @@ initial begin
     sel_writer_bus = `SEL_ALU_OUT;
     sel_source = `SEL_REGFILE;
     A_addr_regfile = 5'd5;
-    sel_destination = `SEL_OPERAND;
+    sel_dest = `SEL_OPERAND;
     sel_opa = `OP_BUS;
     // imm -> ALU
     imm = 32'd50;
@@ -72,7 +72,7 @@ initial begin
     // T1 -> A -> X5
     sel_writer_bus = `SEL_BUS_A;
     sel_source = `SEL_T1;
-    sel_destination = `SEL_REGFILE;
+    sel_dest = `SEL_REGFILE;
     A_addr_regfile = 5'd5;
     #10;
     
@@ -83,7 +83,7 @@ initial begin
     sel_writer_bus = `SEL_ALU_OUT;
     sel_source = `SEL_REGFILE;
     A_addr_regfile = 5'd6;
-    sel_destination = `SEL_OPERAND;
+    sel_dest = `SEL_OPERAND;
     sel_opa = `OP_BUS;
     sel_opb = `OP_IMM;
     imm = 32'd30;
@@ -93,14 +93,14 @@ initial begin
     // T1 -> A -> X5
     sel_writer_bus = `SEL_BUS_A;
     sel_source = `SEL_T1;
-    sel_destination = `SEL_REGFILE;
+    sel_dest = `SEL_REGFILE;
     A_addr_regfile = 5'd6;
     
     // X5 -> A -> X4
     sel_writer_bus = `SEL_BUS_A;
     sel_source = `SEL_REGFILE;
     A_addr_regfile = 5'd6;
-    sel_destination = `SEL_REGFILE;
+    sel_dest = `SEL_REGFILE;
     sel_opa = `OP_BUS;
     sel_opb = `OP_IMM;
     imm = 32'd30;
