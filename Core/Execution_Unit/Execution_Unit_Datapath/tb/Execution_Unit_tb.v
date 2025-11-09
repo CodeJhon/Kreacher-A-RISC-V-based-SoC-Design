@@ -5,35 +5,63 @@
 module Execution_Unit_tb(
     );
 
+    // Global signals
 reg clk;
 reg reset;
 reg we;
 
-// Control signals
-reg [1:0] sel_writer_bus;
-reg [2:0] sel_source;
-reg [2:0] sel_dest;
-reg [1:0] sel_opa;
-reg [1:0] sel_opb;
-reg [3:0] sel_operation;
+// ALU control signals
+reg [1:0]  sel_opa;
+reg [1:0]  sel_opb;
+reg [3:0]  sel_operation;
 reg [31:0] imm;
-reg [4:0] A_addr_regfile;
-reg [4:0] B_addr_regfile;
+reg ALU_wr_en;
 
-// Instantiate the Execution Unit Datapath
+// Bus A control signals
+reg [1:0] A_sel_source;
+reg [1:0] A_sel_dest;
+reg [1:0] A_sel_wr_device;
+reg [4:0] A_addr_wr_regfile;
+reg [1:0] A_sel_rd_device;
+reg [4:0] A_addr_rd_regfile;
+
+// Bus B control signals
+reg [1:0] B_sel_source;
+reg [1:0] B_sel_dest;
+reg [1:0] B_sel_wr_device;
+reg [4:0] B_addr_wr_regfile;
+reg [1:0] B_sel_rd_device;
+reg [4:0] B_addr_rd_regfile;
+
+// Instantiate the module
 Execution_Unit_Datapath uut (
+    // Global
     .clk(clk),
     .reset(reset),
     .we(we),
-    .sel_writer_bus(sel_writer_bus),
-    .sel_source(sel_source),
-    .sel_dest(sel_dest),
+
+    // ALU control
     .sel_opa(sel_opa),
     .sel_opb(sel_opb),
     .sel_operation(sel_operation),
     .imm(imm),
-    .A_addr_regfile(A_addr_regfile),
-    .B_addr_regfile(B_addr_regfile)
+    .ALU_wr_en(ALU_wr_en),
+
+    // Bus A control
+    .A_sel_source(A_sel_source),
+    .A_sel_dest(A_sel_dest),
+    .A_sel_wr_device(A_sel_wr_device),
+    .A_addr_wr_regfile(A_addr_wr_regfile),
+    .A_sel_rd_device(A_sel_rd_device),
+    .A_addr_rd_regfile(A_addr_rd_regfile),
+
+    // Bus B control
+    .B_sel_source(B_sel_source),
+    .B_sel_dest(B_sel_dest),
+    .B_sel_wr_device(B_sel_wr_device),
+    .B_addr_wr_regfile(B_addr_wr_regfile),
+    .B_sel_rd_device(B_sel_rd_device),
+    .B_addr_rd_regfile(B_addr_rd_regfile)
 );
 
 // Example clock generation
@@ -44,66 +72,36 @@ end
 
 // Example stimulus
 initial begin
+    /* TEMPLATE FOR COPYING
+        //*******ALU********
+    sel_opa = ; sel_opb = ; //imm = ;
+    sel_operation = ; ALU_wr_en = 1'b1;
+        //*******Bus A*******
+    A_sel_source = ; A_sel_dest = ;
+    //A_sel_wr_device = ; //A_addr_wr_regfile = 5'd0;
+    A_sel_rd_device = ; //A_addr_rd_regfile = 5'd0;
+        //*******Bus B*******
+    B_sel_source = ; B_sel_dest = ;
+    //B_sel_wr_device = ; //B_addr_wr_regfile = 5'd0;
+    B_sel_rd_device = ; //B_addr_rd_regfile = 5'd0;
+    */
     #1;
     //Initial values
-    reset = 1;
-    we = 0;
-    #20 reset = 0; // Release reset
-    we = 1; 
+    reset = 1; we = 0;
+    #20
+    reset = 0; we = 1; 
     
-    // All registers must be resetted at this point
-    // Example operation: 
-    // X5 -> A -> ALU
-    sel_writer_bus = `SEL_ALU_OUT;
-    sel_source = `SEL_REGFILE;
-    A_addr_regfile = 5'd5;
-    sel_dest = `SEL_OPERAND;
-    sel_opa = `OP_BUS;
-    // imm -> ALU
-    imm = 32'd50;
-    sel_operation = `ALU_ADD;
-    sel_opb = `OP_IMM;
-    
-    
-    
-    #10;
-    
-    //Example operation:
-    // T1 -> A -> X5
-    sel_writer_bus = `SEL_BUS_A;
-    sel_source = `SEL_T1;
-    sel_dest = `SEL_REGFILE;
-    A_addr_regfile = 5'd5;
-    #10;
-    
-    // Example operation: 
-    // X5 -> A -> ALU
-    // imm -> A -> ALU
-    sel_operation = `ALU_ADD;
-    sel_writer_bus = `SEL_ALU_OUT;
-    sel_source = `SEL_REGFILE;
-    A_addr_regfile = 5'd6;
-    sel_dest = `SEL_OPERAND;
-    sel_opa = `OP_BUS;
-    sel_opb = `OP_IMM;
-    imm = 32'd30;
-    #10;
-    
-    //Example operation:
-    // T1 -> A -> X5
-    sel_writer_bus = `SEL_BUS_A;
-    sel_source = `SEL_T1;
-    sel_dest = `SEL_REGFILE;
-    A_addr_regfile = 5'd6;
-    
-    // X5 -> A -> X4
-    sel_writer_bus = `SEL_BUS_A;
-    sel_source = `SEL_REGFILE;
-    A_addr_regfile = 5'd6;
-    sel_dest = `SEL_REGFILE;
-    sel_opa = `OP_BUS;
-    sel_opb = `OP_IMM;
-    imm = 32'd30;
+    /*
+        X3 -> A -> ALU
+       IMM -> ALU
+    */
+       //*******ALU********
+    sel_opa = `OP_BUS; sel_opb = `OP_IMM; imm = 32'd20;
+    sel_operation = `ALU_ADD; ALU_wr_en = 1'b1;
+        //*******Bus A*******
+    A_sel_source = `SEL_REGBANK; A_sel_dest =`SEL_ALU;
+    //A_sel_wr_device = ; //A_addr_wr_regfile = ;
+    A_sel_rd_device = `REGFILE; A_addr_rd_regfile = 5'd3;
     
     #10;
     

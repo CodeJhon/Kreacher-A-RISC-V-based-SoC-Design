@@ -3,7 +3,7 @@
 `define EXEC_CONSTANTS_VH
 
 // 1. Select ALU operands
-// general
+// general (Both OPA & OPB)
 `define OP_BUS             2'b00
 // OPA
 `define OP_K_NEXT_INSTR    2'b01
