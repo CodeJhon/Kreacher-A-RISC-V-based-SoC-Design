@@ -11,7 +11,6 @@ module Execution_Unit_Datapath(
     input [1:0]  sel_opb,
     input [3:0]  sel_operation,
     input [31:0] imm,               //Sign-extended Immediate
-    input ALU_wr_en,
     
     //Control Bus A ---------------------------
         //Source & Destination (Type of transaction)
@@ -68,6 +67,15 @@ wire [31:0] A_rd;
 
 wire [31:0] B_wr;
 wire [31:0] B_rd;
+
+wire [31:0] ALU_wr_T1;
+
+wire A_ALU_wr_en;
+wire B_ALU_wr_en;
+wire ALU_wr_en;
+
+assign ALU_wr_en = A_ALU_wr_en | B_ALU_wr_en;
+
 Regfile_and_Regbank U_Regfile_and_Regbank (
     // Global
     .clk(clk),
@@ -109,7 +117,9 @@ Internal_Bus Bus_A (
     
     // Control
     .sel_source(A_sel_source),
-    .sel_dest(A_sel_dest)
+    .sel_dest(A_sel_dest),
+    
+    .ALU_wr_en(A_ALU_wr_en)
 );
 
 Internal_Bus Bus_B (
@@ -122,7 +132,9 @@ Internal_Bus Bus_B (
     
     // Control
     .sel_source(B_sel_source),
-    .sel_dest(B_sel_dest)
+    .sel_dest(B_sel_dest),
+    
+    .ALU_wr_en(B_ALU_wr_en)
 );
 
 ALU U_ALU(

@@ -47,6 +47,11 @@ reg [31:0] regfile_in [REGFILE_WIDTH-1:1];
 reg [31:0] PC_in;
 reg [31:0] T1_in;
 
+//Write enable
+reg regfile_we [REGFILE_WIDTH-1:1];
+reg PC_we;
+reg T1_we;
+
 //Internal Control signals
 reg [1:0] sel_regfile [REGFILE_WIDTH-1:1]; 
 reg [1:0] sel_T1;
@@ -92,7 +97,7 @@ always@(*)begin
         `REGFILE: begin
             if(B_addr_rd_regfile == 5'd0) B_rd = 32'd0;//X0 hardcoded as 0
             else B_rd = regfile[B_addr_rd_regfile];
-        end   
+         end   
         `PC:            B_rd = PC;
         `T1:            B_rd = T1;
         default:;//Retain
@@ -110,10 +115,10 @@ always@(posedge clk)begin
     end
     else if(we)begin
         for(i=1;i<=REGFILE_WIDTH-1;i=i+1)begin
-            regfile[i] <= regfile_in[i];
+            if(regfile_we[i]) regfile[i] <= regfile_in[i];
         end
-        PC <= PC_in;
-        T1 <= T1_in;
+        if(PC_we) PC <= PC_in;
+        if(T1_we) T1 <= T1_in;
     end   
 end
 
@@ -122,28 +127,31 @@ always@(A_addr_wr_regfile,B_addr_wr_regfile,A_sel_wr_device,B_sel_wr_device,ALU_
     //Default: Retain
     for(i=1;i<=REGFILE_WIDTH-1;i=i+1)begin
         sel_regfile[i] = 2'b10;
+        regfile_we[i] = 1'b0;
     end
     sel_PC = 2'b10;
+    PC_we = 1'b0;
     sel_T1 = 2'b10;
+    T1_we = 1'b0;
     
     //Case: Driven by A
     case(A_sel_wr_device)
-        `REGFILE: sel_regfile[A_addr_wr_regfile] = 2'b00;
-        `T1:                                   sel_T1 = 2'b00;
-        `PC:                                   sel_PC = 2'b00;
+        `REGFILE: {sel_regfile[A_addr_wr_regfile],regfile_we[A_addr_wr_regfile]} = 3'b001; 
+        `T1:                                                      {sel_T1,T1_we} = 3'b001;
+        `PC:                                                      {sel_PC,PC_we} = 3'b001;
         default:; 
     endcase
     
     //Case Driven by B
     case(B_sel_wr_device)
-        `REGFILE: sel_regfile[B_addr_wr_regfile] = 2'b01;
-        `T1:                                   sel_T1 = 2'b01;
-        `PC:                                   sel_PC = 2'b01;
+        `REGFILE: {sel_regfile[B_addr_wr_regfile],regfile_we[A_addr_wr_regfile]} = 3'b011;
+        `T1:                                                      {sel_T1,T1_we} = 3'b011;
+        `PC:                                                      {sel_PC,PC_we} = 3'b011;
         default:;
     endcase
     
     //Special case: T1 written by ALU
-    if(ALU_wr_en) sel_T1 = 2'b11;
+    if(ALU_wr_en)                                                 {sel_T1,T1_we} = 3'b111;
     
 end
     

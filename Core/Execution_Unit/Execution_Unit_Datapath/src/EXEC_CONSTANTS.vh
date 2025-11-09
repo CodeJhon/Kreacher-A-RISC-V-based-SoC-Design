@@ -11,12 +11,14 @@
 // OPB
 `define OP_IMM             2'b01
 
+//Global
+`define NONE              2'b00
+
 // 2. Selecting source / destination
-`define SEL_REGBANK    2'b00
-`define SEL_ALU        2'b01
+`define SEL_REGBANK    2'b01
+`define SEL_ALU        2'b10
 
 // 3. Select devices of regbank (for writing/reading)
-`define NONE              2'b00
 `define REGFILE           2'b01
 `define PC                2'b10
 `define T1                2'b11
