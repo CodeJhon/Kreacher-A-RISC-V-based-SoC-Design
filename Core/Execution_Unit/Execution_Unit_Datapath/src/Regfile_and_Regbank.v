@@ -4,69 +4,116 @@ module Regfile_and_Regbank(
     input clk,
     input reset,
     input we,
-    input [1:0] sel_writer_bus,
     
-    input       [31:0] ALU_write_T1,
-    input       [31:0] A_write_T1,
-    output      [31:0] A_read_T1,
-    input       [31:0] B_write_T1,
-    output      [31:0] B_read_T1,
+    //Data input sources
+    input [31:0] A_write,
+    input [31:0] B_write,
+    input [31:0] ALU_wr_T1,
     
-    input       [31:0] A_write_PC,
-    output      [31:0] A_read_PC,
-    input       [31:0] B_write_PC,
-    output      [31:0] B_read_PC,
+    //Data outputs
+    output [31:0] A_read,
+    output [31:0] B_read,
     
-    //Regfile - Coming from Bus A
-    input        [4:0] A_addr_regfile,
-    input       [31:0] A_write_regfile,
-    output      [31:0] A_read_regfile,
-    //Regfile - Coming from Bus B
-    input        [4:0] B_addr_regfile,
-    input       [31:0] B_write_regfile,
-    output      [31:0] B_read_regfile
+    //Control
+    input ALU_wr_en;
+    
+    input [4:0] A_addr_wr_regfile,
+    input [4:0] B_addr_wr_regfile,
+    
+    input [4:0] A_addr_rd_regfile,
+    input [4:0] B_addr_rd_regfile,
+    
+    input [1:0] A_sel_wr_device,
+    input [1:0] B_sel_wr_device,
+    
+    input [1:0] A_sel_rd_device,
+    input [1:0] B_sel_rd_device
+    
     );
 
-reg [31:0] regfile [30:0];//X0 not implemented here but in the assign statement
+localparam REGFILE_WIDTH = 32;
+localparam EXTRA_REGS = 0; // Starting from T2 
+localparam AMOUNT_REGISTERS = REGFILE_WIDTH + EXTRA_REGS + 2; // PC and T1 included here
+
+//Registers
+reg [31:0] regfile [AMOUNT_REGISTERS-1:1];//X0 not implemented here but in the assign statement
 integer i;
 
-reg [31:0] PC;
+//Internal signals
+reg [1:0] sel_in [AMOUNT_REGISTERS-1:1]; 
 
-//Temporal registers
-reg [31:0] T1;
+reg [31:0] reg_in [AMOUNT_REGISTERS-1:1];
+reg [31:0] reg_out [AMOUNT_REGISTERS-1:1];
 
-assign A_read_regfile = (A_addr_regfile == 5'd0) ? 32'd0 : regfile[A_addr_regfile];//X0 = 0 always
-assign B_read_regfile = (B_addr_regfile == 5'd0) ? 32'd0 : regfile[B_addr_regfile];//X0 = 0 always
-assign A_read_T1 = T1;
-assign B_read_T1 = T1;
-assign A_read_PC = PC;
-assign B_read_PC = PC;
+reg [31:0] A_read;
+reg [31:0] B_read;
 
-always@(posedge clk)begin
-    if(reset)begin//Clear all register on reset
-        T1 <= 32'd0;
-        PC <= 32'd0;
-        for(i=0;i<31;i=i+1) regfile[i] <= 32'd0;
+//Mux in
+always@(*)begin
+    for(i=1;i<=AMOUNT_REGISTERS-2;i=i+1)begin //Muxes for registers X1, X2, ..., XN, PC
+        case(sel_in[i])
+            2'b00: reg_in[i] = A_write;
+            2'b01: reg_in[i] = B_write;
+            default:; //Retain. reg_in[i] = reg_in[i]
+        endcase  
     end
-    else begin
-        if(we)begin
-            case(sel_writer_bus)
-                `SEL_BUS_A: begin
-                    T1 <= A_write_T1;
-                    PC <= A_write_PC;
-                    if(A_addr_regfile != 5'd0) regfile[A_addr_regfile] <= A_write_regfile;
-                end
-                `SEL_BUS_B: begin
-                    T1 <= B_write_T1;
-                    PC <= B_write_PC;
-                    if(B_addr_regfile != 5'd0) regfile[B_addr_regfile] <= B_write_regfile;
-                end
-                `SEL_ALU_OUT:  T1 <= ALU_write_T1;
-                default:;
-            endcase
-        end
+    //Mux for T1
+    case(sel_in[AMOUNT_REGISTERS-1])
+        2'b00: reg_in[AMOUNT_REGISTERS-1] = A_write;
+        2'b01: reg_in[AMOUNT_REGISTERS-1] = B_write;
+        2'b11: reg_in[AMOUNT_REGISTERS-1] = ALU_wr_T1;
+        default:; //Retain. reg_in[i] = reg_in[i]
+    endcase
+end
+
+//Mux out
+always@(*)begin
+    case(A_sel_rd_device)
+        `INTERNAL_BUS:  A_read = reg_out[A_addr_rd_regfile]; 
+        `PC:            A_read = reg_out[AMOUNT_REGISTERS-2];
+        `T1:            A_read = reg_out[AMOUNT_REGISTERS-1];
+        default:;//Retain
+    end
+    case(B_sel_rd_device)
+        `INTERNAL_BUS:  B_read = reg_out[B_addr_rd_regfile]; 
+        `PC:            B_read = reg_out[AMOUNT_REGISTERS-2];
+        `T1:            B_read = reg_out[AMOUNT_REGISTERS-1];
+        default:;//Retain
     end
 end
 
+//Register logic
+always@(posedge clk)begin
+    for(i=1;i<=AMOUNT_REGISTERS-1;i=i+1)begin
+        if(reset)   reg_out[i] <= 32'd0;
+        else if(we) reg_out[i] <= reg_in[i];
+    end
+end
+
+//Internal control for writing logic
+always@(A_addr_wr_regfile,B_addr_wr_regfile,_A_sel_wr_device,B_sel_wr_device)begin
+    //Default
+    for(i=1;i<=AMOUNT_REGISTERS-1;i=i+1)begin
+        sel_in[i] = 2'b10;
+    end
+    
+    case(A_sel_wr_device)
+        `INTERNAL_BUS: sel_in[A_addr_wr_regfile] = 2'b00;
+        `T1:           sel_in[AMOUNT_REGISTERS-1] = 2'b00;
+        `PC:           sel_in[AMOUNT_REGISTERS-2] = 2'b00;
+        default:; 
+    endcase
+    
+    case(B_sel_wr_device)
+        `INTERNAL_BUS: sel_in[B_addr_wr_regfile] = 2'b01;
+        `T1:           sel_in[AMOUNT_REGISTERS-1] = 2'b01;
+        `PC:           sel_in[AMOUNT_REGISTERS-2] = 2'b01;
+        default:;
+    endcase
+    
+    //T1 in case of written by ALU
+    if(ALU_wr_en) sel_in[AMOUNT_REGISTERS-1] = 2'b11;
+    
+end
     
 endmodule

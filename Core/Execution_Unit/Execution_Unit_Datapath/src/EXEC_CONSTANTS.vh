@@ -8,10 +8,11 @@
 `define SEL_T1         3'b010
 `define SEL_OPERAND    3'b011
 
-// Select writer
-`define SEL_BUS_A      2'b00
-`define SEL_BUS_B      2'b01
-`define SEL_ALU_OUT    2'b10
+// Select devices of regbank (for writing/reading)
+`define NONE              2'b00
+`define INTERNAL_BUS      2'b01
+`define PC                2'b10
+`define T1                2'b11
 
 // Select ALU operands
 // general

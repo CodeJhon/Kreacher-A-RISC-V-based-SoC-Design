@@ -54,15 +54,18 @@ initial begin
     // All registers must be resetted at this point
     // Example operation: 
     // X5 -> A -> ALU
-    // imm -> A -> ALU
-    sel_operation = `ALU_ADD;
     sel_writer_bus = `SEL_ALU_OUT;
     sel_source = `SEL_REGFILE;
     A_addr_regfile = 5'd5;
     sel_destination = `SEL_OPERAND;
     sel_opa = `OP_BUS;
-    sel_opb = `OP_IMM;
+    // imm -> ALU
     imm = 32'd50;
+    sel_operation = `ALU_ADD;
+    sel_opb = `OP_IMM;
+    
+    
+    
     #10;
     
     //Example operation:
@@ -92,6 +95,15 @@ initial begin
     sel_source = `SEL_T1;
     sel_destination = `SEL_REGFILE;
     A_addr_regfile = 5'd6;
+    
+    // X5 -> A -> X4
+    sel_writer_bus = `SEL_BUS_A;
+    sel_source = `SEL_REGFILE;
+    A_addr_regfile = 5'd6;
+    sel_destination = `SEL_REGFILE;
+    sel_opa = `OP_BUS;
+    sel_opb = `OP_IMM;
+    imm = 32'd30;
     
     #10;
     
