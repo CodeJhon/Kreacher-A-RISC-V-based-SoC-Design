@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 `include "../src/EXEC_CONSTANTS.vh"
-`include "../src/ALU_CONSTANTS.vh"
 
 module tb_execunit_sim;
 
