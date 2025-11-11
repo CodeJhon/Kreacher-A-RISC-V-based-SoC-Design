@@ -40,12 +40,13 @@ module execution_unit(
 localparam K_NEXT_INSTR = 32'd4;
 localparam K_LUI        = 32'd12;
 
-// ALU operands
+//Logic for selection of ALU operand
 reg    [31:0] ALU_opa;
 reg    [31:0] ALU_opb;
 
 wire [31:0] A_bus_operand;
 wire [31:0] B_bus_operand;
+
 
 always@(A_bus_operand,B_bus_operand,imm,sel_opa,sel_opb)begin
     case(sel_opa)
