@@ -33,7 +33,7 @@ reg [1:0] B_sel_rd_device;
 reg [4:0] B_addr_rd_regfile;
 
 // Instantiate the module
-Execution_Unit_Datapath uut (
+Execution_Unit_top uut (
     // Global
     .clk(clk),
     .reset(reset),
@@ -74,14 +74,14 @@ initial begin
         //*******ALU********
     sel_opa = ; sel_opb = ;  sel_operation = ; //imm = ;
         //*******Bus A*******    
-    A_sel_source = ; A_sel_dest = ;
+    A_sel_source = ; A_sel_dest = ; // Transaction type
     //From Register:
     A_sel_rd_device = ; //A_addr_rd_regfile = 5'd0;
     //To Register:
     A_sel_wr_device = ; //A_addr_wr_regfile = 5'd0;
     
         //*******Bus B*******
-    B_sel_source = ; B_sel_dest = ;
+    B_sel_source = ; B_sel_dest = ; // Transaction type
     //From Register:
     B_sel_rd_device = ; //B_addr_rd_regfile = 5'd0;
     //To Register:

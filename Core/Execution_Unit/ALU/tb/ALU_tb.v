@@ -21,7 +21,7 @@ reg [31:0] opb;
 reg [3:0] sel_operation;
 
 // Output
-wire signed [31:0] alu_result;
+wire signed [31:0] ALU_result;
 
 // Instantiate the ALU
 
@@ -29,7 +29,7 @@ ALU uut (
     .opa(opa),
     .opb(opb),
     .sel_operation(sel_operation),
-    .alu_result(alu_result)
+    .ALU_result(ALU_result)
 );
 
 initial begin    
@@ -39,67 +39,67 @@ initial begin
     opa = 32'd15;
     opb = 32'd10;
     sel_operation = ALU_ADD;
-    #1 if (alu_result !== 32'd25) $error("ADD failed: got %0d, expected 25", alu_result);
+    #1 if (ALU_result !== 32'd25) $error("ADD failed: got %0d, expected 25", ALU_result);
     
     // SUB
     opa = 32'd20;
     opb = 32'd5;
     sel_operation = ALU_SUB;
-    #1 if (alu_result !== 32'd15) $error("SUB failed: got %0d, expected 15", alu_result);
+    #1 if (ALU_result !== 32'd15) $error("SUB failed: got %0d, expected 15", ALU_result);
     
     // AND
     opa = 32'hFF00FF00;
     opb = 32'h0F0F0F0F;
     sel_operation = ALU_AND;
-    #1 if (alu_result !== (opa & opb)) $error("AND failed");
+    #1 if (ALU_result !== (opa & opb)) $error("AND failed");
     
     // OR
     opa = 32'h0000FF00;
     opb = 32'h000000F0;
     sel_operation = ALU_OR;
-    #1 if (alu_result !== (opa | opb)) $error("OR failed");
+    #1 if (ALU_result !== (opa | opb)) $error("OR failed");
     
     // XOR
     opa = 32'hAAAA5555;
     opb = 32'h0F0F0F0F;
     sel_operation = ALU_XOR;
-    #1 if (alu_result !== (opa ^ opb)) $error("XOR failed");
+    #1 if (ALU_result !== (opa ^ opb)) $error("XOR failed");
     
     // SLTU
     opa = 32'd5;
     opb = 32'd10;
     sel_operation = ALU_SLTU;
-    #1 if (alu_result !== 32'd1) $error("SLTIU failed");
+    #1 if (ALU_result !== 32'd1) $error("SLTIU failed");
     
     // SLT
     opa = 32'hFFFFFFF8; //-8
     opb = 32'hFFFFFFE7; //-25
     sel_operation = ALU_SLT;
-    #1 if (alu_result !== 32'd0) $error("SLT failed");
+    #1 if (ALU_result !== 32'd0) $error("SLT failed");
     
     // SLL (shift left logical)
     opa = 32'h00000001;
     opb = 32'd4;
     sel_operation = ALU_SLL;
-    #1 if (alu_result !== 32'h00000010) $error("SLL failed");
+    #1 if (ALU_result !== 32'h00000010) $error("SLL failed");
     
     // SRLI (shift right logical)
     opa = 32'h00000010;
     opb = 32'd2;
     sel_operation = ALU_SRL;
-    #1 if (alu_result !== 32'h00000004) $error("SRL failed");
+    #1 if (ALU_result !== 32'h00000004) $error("SRL failed");
     
     // SRAI (shift right arithmetic)
     opa = 32'hFFFFFFF8; // negative number (-8)
     opb = 32'd2;
     sel_operation = ALU_SRA;
-    #1 if (alu_result !== (32'hFFFFFFFE )) $error("SRA failed");//Expected -2 as result
+    #1 if (ALU_result !== (32'hFFFFFFFE )) $error("SRA failed");//Expected -2 as result
     
     // LUI
     opa = 32'h00012345; 
     opb = 32'd12;//For LUI, we ALWAYS shift by 12 bits
     sel_operation = ALU_SLL;
-    #1 if (alu_result !== (32'h12345000)) $error("LUI failed");//Expected -2 as result
+    #1 if (ALU_result !== (32'h12345000)) $error("LUI failed");//Expected -2 as result
     
     // Finish simulation
     $stop;

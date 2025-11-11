@@ -1,14 +1,14 @@
-`include "./ALU_CONSTANTS.vh"
+`include "ALU_CONSTANTS.vh"
 
 module ALU(
     input signed [31:0] opa,
     input signed [31:0] opb,
     input [3:0] sel_operation,
-    output signed [31:0] alu_result
+    output signed [31:0] ALU_result
 );
 
 reg signed [31:0] internal_alu_result;
-assign alu_result = internal_alu_result;
+assign ALU_result = internal_alu_result;
 
 always@(opa,opb,sel_operation) begin
     case(sel_operation)
