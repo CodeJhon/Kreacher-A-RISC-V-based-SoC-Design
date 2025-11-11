@@ -1,9 +1,8 @@
 `timescale 1ns / 1ps
 `include "../src/EXEC_CONSTANTS.vh"
-`include "../../ALU/src/ALU_CONSTANTS.vh"
+`include "../src/ALU_CONSTANTS.vh"
 
-module Execution_Unit_tb(
-    );
+module tb_execunit_sim;
 
     // Global signals
 reg clk;
@@ -33,7 +32,7 @@ reg [1:0] B_sel_rd_device;
 reg [4:0] B_addr_rd_regfile;
 
 // Instantiate the module
-Execution_Unit_top uut (
+execution_unit uut (
     // Global
     .clk(clk),
     .reset(reset),

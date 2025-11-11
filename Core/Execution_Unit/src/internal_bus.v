@@ -1,6 +1,6 @@
 `include "./EXEC_CONSTANTS.vh"
 
-module Internal_Bus(
+module internal_bus(
     //Sources
     input [31:0] regbank_source,
     

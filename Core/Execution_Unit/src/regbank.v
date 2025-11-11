@@ -1,6 +1,6 @@
 `include "./EXEC_CONSTANTS.vh"
 
-module Regbank(
+module regbank(
     //Global
     input clk,
     input reset,

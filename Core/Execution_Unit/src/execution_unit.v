@@ -1,6 +1,6 @@
 `include "./EXEC_CONSTANTS.vh"
 
-module Execution_Unit_top(
+module execution_unit(
     //Global
     input clk,
     input reset,
@@ -76,7 +76,7 @@ wire ALU_wr_en;
 
 assign ALU_wr_en = A_ALU_wr_en | B_ALU_wr_en;
 
-Regbank U_Regbank (
+regbank u_regbank (
     // Global
     .clk(clk),
     .reset(reset),
@@ -107,7 +107,7 @@ Regbank U_Regbank (
     .B_sel_rd_device(B_sel_rd_device)
 );
 
-Internal_Bus Bus_A (
+internal_bus bus_A (
     // Sources
     .regbank_source(A_rd),
     
@@ -122,7 +122,7 @@ Internal_Bus Bus_A (
     .ALU_wr_en(A_ALU_wr_en)
 );
 
-Internal_Bus Bus_B (
+internal_bus bus_B (
     // Sources
     .regbank_source(B_rd),
     
@@ -137,7 +137,7 @@ Internal_Bus Bus_B (
     .ALU_wr_en(B_ALU_wr_en)
 );
 
-ALU U_ALU(
+ALU u_ALU(
     .opa(ALU_opa),
     .opb(ALU_opb),
     .sel_operation(sel_operation),
