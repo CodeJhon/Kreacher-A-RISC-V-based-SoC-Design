@@ -1,4 +1,4 @@
-`include "./EXEC_CONSTANTS.vh"
+`include "../CORE_CONSTANTS.vh"
 
 module ALU(
     input signed [31:0] opa,
