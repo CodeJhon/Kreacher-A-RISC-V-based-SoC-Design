@@ -1,3 +1,5 @@
+`include "../CORE_CONSTANTS.vh"
+
 module ID #(parameter XLEN = 32)(
     //Global
     input clk,
@@ -17,7 +19,7 @@ module ID #(parameter XLEN = 32)(
     //----------------------------EX Stage
     //Data from/to EX stage
     input [XLEN-1:0] EX_ALU_out,
-    input [XLEN-1:0] EX_writeback,
+    input [XLEN-1:0] EX_RD,
 
     output [XLEN-1:0] EX_PC_4,
     output [XLEN-1:0] EX_PC,
@@ -52,7 +54,7 @@ regfile #(.XLEN(XLEN)) u_regfile (
     .RD_addr    (IF_EIB[11:7]),
 
     // Sources & Destinations
-    .RD         (EX_writeback),
+    .RD         (EX_RD),
     .RS1        (EX_RS1),
     .RS2        (EX_RS2),
 

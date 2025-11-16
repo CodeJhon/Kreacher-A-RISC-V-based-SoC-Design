@@ -20,5 +20,14 @@
 `define NEXT_PC_4         2'b00
 `define NEXT_PC_ALU_OUT   2'b01
 
+//sel_opa
+`define OPA_PC      2'b00
+`define OPA_IMM     2'b01
+`define OPA_RS1     2'b10
+
+//sel_opb
+`define OPB_12      2'b00
+`define OPB_IMM     2'b01
+`define OPB_RS2     2'b10
 
 `endif
