@@ -6,9 +6,9 @@ module MEM #(parameter XLEN = 32)(
     input reset,
 
     //Buses
-    output [XLEN-1:0] EMAB,            //Memory Address
-    output            EMCB,            //Memory Control
-    input [XLEN-1:0]  EMDB,            //Memory Data
+    output [XLEN-1:0] EMAB,            //External Memory Address Bus
+    output            EMCB,            //External Memory Control Bus
+    //input [XLEN-1:0]  EMDB,            //External Memory Data Bus
 
     //----------------------------EX Stage
     //Data from/to EX stage
