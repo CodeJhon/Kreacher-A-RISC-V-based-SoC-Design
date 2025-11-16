@@ -1,7 +1,7 @@
 `include "../CORE_CONSTANTS.vh"
 
 module IF_HK #(parameter XLEN = 32)(
-    //global
+    //Global
     input clk,
     input reset,
     
