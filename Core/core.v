@@ -9,7 +9,7 @@ module core #(parameter XLEN = 32)(
     wire [LENGHT:0] (Fom Stage X)_Signal_Name_(To stage Y)
 */
 
-//------------------------------------- Data (Not for buses)
+//------------------------------------- Data signals (Not for buses)
 
 //ALU_out
 wire [XLEN-1:0] ID_ALU_out_IF;
@@ -29,6 +29,28 @@ wire [XLEN-1:0] ID_PC_EX;
 
 //EIB
 wire [XLEN-1:0] IF_EIB_ID;
+
+//RD
+wire [XLEN-1:0] WB_RD_MEM;
+wire [XLEN-1:0] MEM_RD_EX;
+wire [XLEN-1:0] EX_RD_ID;
+
+//RS1
+wire [XLEN-1:0] ID_RS1_EX;
+
+//RS2
+wire [XLEN-1:0] ID_RS2_EX;
+wire [XLEN-1:0] EX_RS2_MEM;
+
+//imm
+wire [XLEN-1:0] ID_imm_EX;
+
+//adder_sum
+wire [XLEN-1:0] EX_adder_sum_MEM;
+wire [XLEN-1:0] MEM_adder_sum_WB;
+
+//EMDB
+wire [XLEN-1:0] MEM_EMDB_WB;
 
 //------------------------------------- Control (Not for buses)
 
@@ -76,13 +98,13 @@ ID #(.XLEN(XLEN)) u_ID (
     //----------------------------EX Stage
     //Data from/to EX stage
     .EX_ALU_out(EX_ALU_out_ID),
-    .EX_RD(),
+    .EX_RD(EX_RD_ID),
 
     .EX_PC_4(ID_PC_4_EX),
     .EX_PC(ID_PC_EX),
-    .EX_RS1(),
-    .EX_RS2(),
-    .EX_imm(),
+    .EX_RS1(ID_RS1_EX),
+    .EX_RS2(ID_RS2_EX),
+    .EX_imm(ID_imm_EX),
 
     //Control from/to EX stage
     .EX_sel_opa(),
@@ -106,12 +128,12 @@ EX #(.XLEN(XLEN)) u_EX (
     //Data from/to ID stage
     .ID_PC_4(ID_PC_4_EX),
     .ID_PC(ID_PC_EX),
-    .ID_RS1(),
-    .ID_RS2(),
-    .ID_imm(),
+    .ID_RS1(ID_RS1_EX),
+    .ID_RS2(ID_RS2_EX),
+    .ID_imm(ID_imm_EX),
 
     .ID_ALU_out(EX_ALU_out_ID),
-    .ID_RD(),
+    .ID_RD(EX_RD_ID),
 
     //Control from/to ID stage
     .ID_sel_opa(),
@@ -126,12 +148,12 @@ EX #(.XLEN(XLEN)) u_EX (
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    .MEM_RD(),
+    .MEM_RD(MEM_RD_EX),
 
     .MEM_PC_4(EX_PC_4_MEM),
-    .MEM_adder_sum(),
-    .MEM_ALU_out(),
-    .MEM_RS2(),
+    .MEM_adder_sum(EX_adder_sum_MEM),
+    .MEM_ALU_out(EX_ALU_out_MEM),
+    .MEM_RS2(EX_RS2_MEM),
 
     //Control from/to MEM stage
     .MEM_mem_wr_en(),
@@ -155,11 +177,11 @@ MEM #(.XLEN(XLEN)) u_MEM (
     //----------------------------EX Stage
     //Data from/to EX stage
     .EX_PC_4(EX_PC_4_MEM),
-    .EX_adder_sum(),
+    .EX_adder_sum(EX_adder_sum_MEM),
     .EX_ALU_out(EX_ALU_out_MEM),
-    .EX_RS2(),
+    .EX_RS2(EX_RS2_MEM),
 
-    .EX_RD(),
+    .EX_RD(MEM_RD_EX),
 
     //Control from/to EX stage
     .EX_mem_wr_en(),
@@ -170,12 +192,12 @@ MEM #(.XLEN(XLEN)) u_MEM (
 
     //----------------------------WB Stage
     //Data from/to WB stage
-    .WB_RD(),
+    .WB_RD(WB_RD_MEM),
 
-    .WB_adder_sum(),
+    .WB_adder_sum(MEM_adder_sum_WB),
     .WB_PC_4(MEM_PC_4_WB),
     .WB_ALU_out(MEM_ALU_out_WB),
-    .WB_EMDB(),
+    .WB_EMDB(MEM_EMDB_WB),
 
     //Control from/to WB stage
     .WB_sel_writeback()
@@ -189,12 +211,12 @@ WB #(.XLEN(XLEN)) u_WB (
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    .MEM_adder_sum(),
+    .MEM_adder_sum(MEM_adder_sum_WB),
     .MEM_PC_4(MEM_PC_4_WB),
     .MEM_ALU_out(MEM_ALU_out_WB),
-    .MEM_EMDB(),
+    .MEM_EMDB(MEM_EMDB_WB),
 
-    .MEM_RD(),
+    .MEM_RD(WB_RD_MEM),
 
     //Control from/to WB stage
     .WB_sel_writeback()
