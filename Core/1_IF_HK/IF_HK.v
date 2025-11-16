@@ -24,7 +24,6 @@ module IF_HK #(parameter XLEN = 32)(
 // ---------------------------------- Internal physical registers
 reg [XLEN-1:0] PC;
 
-
 // ---------------------------------- Implementation of modules
 
 //PC+4
