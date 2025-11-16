@@ -1,3 +1,5 @@
+`include "../CORE_CONSTANTS.vh"
+
 module MEM #(parameter XLEN = 32)(
     //Global
     input clk,
