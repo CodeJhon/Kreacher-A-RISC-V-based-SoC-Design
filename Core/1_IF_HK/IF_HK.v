@@ -9,6 +9,7 @@ module IF_HK #(parameter XLEN = 32)(
     input [XLEN-1:0] EIB,  //External Instruction Bus
     output [XLEN-1:0] EIAB, //External Instruction Address Bus 
     
+    //----------------------------ID Stage
     //Data from/to ID stage
     input [XLEN-1:0] ID_ALU_out,
 

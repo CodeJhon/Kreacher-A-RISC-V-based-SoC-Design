@@ -1,0 +1,71 @@
+module MEM #(parameter XLEN = 32)(
+    //Global
+    input clk,
+    input reset,
+
+    //Buses
+    output [XLEN-1:0] EMAB,            //Memory Address
+    output            EMCB,            //Memory Control
+    input [XLEN-1:0]  EMDB,            //Memory Data
+
+    //----------------------------EX Stage
+    //Data from/to EX stage
+    input [XLEN-1:0] EX_PC_4,
+    input [XLEN-1:0] EX_adder_sum,
+    input [XLEN-1:0] EX_ALU_out,
+    input [XLEN-1:0] EX_RS2,
+    
+    output [XLEN-1:0] EX_RD,
+
+    //Control from/to EX stage
+    input            EX_mem_wr_en,
+    //input []         EX_val_rd_type,
+    //input []         EX_val_wr_type,
+    
+    input [2:0]      EX_sel_writeback,
+
+    //----------------------------WB Stage
+    //Data from/to WB stage
+    input [XLEN-1:0] WB_RD,
+
+    output [XLEN-1:0] WB_adder_sum,
+    output [XLEN-1:0] WB_PC_4,
+    output [XLEN-1:0] WB_ALU_out,
+    output [XLEN-1:0] WB_EMDB,
+
+    //Control from/to WB stage
+    output [2:0] WB_sel_writeback
+
+);
+
+
+// ---------------------------------- Implementation of modules
+
+sign_extension #(.XLEN(XLEN)) sign_ex_wr (
+    .in(EX_RS2),
+    .out()
+    // .extension_type()
+);
+
+sign_extension #(.XLEN(XLEN)) sign_ex_rd (
+    .in(),
+    .out(WB_EMDB)
+    // .extension_type()
+);
+
+// ------------------------------------- Connection to adjacent stage(s)
+//EX
+assign EX_RD = WB_RD;
+
+//WB
+assign WB_adder_sum = EX_adder_sum;
+assign WB_PC_4 = EX_PC_4;
+assign WB_ALU_out = EX_ALU_out;
+
+assign WB_sel_writeback = EX_sel_writeback;
+
+// -------------------------------------- Connection to buses (if any)
+assign EMAB = EX_ALU_out;
+assign EMCB = EX_mem_wr_en;
+
+endmodule
