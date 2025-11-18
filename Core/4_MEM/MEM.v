@@ -44,12 +44,12 @@ module MEM #(parameter XLEN = 32)(
 
 sign_extension #(.XLEN(XLEN)) sign_ex_wr (
     .in(EX_RS2),
-    .out(EMDB_in),
+    .out(EMDB_out),
     .extension_type(EX_val_wr_type)
 );
 
 sign_extension #(.XLEN(XLEN)) sign_ex_rd (
-    .in(EMDB_out),
+    .in(EMDB_in),
     .out(WB_EMDB),
     .extension_type(EX_val_rd_type)
 );
