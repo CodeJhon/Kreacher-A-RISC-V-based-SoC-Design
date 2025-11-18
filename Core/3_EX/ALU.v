@@ -13,6 +13,9 @@ assign ALU_result = internal_alu_result;
 
 always@(opa,opb,sel_operation) begin
     case(sel_operation)
+        //Forwarding
+        `ALU_FORWARD_A:          internal_alu_result = opa;
+        //Operations
         `ALU_ADD:                internal_alu_result = opa + opb;
         `ALU_SUB:                internal_alu_result = opa - opb;
         `ALU_SLT:                internal_alu_result = {{ZERO_PAD{1'b0}},(opa[XLEN-1] == opb[XLEN-1]) ? opa < opb : opa[XLEN-1]}; 
