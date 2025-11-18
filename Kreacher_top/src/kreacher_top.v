@@ -1,4 +1,4 @@
-module kreachcer_top #(parameter XLEN = 32)(
+module kreacher_top #(parameter XLEN = 32)(
     //Global
     input clk,
     input reset,
@@ -21,13 +21,13 @@ module kreachcer_top #(parameter XLEN = 32)(
 );
 
 // ------------------------------------------------ Buses
-wire [XLEN-1:0] EIB,  //External Instruction Bus
-wire [XLEN-1:0] EIAB, //External Instruction Address Bus
+wire [XLEN-1:0] EIB;  //External Instruction Bus
+wire [XLEN-1:0] EIAB; //External Instruction Address Bus
 
-wire [XLEN-1:0] EMAB,            //External Memory Address Bus
-wire            EMCB,            //External Memory Control Bus
-wire [XLEN-1:0] EMDB_out,        //External Memory Data Bus, output for the core, input for the external memory
-wire [XLEN-1:0] EMDB_in,         //External Memory Data Bus, input for the core, output for the external memory
+wire [XLEN-1:0] EMAB;            //External Memory Address Bus
+wire            EMCB;            //External Memory Control Bus
+wire [XLEN-1:0] EMDB_out;        //External Memory Data Bus, output for the core, input for the external memory
+wire [XLEN-1:0] EMDB_in;         //External Memory Data Bus, input for the core, output for the external memory
 
 core #(.XLEN(XLEN)) core_inst (
     .clk(clk), 
