@@ -7,8 +7,12 @@ reg  clk;
 reg  reset;
 reg  we;
 reg  PMEM_cs;
+reg  DMEM_cs;
 reg  [XLEN-1:0] EIAB; // Assuming XLEN=32 for instantiation
 wire [XLEN-1:0] EIB;
+reg [XLEN-1:0] EMDB_out;
+reg [XLEN-1:0] EMAB;
+wire [XLEN-1:0] EMDB_in;
 
 // --- Test Parameters ---
 localparam CLOCK_PERIOD = 10; // 10ns for a 100MHz clock
@@ -17,9 +21,15 @@ localparam CLOCK_PERIOD = 10; // 10ns for a 100MHz clock
 memories_top #(.XLEN(XLEN)) DUT (
     .clk      ( clk ),
     .reset    ( reset ),
+    .we       ( we ),
     .PMEM_cs  ( PMEM_cs ),
+    .DMEM_cs  ( DMEM_cs ),
     .EIAB     ( EIAB ),
-    .EIB      ( EIB )
+    .EIB      ( EIB ),
+    .EMDB_out  ( EMDB_out ),
+    .EMAB     ( EMAB ),
+    .EMDB_in ( EMDB_in )
+    
 );
 
 // --- Clock Generation ---
@@ -31,19 +41,47 @@ end
 // --- Test Sequence (Main Stimulus) ---
 initial begin
     // 1. Initial Reset and Setup
+    #15;
     reset   = 0;
     we      = 0;
     PMEM_cs = 1;
+    DMEM_cs = 0;
     EIAB    = 32'h0;
+    EMDB_out = 32'h0;
+    EMAB    = 32'h0;
     $display("--- Starting Simulation ---");
     
     #10;
-    EIAB    = 32'd4;
-    #10;
-    EIAB    = 32'd8;
+    EIAB    = 32'h00000004;
     
-    // 6. Finish Simulation
-    @(posedge clk);
+    #10;
+    we      = 0;
+    PMEM_cs = 0;
+    DMEM_cs = 1;
+    EMDB_out = 32'hA700BB9F;
+    EMAB    = 32'h0;
+    
+    #10;
+    we      = 1;
+    
+    #10;
+    we      = 0;
+    PMEM_cs = 0;
+    DMEM_cs = 1;
+    EMDB_out = 32'h7D00AF8C;
+    EMAB    = 32'h00000008;
+    
+    #10;
+    we      =1;
+    
+    #10;
+    we      = 0;
+    PMEM_cs = 1;
+    DMEM_cs = 1;
+    EIAB    = 32'h00000008;
+    EMAB    = 32'h00000008;
+    
+    #10;
     PMEM_cs = 0; // Deselect
     $display("--- Simulation Complete ---");
     $finish;

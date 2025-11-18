@@ -18,7 +18,7 @@ end
 
 always @(negedge clk) begin
     if (cs) begin
-       data_out = {memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]}; 
+       data_out = {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]}; 
     end
 end
 
