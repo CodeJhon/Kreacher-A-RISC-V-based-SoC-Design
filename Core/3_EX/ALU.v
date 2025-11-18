@@ -3,7 +3,7 @@
 module ALU #(parameter XLEN = 32)(
     input signed [XLEN-1:0] opa,
     input signed [XLEN-1:0] opb,
-    input [XLEN-1:0] sel_operation,
+    input [4:0] sel_operation, 
     output signed [XLEN-1:0] ALU_result
 );
 
