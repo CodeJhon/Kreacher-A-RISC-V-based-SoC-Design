@@ -33,7 +33,7 @@ initial begin
     // 1. Initial Reset and Setup
     reset   = 0;
     we      = 0;
-    PMEM_cs = 0;
+    PMEM_cs = 1;
     EIAB    = 32'h0;
     $display("--- Starting Simulation ---");
     
