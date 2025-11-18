@@ -1,4 +1,4 @@
-module ROM #(parameter XLEN = 32, parameter MEM_FILE = "file_example.mem")(
+module ROM #(parameter XLEN = 32, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem")(
     input clk,
     input reset,
     input cs,
@@ -7,7 +7,7 @@ module ROM #(parameter XLEN = 32, parameter MEM_FILE = "file_example.mem")(
 
 );
 
-reg [7:0] memory [XLEN-1:0];
+reg [7:0] memory [DEPTH-1:0];
 
 //Initialize the memory with the contents of the specified file
 initial begin

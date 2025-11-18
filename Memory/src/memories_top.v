@@ -11,7 +11,7 @@ module memories_top #(parameter XLEN = 32)(
 
 //Module Implementation
 
-ROM #(.XLEN(XLEN), .MEM_FILE("PMEM_content.mem")) PMEM(
+ROM #(.XLEN(XLEN), .DEPTH(1024), .MEM_FILE("PMEM_content.mem")) PMEM(
     .clk(clk),
     .reset(reset),
     .cs(PMEM_cs),

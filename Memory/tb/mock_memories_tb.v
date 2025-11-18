@@ -37,7 +37,10 @@ initial begin
     EIAB    = 32'h0;
     $display("--- Starting Simulation ---");
     
-    #100;
+    #10;
+    EIAB    = 32'd4;
+    #10;
+    EIAB    = 32'd8;
     
     // 6. Finish Simulation
     @(posedge clk);
