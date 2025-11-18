@@ -43,6 +43,11 @@
 `define ZERO_EXTEND_16  3'b011
 `define ZERO_EXTEND_8   3'b100
 
-
+//imm_type
+`define I_IMMEDIATE 3'b000
+`define S_IMMEDIATE 3'b001
+`define B_IMMEDIATE 3'b010
+`define U_IMMEDIATE 3'b011
+`define J_IMMEDIATE 3'b100
 
 `endif

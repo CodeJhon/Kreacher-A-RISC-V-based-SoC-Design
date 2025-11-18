@@ -62,6 +62,14 @@ regfile #(.XLEN(XLEN)) u_regfile (
     .regfile_we (regfile_we)
 );
 
+//Immediate Sign-Extension
+wire [2:0] imm_type;
+extend_imm #(.XLEN(XLEN)) u_extend_imm (
+    .in(IF_EIB),
+    .out(EX_imm),
+    .imm_type(imm_type)
+);
+
 //Controller (Decoder)
 control u_control (
     //---------------------- Inputs
@@ -75,7 +83,7 @@ control u_control (
 
     // ID
     .regfile_we(regfile_we),
-    // .imm_type(),
+    .imm_type(imm_type),
 
     // EX
     .sel_opa(EX_sel_opa),
@@ -91,12 +99,7 @@ control u_control (
     .sel_writeback(EX_sel_writeback)
 );
 
-//Immediate Sign-Extension
-extend_imm #(.XLEN(XLEN)) u_extend_imm (
-    .in(IF_EIB),
-    .out(EX_imm)
-    // .imm_type()
-);
+
 
 // ------------------------------------- Connection to adjacent stage(s)
 //IF_HK

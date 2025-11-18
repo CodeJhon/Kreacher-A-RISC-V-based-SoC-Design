@@ -9,8 +9,8 @@ module control(
     output [1:0] sel_next_pc,
 
     //ID
-    output regfile_we,
-    //output [] imm_type,
+    output       regfile_we,
+    output [2:0] imm_type,
 
     //EX
     output [1:0] sel_opa,
