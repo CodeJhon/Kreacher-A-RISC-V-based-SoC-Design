@@ -36,7 +36,23 @@ module ID #(parameter XLEN = 32)(
     output [2:0]      EX_val_rd_type,
     output [2:0]      EX_val_wr_type,
     
-    output [2:0]      EX_sel_writeback
+    output [2:0]      EX_sel_writeback,
+
+    //TEMPORARY (ONLY FOR TB PURPOSES)
+    input [1:0]      sel_next_PC,
+
+    input [2:0]      imm_type,
+    input            regfile_we,
+
+    input [1:0]      sel_opa,
+    input [1:0]      sel_opb,
+    input [4:0]      sel_op,
+
+    input            mem_wr_en,
+    input [2:0]      val_rd_type,
+    input [2:0]      val_wr_type,
+    
+    input [2:0]      sel_writeback
     
 );
 
@@ -70,7 +86,20 @@ extend_imm #(.XLEN(XLEN)) u_extend_imm (
     .imm_type(imm_type)
 );
 
+//TEMPORARY (ONLY FOR TB PURPOSES)
+assign IF_sel_next_PC = sel_next_PC;
+assign EX_sel_opa = sel_opa;
+assign EX_sel_opb = sel_opb;
+assign EX_sel_op = sel_op;
+
+assign EX_mem_wr_en = mem_wr_en;
+assign EX_val_wr_type = val_wr_type;
+assign EX_val_rd_type = val_rd_type;
+
+assign EX_sel_writeback = sel_writeback;
+
 //Controller (Decoder)
+/*
 control u_control (
     //---------------------- Inputs
     .opcode(IF_EIB[6:0]),
@@ -98,7 +127,7 @@ control u_control (
     // WB
     .sel_writeback(EX_sel_writeback)
 );
-
+*/
 
 
 // ------------------------------------- Connection to adjacent stage(s)
