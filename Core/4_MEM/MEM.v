@@ -13,7 +13,6 @@ module MEM #(parameter XLEN = 32)(
     //----------------------------EX Stage
     //Data from/to EX stage
     input [XLEN-1:0] EX_PC_4,
-    input [XLEN-1:0] EX_adder_sum,
     input [XLEN-1:0] EX_ALU_out,
     input [XLEN-1:0] EX_RS2,
     
@@ -30,7 +29,6 @@ module MEM #(parameter XLEN = 32)(
     //Data from/to WB stage
     input [XLEN-1:0] WB_RD,
 
-    output [XLEN-1:0] WB_adder_sum,
     output [XLEN-1:0] WB_PC_4,
     output [XLEN-1:0] WB_ALU_out,
     output [XLEN-1:0] WB_EMDB,
@@ -60,7 +58,6 @@ sign_extension #(.XLEN(XLEN)) sign_ex_rd (
 assign EX_RD = WB_RD;
 
 //WB
-assign WB_adder_sum = EX_adder_sum;
 assign WB_PC_4 = EX_PC_4;
 assign WB_ALU_out = EX_ALU_out;
 

@@ -22,19 +22,16 @@
 
 //sel_opa
 `define OPA_PC      2'b00
-`define OPA_IMM     2'b01
-`define OPA_RS1     2'b10
+`define OPA_RS1     2'b01
 
 //sel_opb
-`define OPB_12      2'b00
-`define OPB_IMM     2'b01
-`define OPB_RS2     2'b10
+`define OPB_IMM     2'b00
+`define OPB_RS2     2'b01
 
 //sel_writeback
-`define WBACK_ADDER_SUM  2'b00
-`define WBACK_ALU_OUT    2'b01
-`define WBACK_PC_4       2'b10
-`define WBACK_EMDB       2'b11
+`define WBACK_ALU_OUT    2'b00
+`define WBACK_PC_4       2'b01
+`define WBACK_EMDB       2'b10
 
 //val_rd_type, val_wr_type (mem stage)
 `define FORWARD_INPUT   3'b000

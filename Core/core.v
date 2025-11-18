@@ -54,10 +54,6 @@ wire [XLEN-1:0] EX_RS2_MEM;
 //imm
 wire [XLEN-1:0] ID_imm_EX;
 
-//adder_sum
-wire [XLEN-1:0] EX_adder_sum_MEM;
-wire [XLEN-1:0] MEM_adder_sum_WB;
-
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
 
@@ -188,7 +184,6 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_RD(MEM_RD_EX),
 
     .MEM_PC_4(EX_PC_4_MEM),
-    .MEM_adder_sum(EX_adder_sum_MEM),
     .MEM_ALU_out(EX_ALU_out_MEM),
     .MEM_RS2(EX_RS2_MEM),
 
@@ -214,7 +209,6 @@ MEM #(.XLEN(XLEN)) u_MEM (
     //----------------------------EX Stage
     //Data from/to EX stage
     .EX_PC_4(EX_PC_4_MEM),
-    .EX_adder_sum(EX_adder_sum_MEM),
     .EX_ALU_out(EX_ALU_out_MEM),
     .EX_RS2(EX_RS2_MEM),
 
@@ -231,7 +225,6 @@ MEM #(.XLEN(XLEN)) u_MEM (
     //Data from/to WB stage
     .WB_RD(WB_RD_MEM),
 
-    .WB_adder_sum(MEM_adder_sum_WB),
     .WB_PC_4(MEM_PC_4_WB),
     .WB_ALU_out(MEM_ALU_out_WB),
     .WB_EMDB(MEM_EMDB_WB),
@@ -248,7 +241,6 @@ WB #(.XLEN(XLEN)) u_WB (
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    .MEM_adder_sum(MEM_adder_sum_WB),
     .MEM_PC_4(MEM_PC_4_WB),
     .MEM_ALU_out(MEM_ALU_out_WB),
     .MEM_EMDB(MEM_EMDB_WB),
