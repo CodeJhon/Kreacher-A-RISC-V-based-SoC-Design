@@ -14,7 +14,7 @@ assign ALU_result = internal_alu_result;
 always@(opa,opb,sel_operation) begin
     case(sel_operation)
         //Forwarding
-        `ALU_FORWARD_A:          internal_alu_result = opa;
+        `ALU_FORWARD_B:          internal_alu_result = opb;
         //Operations
         `ALU_ADD:                internal_alu_result = opa + opb;
         `ALU_SUB:                internal_alu_result = opa - opb;

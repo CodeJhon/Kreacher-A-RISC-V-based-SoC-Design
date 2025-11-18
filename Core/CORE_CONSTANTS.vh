@@ -13,7 +13,7 @@
 `define ALU_SLL         5'b00111
 `define ALU_SRL         5'b01000
 `define ALU_SRA         5'b01001
-`define ALU_FORWARD_A   5'b01010
+`define ALU_FORWARD_B   5'b01010
 
 // --- CONTROL CONSTANTS ----
 
