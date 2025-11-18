@@ -29,7 +29,7 @@ reg [XLEN-1:0] regfile [31:1];
 //Regfile
 always@(posedge clk)begin
     if(reset)begin
-        for(i=1;i<31;i=i+1)begin
+        for(i=1;i<=31;i=i+1)begin
             regfile[i] <= 0;
         end
     end

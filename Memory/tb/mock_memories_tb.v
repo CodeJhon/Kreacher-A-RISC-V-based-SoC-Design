@@ -5,7 +5,7 @@ module mock_memories_tb #(parameter XLEN = 32)();
 // --- Testbench Signals ---
 reg  clk;
 reg  reset;
-reg  we;
+reg  DMEM_we;
 reg  PMEM_cs;
 reg  DMEM_cs;
 reg  [XLEN-1:0] EIAB; // Assuming XLEN=32 for instantiation
@@ -21,7 +21,7 @@ localparam CLOCK_PERIOD = 10; // 10ns for a 100MHz clock
 memories_top #(.XLEN(XLEN)) DUT (
     .clk      ( clk ),
     .reset    ( reset ),
-    .we       ( we ),
+    .DMEM_we       ( DMEM_we ),
     .PMEM_cs  ( PMEM_cs ),
     .DMEM_cs  ( DMEM_cs ),
     .EIAB     ( EIAB ),
@@ -43,7 +43,7 @@ initial begin
     // 1. Initial Reset and Setup
     #15;
     reset   = 0;
-    we      = 0;
+    DMEM_we      = 0;
     PMEM_cs = 1;
     DMEM_cs = 0;
     EIAB    = 32'h0;
@@ -55,27 +55,27 @@ initial begin
     EIAB    = 32'h00000004;
     
     #10;
-    we      = 0;
+    DMEM_we      = 0;
     PMEM_cs = 0;
     DMEM_cs = 1;
     EMDB_out = 32'hA700BB9F;
     EMAB    = 32'h0;
     
     #10;
-    we      = 1;
+    DMEM_we      = 1;
     
     #10;
-    we      = 0;
+    DMEM_we      = 0;
     PMEM_cs = 0;
     DMEM_cs = 1;
     EMDB_out = 32'h7D00AF8C;
     EMAB    = 32'h00000008;
     
     #10;
-    we      =1;
+    DMEM_we      =1;
     
     #10;
-    we      = 0;
+    DMEM_we      = 0;
     PMEM_cs = 1;
     DMEM_cs = 1;
     EIAB    = 32'h00000008;

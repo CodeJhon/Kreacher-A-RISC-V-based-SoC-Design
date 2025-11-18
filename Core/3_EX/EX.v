@@ -49,7 +49,7 @@ module EX #(parameter XLEN = 32)(
 //Muxes
 reg  [XLEN-1:0]  ALU_opa;
 reg  [XLEN-1:0]  ALU_opb;
-always @(ID_sel_opa,ID_sel_opb) begin
+always @(ID_sel_opa, ID_sel_opb, ID_PC, ID_RS1, ID_imm, ID_RS2) begin
     case (ID_sel_opa)
         `OPA_PC:  ALU_opa = ID_PC;
         `OPA_RS1: ALU_opa = ID_RS1;

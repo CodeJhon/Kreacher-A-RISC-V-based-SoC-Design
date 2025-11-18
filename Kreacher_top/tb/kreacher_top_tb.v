@@ -58,9 +58,9 @@ initial begin
 
     // Wait for reset release
     @(negedge reset);
+    #1;
 
     // Instruction #1: ADDI X4, X2, 12
-    #10;
     sel_next_PC = `NEXT_PC_4;
 
     imm_type    = `I_IMMEDIATE;
@@ -71,13 +71,13 @@ initial begin
     sel_op      = `ALU_ADD;
     
     mem_wr_en   = 0;
-    //val_rd_type = 3'b001;
-    //val_wr_type = 3'b010;
+    val_rd_type = 3'b111;
+    val_wr_type = 3'b111;
 
     sel_writeback = `WBACK_ALU_OUT;
 
     // Wait some cycles
-    #50;
+    #12;
 
     // Finish simulation
     $stop;

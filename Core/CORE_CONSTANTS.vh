@@ -30,9 +30,9 @@
 `define OPB_RS2     2'b01
 
 //sel_writeback
-`define WBACK_ALU_OUT    2'b00
-`define WBACK_PC_4       2'b01
-`define WBACK_EMDB       2'b10
+`define WBACK_ALU_OUT    3'b000
+`define WBACK_PC_4       3'b001
+`define WBACK_EMDB       3'b010
 
 //val_rd_type, val_wr_type (mem stage)
 `define FORWARD_INPUT   3'b000

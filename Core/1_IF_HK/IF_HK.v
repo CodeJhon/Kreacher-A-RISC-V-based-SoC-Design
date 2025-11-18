@@ -38,7 +38,7 @@ always@(posedge clk)begin
 end
 
 //Mux
-always@(ID_sel_next_PC)begin
+always@(ID_sel_next_PC, PC_4, ID_ALU_out)begin
     case(ID_sel_next_PC)
         `NEXT_PC_4:         next_PC = PC_4;
         `NEXT_PC_ALU_OUT:   next_PC = ID_ALU_out;
