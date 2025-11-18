@@ -21,8 +21,8 @@ module MEM #(parameter XLEN = 32)(
 
     //Control from/to EX stage
     input            EX_mem_wr_en,
-    //input []         EX_val_rd_type,
-    //input []         EX_val_wr_type,
+    input [2:0]      EX_val_rd_type,
+    input [2:0]      EX_val_wr_type,
     
     input [2:0]      EX_sel_writeback,
 
@@ -45,14 +45,14 @@ module MEM #(parameter XLEN = 32)(
 
 sign_extension #(.XLEN(XLEN)) sign_ex_wr (
     .in(EX_RS2),
-    .out()
-    // .extension_type()
+    .out(),
+    .extension_type(EX_val_wr_type)
 );
 
 sign_extension #(.XLEN(XLEN)) sign_ex_rd (
     .in(),
-    .out(WB_EMDB)
-    // .extension_type()
+    .out(WB_EMDB),
+    .extension_type(EX_val_rd_type)
 );
 
 // ------------------------------------- Connection to adjacent stage(s)

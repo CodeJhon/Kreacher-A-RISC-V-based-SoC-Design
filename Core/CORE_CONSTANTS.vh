@@ -36,4 +36,13 @@
 `define WBACK_PC_4       2'b10
 `define WBACK_EMDB       2'b11
 
+//val_rd_type, val_wr_type (mem stage)
+`define FORWARD_INPUT   3'b000
+`define SIGN_EXTEND_16  3'b001
+`define SIGN_EXTEND_8   3'b010
+`define ZERO_EXTEND_16  3'b011
+`define ZERO_EXTEND_8   3'b100
+
+
+
 `endif

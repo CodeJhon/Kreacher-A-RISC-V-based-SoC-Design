@@ -22,8 +22,8 @@ module EX #(parameter XLEN = 32)(
     input [4:0]      ID_sel_op,
 
     input            ID_mem_wr_en,
-    //input []         ID_val_rd_type,
-    //input []         ID_val_wr_type,
+    input [2:0]      ID_val_rd_type,
+    input [2:0]      ID_val_wr_type,
     
     input [2:0]      ID_sel_writeback,
 
@@ -39,8 +39,8 @@ module EX #(parameter XLEN = 32)(
 
     //Control from/to MEM stage
     output            MEM_mem_wr_en,
-    //output []         MEM_val_rd_type,
-    //output []         MEM_val_wr_type,
+    output [2:0]      MEM_val_rd_type,
+    output [2:0]      MEM_val_wr_type,
     
     output [2:0]      MEM_sel_writeback
 );
@@ -89,8 +89,8 @@ assign MEM_adder_sum = adder_sum;
 assign MEM_ALU_out = ALU_out;
 assign MEM_RS2 = ID_RS2;
 assign MEM_mem_wr_en = ID_mem_wr_en;
-//assign  MEM_val_rd_type,
-//assign MEM_val_wr_type,
+assign MEM_val_rd_type = ID_val_rd_type;
+assign MEM_val_wr_type = ID_val_wr_type;
 
 assign MEM_sel_writeback = ID_sel_writeback;
 

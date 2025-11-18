@@ -80,8 +80,12 @@ wire ID_mem_wr_en_EX;
 wire EX_mem_wr_en_MEM;
 
 //val_rd_type
+wire [2:0] ID_val_rd_type_EX;
+wire [2:0] EX_val_rd_type_MEM;
 
 //val_wr_type
+wire [2:0] ID_val_wr_type_EX;
+wire [2:0] EX_val_wr_type_MEM;
 
 //sel_writeback
 wire [2:0] ID_sel_writeback_EX;
@@ -145,8 +149,8 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_sel_op(ID_sel_op_EX),
 
     .EX_mem_wr_en(ID_mem_wr_en_EX),
-    // .EX_val_rd_type(),
-    // .EX_val_wr_type(),
+    .EX_val_rd_type(ID_val_rd_type_EX),
+    .EX_val_wr_type(ID_val_wr_type_EX),
     
     .EX_sel_writeback(ID_sel_writeback_EX)
 );
@@ -174,8 +178,8 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_sel_op(ID_sel_op_EX),
 
     .ID_mem_wr_en(ID_mem_wr_en_EX),
-    // .ID_val_rd_type(),
-    // .ID_val_wr_type(),
+    .ID_val_rd_type(ID_val_rd_type_EX),
+    .ID_val_wr_type(ID_val_wr_type_EX),
     
     .ID_sel_writeback(ID_sel_writeback_EX),
 
@@ -190,8 +194,8 @@ EX #(.XLEN(XLEN)) u_EX (
 
     //Control from/to MEM stage
     .MEM_mem_wr_en(EX_mem_wr_en_MEM),
-    // .MEM_val_rd_type(),
-    // .MEM_val_wr_type(),
+    .MEM_val_rd_type(EX_val_rd_type_MEM),
+    .MEM_val_wr_type(EX_val_wr_type_MEM),
     
     .MEM_sel_writeback(EX_sel_writeback_MEM)
 );
@@ -218,8 +222,8 @@ MEM #(.XLEN(XLEN)) u_MEM (
 
     //Control from/to EX stage
     .EX_mem_wr_en(EX_mem_wr_en_MEM),
-    // .EX_val_rd_type(),
-    // .EX_val_wr_type(),
+    .EX_val_rd_type(EX_val_rd_type_MEM),
+    .EX_val_wr_type(EX_val_wr_type_MEM),
 
     .EX_sel_writeback(EX_sel_writeback_MEM),
 

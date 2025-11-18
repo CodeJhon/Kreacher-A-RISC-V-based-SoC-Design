@@ -18,9 +18,9 @@ module control(
     output [4:0] sel_op,
 
     //MEM
-    output mem_wr_en,
-    //output [] val_wr_type,
-    //output [] val_rd_type,
+    output       mem_wr_en,
+    output [2:0] val_wr_type,
+    output [2:0] val_rd_type,
 
     //WB
     output [2:0] sel_writeback

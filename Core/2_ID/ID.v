@@ -33,8 +33,8 @@ module ID #(parameter XLEN = 32)(
     output [4:0]      EX_sel_op,
 
     output            EX_mem_wr_en,
-    //output []         EX_val_rd_type,
-    //output []         EX_val_wr_type,
+    output [2:0]      EX_val_rd_type,
+    output [2:0]      EX_val_wr_type,
     
     output [2:0]      EX_sel_writeback
     
@@ -84,8 +84,8 @@ control u_control (
 
     // MEM
     .mem_wr_en(EX_mem_wr_en),
-    // .val_wr_type(),
-    // .val_rd_type(),
+    .val_wr_type(EX_val_wr_type),
+    .val_rd_type(EX_val_rd_type),
 
     // WB
     .sel_writeback(EX_sel_writeback)
