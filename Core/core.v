@@ -8,9 +8,9 @@ module core #(parameter XLEN = 32)(
     output [XLEN-1:0] EIAB, //External Instruction Address Bus
 
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
-    output            EMCB            //External Memory Control Bus
-    //input [XLEN-1:0]  EMDB,            //External Memory Data Bus
-    
+    output            EMCB,            //External Memory Control Bus
+    output [XLEN-1:0]  EMDB_out,            //External Memory Data Bus, output for the core, input for the external memory
+    input [XLEN-1:0]  EMDB_in               //External Memory Data Bus, input for the core, output for the external memory
 );
 
 /*
@@ -204,7 +204,8 @@ MEM #(.XLEN(XLEN)) u_MEM (
     // Buses
     .EMAB(EMAB), //Memory Address
     .EMCB(EMCB), //Memory Control
-    //.EMDB(), //Memory Data
+    .EMDB_in(EMDB_in), //Memory Data
+    .EMDB_out(EMDB_out),
 
     //----------------------------EX Stage
     //Data from/to EX stage

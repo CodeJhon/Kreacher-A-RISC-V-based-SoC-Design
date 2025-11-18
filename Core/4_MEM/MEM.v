@@ -8,7 +8,8 @@ module MEM #(parameter XLEN = 32)(
     //Buses
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
     output            EMCB,            //External Memory Control Bus
-    //input [XLEN-1:0]  EMDB,            //External Memory Data Bus
+    input [XLEN-1:0]  EMDB_in,            //External Memory Input Data Bus
+    output [XLEN-1:0]  EMDB_out,          //External Memory Output Data Bus
 
     //----------------------------EX Stage
     //Data from/to EX stage
@@ -43,12 +44,12 @@ module MEM #(parameter XLEN = 32)(
 
 sign_extension #(.XLEN(XLEN)) sign_ex_wr (
     .in(EX_RS2),
-    .out(),
+    .out(EMDB_out),
     .extension_type(EX_val_wr_type)
 );
 
 sign_extension #(.XLEN(XLEN)) sign_ex_rd (
-    .in(),
+    .in(EMDB_in),
     .out(WB_EMDB),
     .extension_type(EX_val_rd_type)
 );
