@@ -11,10 +11,12 @@ module EX #(parameter XLEN = 32)(
     input [XLEN-1:0] ID_PC,
     input [XLEN-1:0] ID_RS1,
     input [XLEN-1:0] ID_RS2,
+    input [4:0]      ID_RD_addr_in,
     input [XLEN-1:0] ID_imm,
 
     output [XLEN-1:0] ID_ALU_out,
     output [XLEN-1:0] ID_RD,
+    output [4:0]      ID_RD_addr_out,
 
     //Control from/to ID stage
     input [1:0]      ID_sel_opa,
@@ -30,10 +32,12 @@ module EX #(parameter XLEN = 32)(
     //----------------------------MEM Stage
     //Data from/to MEM stage
     input [XLEN-1:0] MEM_RD,
+    input [4:0]      MEM_RD_addr_in,
 
     output [XLEN-1:0] MEM_PC_4,
     output [XLEN-1:0] MEM_ALU_out,
     output [XLEN-1:0] MEM_RS2,
+    output [4:0]      MEM_RD_addr_out,
 
 
     //Control from/to MEM stage
@@ -77,6 +81,7 @@ ALU #(.XLEN(XLEN)) u_ALU (
 //ID
 assign ID_ALU_out = ALU_out;
 assign ID_RD = MEM_RD;
+assign ID_RD_addr_out = MEM_RD_addr_in;
 //MEM
 assign MEM_PC_4 = ID_PC_4;
 assign MEM_ALU_out = ALU_out;
@@ -84,6 +89,7 @@ assign MEM_RS2 = ID_RS2;
 assign MEM_mem_wr_en = ID_mem_wr_en;
 assign MEM_val_rd_type = ID_val_rd_type;
 assign MEM_val_wr_type = ID_val_wr_type;
+assign MEM_RD_addr_out = ID_RD_addr_in;
 
 assign MEM_sel_writeback = ID_sel_writeback;
 

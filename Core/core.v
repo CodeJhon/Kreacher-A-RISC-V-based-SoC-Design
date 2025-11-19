@@ -67,6 +67,16 @@ wire [XLEN-1:0] ID_RS1_EX;
 wire [XLEN-1:0] ID_RS2_EX;
 wire [XLEN-1:0] EX_RS2_MEM;
 
+//RD_addr_in
+wire [4:0] ID_RD_addr_in_EX;
+wire [4:0] EX_RD_addr_in_MEM;
+wire [4:0] MEM_RD_addr_in_WB;
+
+//RD_addr_out
+wire [4:0] WB_RD_addr_out_MEM;
+wire [4:0] MEM_RD_addr_out_EX;
+wire [4:0] EX_RD_addr_out_ID;
+
 //imm
 wire [XLEN-1:0] ID_imm_EX;
 
@@ -148,11 +158,13 @@ ID #(.XLEN(XLEN)) u_ID (
     //Data from/to EX stage
     .EX_ALU_out(EX_ALU_out_ID),
     .EX_RD(EX_RD_ID),
+    .EX_RD_addr_in(EX_RD_addr_out_ID),
 
     .EX_PC_4(ID_PC_4_EX),
     .EX_PC(ID_PC_EX),
     .EX_RS1(ID_RS1_EX),
     .EX_RS2(ID_RS2_EX),
+    .EX_RD_addr_out(ID_RD_addr_in_EX),
     .EX_imm(ID_imm_EX),
 
     //Control from/to EX stage
@@ -191,10 +203,12 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_PC(ID_PC_EX),
     .ID_RS1(ID_RS1_EX),
     .ID_RS2(ID_RS2_EX),
+    .ID_RD_addr_in(ID_RD_addr_in_EX),
     .ID_imm(ID_imm_EX),
 
     .ID_ALU_out(EX_ALU_out_ID),
     .ID_RD(EX_RD_ID),
+    .ID_RD_addr_out(EX_RD_addr_out_ID),
 
     //Control from/to ID stage
     .ID_sel_opa(ID_sel_opa_EX),
@@ -210,10 +224,12 @@ EX #(.XLEN(XLEN)) u_EX (
     //----------------------------MEM Stage
     //Data from/to MEM stage
     .MEM_RD(MEM_RD_EX),
+    .MEM_RD_addr_in(MEM_RD_addr_out_EX),
 
     .MEM_PC_4(EX_PC_4_MEM),
     .MEM_ALU_out(EX_ALU_out_MEM),
     .MEM_RS2(EX_RS2_MEM),
+    .MEM_RD_addr_out(EX_RD_addr_in_MEM),
 
     //Control from/to MEM stage
     .MEM_mem_wr_en(EX_mem_wr_en_MEM),
@@ -240,8 +256,10 @@ MEM #(.XLEN(XLEN)) u_MEM (
     .EX_PC_4(EX_PC_4_MEM),
     .EX_ALU_out(EX_ALU_out_MEM),
     .EX_RS2(EX_RS2_MEM),
+    .EX_RD_addr_in(EX_RD_addr_in_MEM),
 
     .EX_RD(MEM_RD_EX),
+    .EX_RD_addr_out(MEM_RD_addr_out_EX),
 
     //Control from/to EX stage
     .EX_mem_wr_en(EX_mem_wr_en_MEM),
@@ -253,10 +271,12 @@ MEM #(.XLEN(XLEN)) u_MEM (
     //----------------------------WB Stage
     //Data from/to WB stage
     .WB_RD(WB_RD_MEM),
+    .WB_RD_addr_in(WB_RD_addr_out_MEM),
 
     .WB_PC_4(MEM_PC_4_WB),
     .WB_ALU_out(MEM_ALU_out_WB),
     .WB_EMDB(MEM_EMDB_WB),
+    .WB_RD_addr_out(MEM_RD_addr_in_WB),
 
     //Control from/to WB stage
     .WB_sel_writeback(MEM_sel_writeback_WB)
@@ -273,8 +293,10 @@ WB #(.XLEN(XLEN)) u_WB (
     .MEM_PC_4(MEM_PC_4_WB),
     .MEM_ALU_out(MEM_ALU_out_WB),
     .MEM_EMDB(MEM_EMDB_WB),
+    .MEM_RD_addr_in(MEM_RD_addr_in_WB),
 
     .MEM_RD(WB_RD_MEM),
+    .MEM_RD_addr_out(WB_RD_addr_out_MEM),
 
     //Control from/to WB stage
     .WB_sel_writeback(MEM_sel_writeback_WB)

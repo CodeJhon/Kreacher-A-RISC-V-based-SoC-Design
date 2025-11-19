@@ -18,13 +18,15 @@ module ID #(parameter XLEN = 32)(
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    input [XLEN-1:0] EX_ALU_out,
-    input [XLEN-1:0] EX_RD,
+    input [XLEN-1:0]  EX_ALU_out,
+    input [XLEN-1:0]  EX_RD,
+    input [4:0]       EX_RD_addr_in,
 
     output [XLEN-1:0] EX_PC_4,
     output [XLEN-1:0] EX_PC,
     output [XLEN-1:0] EX_RS1,
     output [XLEN-1:0] EX_RS2,
+    output [4:0]      EX_RD_addr_out,
     output [XLEN-1:0] EX_imm,
 
     //Control from/to EX stage
@@ -67,7 +69,7 @@ regfile #(.XLEN(XLEN)) u_regfile (
     // Addresses
     .RS1_addr   (IF_EIB[19:15]),
     .RS2_addr   (IF_EIB[24:20]),
-    .RD_addr    (IF_EIB[11:7]),
+    .RD_addr    (EX_RD_addr_in),
 
     // Sources & Destinations
     .RD         (EX_RD),
@@ -132,9 +134,10 @@ control u_control (
 
 // ------------------------------------- Connection to adjacent stage(s)
 //IF_HK
-assign IF_ALU_out = EX_ALU_out;
+assign IF_ALU_out     = EX_ALU_out;
 //EX
-assign EX_PC_4 = IF_PC_4;
-assign EX_PC = IF_PC;
+assign EX_PC_4        = IF_PC_4;
+assign EX_PC          = IF_PC;
+assign EX_RD_addr_out = IF_EIB[11:7];
 
 endmodule

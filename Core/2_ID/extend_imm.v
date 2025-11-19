@@ -13,7 +13,7 @@ localparam EXTENSION_I_S = XLEN - 11;
 localparam EXTENSION_B = XLEN - 12;
 localparam EXTENSION_J = XLEN - 20;
 
-always @(imm_type) begin
+always @(imm_type, in) begin
     case (imm_type)
         `I_IMMEDIATE: out = {{EXTENSION_I_S{in[31]}},in[30:25],in[24:21],in[20]};
         `S_IMMEDIATE: out = {{EXTENSION_I_S{in[31]}},in[30:25],in[11:8],in[7]};

@@ -16,8 +16,10 @@ module MEM #(parameter XLEN = 32)(
     input [XLEN-1:0] EX_PC_4,
     input [XLEN-1:0] EX_ALU_out,
     input [XLEN-1:0] EX_RS2,
+    input [4:0]      EX_RD_addr_in,
     
     output [XLEN-1:0] EX_RD,
+    output [4:0]     EX_RD_addr_out,
 
     //Control from/to EX stage
     input            EX_mem_wr_en,
@@ -29,10 +31,12 @@ module MEM #(parameter XLEN = 32)(
     //----------------------------WB Stage
     //Data from/to WB stage
     input [XLEN-1:0] WB_RD,
+    input [4:0]      WB_RD_addr_in,
 
     output [XLEN-1:0] WB_PC_4,
     output [XLEN-1:0] WB_ALU_out,
     output [XLEN-1:0] WB_EMDB,
+    output [4:0]      WB_RD_addr_out,
 
     //Control from/to WB stage
     output [2:0] WB_sel_writeback
@@ -57,10 +61,12 @@ sign_extension #(.XLEN(XLEN)) sign_ex_rd (
 // ------------------------------------- Connection to adjacent stage(s)
 //EX
 assign EX_RD = WB_RD;
+assign EX_RD_addr_out = WB_RD_addr_in;
 
 //WB
 assign WB_PC_4 = EX_PC_4;
 assign WB_ALU_out = EX_ALU_out;
+assign WB_RD_addr_out = EX_RD_addr_in;
 
 assign WB_sel_writeback = EX_sel_writeback;
 
