@@ -29,9 +29,9 @@ module control(
 );
 always@(opcode or funct3 or funct7)begin //combinational circuit
     case(opcode)
-        SHIFT_ARITHMETIC:begin
-            case(func3)
-                ADDI:begin
+        `SHIFT_ARITHMETIC_I:begin
+            case(funct3)
+                `ADDI:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
@@ -43,31 +43,31 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                SLTI:begin
+                `SLTI:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_IMM;
-                    sel_op = //check
+                    sel_op = `ALU_SLT;
                     mem_wr_en = `DISABLE;
                     val_wr_type = `MEM_NOT_USED;
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                SLTIU: begin
+                `SLTIU: begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_IMM;
-                    sel_op =//check
+                    sel_op =`ALU_SLTU;
                     mem_wr_en = `DISABLE;
                     val_wr_type = `MEM_NOT_USED;
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                ANDI:begin
+                `ANDI:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
@@ -79,7 +79,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                XORI:begin
+                `XORI:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
@@ -91,7 +91,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                ORI:begin
+                `ORI:begin
                      sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
@@ -103,7 +103,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                SLLI:begin//check
+                `SLLI:begin//check
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
@@ -115,7 +115,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
-                SRLI_SRAI:begin
+                `SRLI_SRAI:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
                     imm_type = `I_IMMEDIATE;
@@ -130,20 +130,51 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
             endcase
         end
 
-        LUI: begin
-            sel_next_pc = ;
-            regfile_we = ;
+        `LUI: begin
+            sel_next_pc = `NEXT_PC_4;
+            regfile_we = `DISABLE;
             imm_type = `U_IMMEDIATE;
-            sel_opa = ;
-            sel_opb = ;
-            sel_op = ;
-            mem_wr_en = ;
-            val_wr_type = ;
-            val_rd_type = ;
-            sel_writeback = ;        
+            sel_opa = `OPA_RS1;//check
+            sel_opb = `OPB_IMM;
+            sel_op = `ALU_FORWARD_B;
+            mem_wr_en = `DISABLE;
+            val_wr_type = `MEM_NOT_USED;
+            val_rd_type = `MEM_NOT_USED;
+            sel_writeback = `WBACK_ALU_OUT;  
         end
 
-        ADD:begin
+        `AUIPC:begin
+            sel_next_pc = `NEXT_PC_4;
+            regfile_we = `DISABLE;
+            imm_type = `U_IMMEDIATE;
+            sel_opa = `OPA_PC;
+            sel_opb = `OPB_IMM;;
+            sel_op =  `ALU_ADD;
+           mem_wr_en = `DISABLE;
+            val_wr_type = `MEM_NOT_USED;
+            val_rd_type = `MEM_NOT_USED;
+            sel_writeback = `WBACK_ALU_OUT;  
+        end
+
+        `SHIFT_ARITHMETIC:begin
+            case(funct3)
+                `AND:begin
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = ;
+                    sel_opa = ;
+                    sel_opb = ;
+                    sel_op = ;
+                    mem_wr_en = ;
+                    val_wr_type = ;
+                    val_rd_type = ;
+                    sel_writeback = ;
+                end
+            endcase
+        end
+        
+
+        default:begin
             sel_next_pc = ;
             regfile_we = ;
             imm_type = ;
