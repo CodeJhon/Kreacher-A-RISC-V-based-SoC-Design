@@ -1,0 +1,80 @@
+
+    .globl _start
+_start:
+    ########################################
+    #auipc, lui, ADDI/SLTI/SLTIU/ANDI/ORI/XORI
+    ########################################
+    lui     x1, 0x5          # LUI
+    auipc   x2, 0x10             # AUIPC
+    addi    x3, x1, 10           # ADDI
+    andi    x4, x3, 0xF          # ANDI
+    slti    x5, x4, -20           # SLTI
+    sltiu   x6, x4, -20           # SLTIU
+    ori     x7, x3, 0xF0         # ORI
+    xori    x8, x3, 0xFF         # XORI
+
+    ########################################
+    # SLLI/SRLI/SRAI
+    ########################################
+    slli    x9,  x3, 2           # SLLI
+    srli    x10, x3, 1           # SRLI
+    srai    x11, x3, 1           # SRAI
+
+    ########################################
+    # 
+    ########################################
+    addi    x12, x0, 0x0100      # base address
+
+    ########################################
+    # SW/SH/SB
+    ########################################
+    sw      x3,  0(x12)          # SW
+    sh      x9,  4(x12)          # SH
+    sb      x10,  6(x12)          # SB
+
+    ########################################
+    # LW/LH/LHU/LB/LBU
+    ########################################
+    lw      x13, 0(x12)          # LW
+    lh      x14, 4(x12)          # LH
+    lhu     x15, 4(x12)          # LHU
+    lb      x16, 6(x12)          # LB
+    lbu     x17, 6(x12)          # LBU
+
+    ########################################
+    # jal / jalr
+    ########################################
+    jal     x18, label_jal       # JAL
+
+after_jal:
+    addi    x19, x0, 99          # indicator (not required instruction)
+
+label_jal:
+    addi    x20, x0, after_jal   # prepare indirect jump target
+    
+
+    ########################################
+    # ADD/SUB/SLT/SLTU/AND/XOR/OR
+    ########################################
+    add     x22, x3, x9          # ADD
+    sub     x23, x3, x9          # SUB
+    slt     x24, x3, x9          # SLT
+    sltu    x25, x3, x9          # SLTU
+    and     x26, x3, x9          # AND
+    xor     x27, x3, x9          # XOR
+    or      x28, x3, x9          # OR
+
+    ########################################
+    # SLL/SRL/SRA
+    ########################################
+    sll     x29, x3, x4          # SLL
+    srl     x30, x3, x4          # SRL
+    sra     x31, x3, x4          # SRA
+
+
+    jalr    x21, x20, 0          # JALR
+    ########################################
+    # 
+    ########################################
+end:
+    jal x0, end
