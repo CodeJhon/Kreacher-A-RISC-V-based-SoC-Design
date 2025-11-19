@@ -3,6 +3,7 @@
 module control(
     //-------------------------- Inputs
     input [6:0] opcode,
+    input imm_I_10,
     input [2:0] funct3,
     input [6:0] funct7,
     

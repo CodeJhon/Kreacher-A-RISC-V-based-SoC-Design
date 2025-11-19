@@ -105,6 +105,7 @@ assign EX_sel_writeback = sel_writeback;
 control u_control (
     //---------------------- Inputs
     .opcode(IF_EIB[6:0]),
+    .imm_I_10(IF_EIB[30]),
     .funct3(IF_EIB[14:12]),
     .funct7(IF_EIB[31:25]),
 

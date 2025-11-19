@@ -60,7 +60,7 @@ initial begin
     @(negedge reset);
     #1;
 
-    // Instruction #1: lui x1, 0(x5)
+    // Instruction #1: lui x1, 0x5
     sel_next_PC = `NEXT_PC_4;
 
     imm_type    = `U_IMMEDIATE;
