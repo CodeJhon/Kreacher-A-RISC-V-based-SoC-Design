@@ -83,6 +83,13 @@ initial begin
     
     #10;
     PMEM_cs = 0; // Deselect
+    
+    #100;
+    $display("Writing DMEM to file...");
+    $writememh("DMEM_result.mem", DUT.DMEM.memory); 
+    //File is found afterwards in Vivado_Kreacher\Vivado_Kreacher.sim\sim_1\behav\xsim
+    $display("Memory dumped to DMEM_result.mem");
+
     $display("--- Simulation Complete ---");
     $finish;
 end
