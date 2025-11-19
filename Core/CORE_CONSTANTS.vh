@@ -4,6 +4,9 @@
 
 // ---- OPCODE CONSTANTS ----
 `define SHIFT_ARITHMETIC 7'b0010011 
+`define LUI 7'b0110111
+`define AUIPC 7'b0010111
+
 
 
 // ---- func3 ----SHIFT_ARITHMETIC
@@ -33,12 +36,6 @@
 `define ALU_FORWARD_B   5'b01010
 
 // --- CONTROL CONSTANTS ----
-
-//regfile_we
-`define RS1_addr 2'b00
-`define RS2_addr 2'b01
-`define RD_addr 2'b10
-`define RD_addr 2'b11
 
 //sel_next_pc
 `define NEXT_PC_4         2'b00

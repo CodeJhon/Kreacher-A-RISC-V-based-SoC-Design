@@ -49,7 +49,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     imm_type = `I_IMMEDIATE;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_IMM;
-                    sel_op = //check
+                    sel_op = `ALU_SLT;
                     mem_wr_en = `DISABLE;
                     val_wr_type = `MEM_NOT_USED;
                     val_rd_type = `MEM_NOT_USED;
@@ -61,7 +61,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     imm_type = `I_IMMEDIATE;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_IMM;
-                    sel_op =//check
+                    sel_op =`ALU_SLTU;
                     mem_wr_en = `DISABLE;
                     val_wr_type = `MEM_NOT_USED;
                     val_rd_type = `MEM_NOT_USED;
@@ -131,16 +131,29 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
         end
 
         LUI: begin
-            sel_next_pc = ;
-            regfile_we = ;
+            sel_next_pc = `NEXT_PC_4;
+            regfile_we = `DISABLE;
             imm_type = `U_IMMEDIATE;
-            sel_opa = ;
-            sel_opb = ;
-            sel_op = ;
-            mem_wr_en = ;
-            val_wr_type = ;
-            val_rd_type = ;
-            sel_writeback = ;        
+            sel_opa = `OPA_RS1;//check
+            sel_opb = `OPB_IMM;
+            sel_op = `ALU_FORWARD_B;
+            mem_wr_en = `DISABLE;
+            val_wr_type = `MEM_NOT_USED;
+            val_rd_type = `MEM_NOT_USED;
+            sel_writeback = `WBACK_ALU_OUT;  
+        end
+
+        AUIPC:begin
+            sel_next_pc = `NEXT_PC_4;
+            regfile_we = `DISABLE;
+            imm_type = `U_IMMEDIATE;
+            sel_opa = `OPA_PC;
+            sel_opb = `OPB_IMM;;
+            sel_op =  `ALU_ADD;
+           mem_wr_en = `DISABLE;
+            val_wr_type = `MEM_NOT_USED;
+            val_rd_type = `MEM_NOT_USED;
+            sel_writeback = `WBACK_ALU_OUT;  
         end
 
         ADD:begin
