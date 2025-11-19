@@ -37,7 +37,7 @@ always@(posedge clk)begin
 end
 
 // Output of sources
-assign RS1 = regfile[RS1_addr];
-assign RS2 = regfile[RS2_addr];
+assign RS1 = (RS1_addr == 0) ? {XLEN{1'b0}} : regfile[RS1_addr];
+assign RS2 = (RS2_addr == 0) ? {XLEN{1'b0}} : regfile[RS2_addr];
 
 endmodule
