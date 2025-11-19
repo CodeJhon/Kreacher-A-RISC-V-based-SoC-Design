@@ -22,7 +22,7 @@ end
 
 always @(posedge clk) begin
     if(reset)begin
-        for (i=0; i<XLEN;i = i+1) begin
+        for (i=0; i<=DEPTH-1;i = i+1) begin
             memory[i] <= 8'd0;
         end
     end

@@ -28,10 +28,10 @@ ROM #(.XLEN(XLEN), .DEPTH(1024), .MEM_FILE("PMEM_content.mem")) PMEM(
     .data_out(EIB)
 );
 
-RAM #(.XLEN(XLEN), .DEPTH(1024), .MEM_FILE("DMEM_content.mem")) DMEM(
+RAM #(.XLEN(XLEN), .DEPTH(3000), .MEM_FILE("DMEM_content.mem")) DMEM(
     .clk(clk),
     .reset(reset),
-    .we(we),
+    .we(DMEM_we),
     .cs(DMEM_cs),
     .data_in(EMDB_out),
     .addr(EMAB),

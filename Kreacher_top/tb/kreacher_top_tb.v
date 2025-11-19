@@ -26,7 +26,7 @@ reg [2:0]  val_wr_type;
 reg [2:0]  sel_writeback;
 
 // Instantiate DUT
-kreacher_top #(.XLEN(XLEN)) dut (
+kreacher_top #(.XLEN(XLEN)) DUT (
     .clk(clk),
     .reset(reset),
     //TEMPORARY (ONLY FOR TB PURPOSES)
@@ -60,7 +60,26 @@ initial begin
     @(negedge reset);
     #1;
 
-    // Instruction #1: ADDI X4, X2, 12
+    // Instruction #1: lui x1, 0(x5)
+    sel_next_PC = `NEXT_PC_4;
+
+    imm_type    = `U_IMMEDIATE;
+    regfile_we  = 1;
+
+    //sel_opa     = `OPA_RS1;
+    sel_opb     = `OPB_IMM;
+    sel_op      = `ALU_FORWARD_B;
+    
+    mem_wr_en   = 0;
+    val_rd_type = 3'b111;
+    val_wr_type = 3'b111;
+
+    sel_writeback = `WBACK_ALU_OUT;
+
+    // Wait some cycles
+    #10;
+
+    // Instruction #2: addi x12 x0, 0x200
     sel_next_PC = `NEXT_PC_4;
 
     imm_type    = `I_IMMEDIATE;
@@ -77,7 +96,31 @@ initial begin
     sel_writeback = `WBACK_ALU_OUT;
 
     // Wait some cycles
-    #12;
+    #10;
+
+    // Instruction #2: sw x1 0(x12)
+    sel_next_PC = `NEXT_PC_4;
+
+    imm_type    = `S_IMMEDIATE;
+    regfile_we  = 0;
+
+    sel_opa     = `OPA_RS1;
+    sel_opb     = `OPB_IMM;
+    sel_op      = `ALU_ADD;
+    
+    mem_wr_en   = 1;
+    val_rd_type = 3'b111;
+    val_wr_type = `FORWARD_INPUT;
+
+    //sel_writeback = `WBACK_ALU_OUT;
+
+    // Wait final cycles
+    #9;
+
+    $display("Writing DMEM to file...");
+    $writememh("DMEM_result.mem", DUT.memories_top_inst.DMEM.memory); 
+    //File is found afterwards in Vivado_Kreacher\Vivado_Kreacher.sim\sim_1\behav\xsim
+    $display("Memory dumped to DMEM_result.mem");
 
     // Finish simulation
     $stop;
