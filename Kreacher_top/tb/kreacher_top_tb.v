@@ -49,15 +49,17 @@ always #5 clk = ~clk;  // 100 MHz clock
 // Reset logic
 initial begin
     reset = 1;
-    #20;
+    #16;
     reset = 0;
 end
 
 // Stimulus
 initial begin
-
+    
+    //Wait for reset
+    @(negedge reset);
     //Initial delay
-    #16;
+    //#16;
     //First fetch
     sel_next_PC = `NEXT_PC_4;
     #10;
