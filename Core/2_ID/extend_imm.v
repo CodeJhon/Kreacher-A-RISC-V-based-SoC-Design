@@ -20,6 +20,7 @@ always @(imm_type, in) begin
         `B_IMMEDIATE: out = {{EXTENSION_B{in[31]}},in[7],in[30:25],in[11:8],1'b0};
         `U_IMMEDIATE: out = {in[31],in[30:20],in[19:12],12'd0};
         `J_IMMEDIATE: out = {{EXTENSION_J{in[31]}},in[19:12],in[20],in[30:25],in[24:21],1'b0};
+        `IMM_NOT_USED out = 0;
         default:      out = 0;
     endcase
 end
