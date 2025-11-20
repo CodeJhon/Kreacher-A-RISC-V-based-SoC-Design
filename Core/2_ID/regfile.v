@@ -4,9 +4,9 @@ module regfile #(parameter XLEN = 32)(
     input reset,
 
     //Addresses
-    input [4:0] RS1_addr,
-    input [4:0] RS2_addr,
-    input [4:0] RD_addr,
+    input [4:0]       RS1_addr,
+    input [4:0]       RS2_addr,
+    input [4:0]       RD_addr,
 
     //Sources & Destinations
     input  [XLEN-1:0] RD,

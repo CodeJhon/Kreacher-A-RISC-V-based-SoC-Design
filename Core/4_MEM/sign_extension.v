@@ -5,7 +5,7 @@ module sign_extension #(parameter XLEN = 32)(
     output reg [XLEN-1:0]  out, //After extension
 
     //Control
-    input [2:0] extension_type
+    input [2:0]            extension_type
 );
 
 localparam EXT_16 = XLEN - 16;

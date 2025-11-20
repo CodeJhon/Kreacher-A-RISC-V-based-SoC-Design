@@ -8,34 +8,34 @@ module MEM #(parameter XLEN = 32)(
     //Buses
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
     output            EMCB,            //External Memory Control Bus
-    input [XLEN-1:0]  EMDB_in,            //External Memory Input Data Bus
-    output [XLEN-1:0]  EMDB_out,          //External Memory Output Data Bus
+    input  [XLEN-1:0] EMDB_in,            //External Memory Input Data Bus
+    output [XLEN-1:0] EMDB_out,          //External Memory Output Data Bus
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    input [XLEN-1:0] EX_PC_4,
-    input [XLEN-1:0] EX_ALU_out,
-    input [XLEN-1:0] EX_RS2,
-    input [4:0]      EX_RD_addr_in,
+    input [XLEN-1:0]  EX_PC_4,
+    input [XLEN-1:0]  EX_ALU_out,
+    input [XLEN-1:0]  EX_RS2,
+    input [4:0]       EX_RD_addr_in,
     
     output [XLEN-1:0] EX_RD,
-    output [4:0]     EX_RD_addr_out,
+    output [4:0]      EX_RD_addr_out,
 
     //Control from/to EX stage
-    input            EX_mem_wr_en,
-    input [2:0]      EX_val_rd_type,
-    input [2:0]      EX_val_wr_type,
-    input            EX_regfile_we_in,
+    input             EX_mem_wr_en,
+    input [2:0]       EX_val_rd_type,
+    input [2:0]       EX_val_wr_type,
+    input             EX_regfile_we_in,
     
-    input [2:0]      EX_sel_writeback,
+    input [2:0]       EX_sel_writeback,
 
-    output           EX_regfile_we_out,
+    output            EX_regfile_we_out,
 
     //----------------------------WB Stage
     //Data from/to WB stage
-    input [XLEN-1:0] WB_RD,
-    input [4:0]      WB_RD_addr_in,
-    input            WB_regfile_we_in,
+    input [XLEN-1:0]  WB_RD,
+    input [4:0]       WB_RD_addr_in,
+    input             WB_regfile_we_in,
 
     output [XLEN-1:0] WB_PC_4,
     output [XLEN-1:0] WB_ALU_out,
@@ -44,7 +44,7 @@ module MEM #(parameter XLEN = 32)(
     output            WB_regfile_we_out,
 
     //Control from/to WB stage
-    output [2:0] WB_sel_writeback
+    output [2:0]      WB_sel_writeback
 
 );
 
@@ -57,28 +57,30 @@ sign_extension #(.XLEN(XLEN)) sign_ex_wr (
     .extension_type(EX_val_wr_type)
 );
 
+wire [XLEN-1:0] EMDB_in_extended;
 sign_extension #(.XLEN(XLEN)) sign_ex_rd (
     .in(EMDB_in),
-    .out(WB_EMDB),
+    .out(EMDB_in_extended),
     .extension_type(EX_val_rd_type)
 );
 
 // ------------------------------------- Connection to adjacent stage(s)
 //EX
-assign EX_RD = WB_RD;
-assign EX_RD_addr_out = WB_RD_addr_in;
-assign EX_regfile_we_out = WB_regfile_we_in;
+assign EX_RD                = WB_RD;
+assign EX_RD_addr_out       = WB_RD_addr_in;
+assign EX_regfile_we_out    = WB_regfile_we_in;
 
 //WB
-assign WB_PC_4 = EX_PC_4;
-assign WB_ALU_out = EX_ALU_out;
-assign WB_RD_addr_out = EX_RD_addr_in;
-assign WB_regfile_we_out = EX_regfile_we_in;
+assign WB_PC_4              = EX_PC_4;
+assign WB_ALU_out           = EX_ALU_out;
+assign WB_EMDB              = EMDB_in_extended;
+assign WB_RD_addr_out       = EX_RD_addr_in;
+assign WB_regfile_we_out    = EX_regfile_we_in;
 
-assign WB_sel_writeback = EX_sel_writeback;
+assign WB_sel_writeback     = EX_sel_writeback;
 
 // -------------------------------------- Connection to buses (if any)
-assign EMAB = EX_ALU_out;
-assign EMCB = EX_mem_wr_en;
+assign EMAB                 = EX_ALU_out;
+assign EMCB                 = EX_mem_wr_en;
 
 endmodule

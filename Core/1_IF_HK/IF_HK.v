@@ -6,7 +6,7 @@ module IF_HK #(parameter XLEN = 32)(
     input reset,
     
     //Buses
-    input [XLEN-1:0] EIB,  //External Instruction Bus
+    input [XLEN-1:0]  EIB,  //External Instruction Bus
     output [XLEN-1:0] EIAB, //External Instruction Address Bus 
     
     //----------------------------ID Stage
@@ -63,6 +63,6 @@ end
 
 
 // -------------------------------------- Connection to buses (if any)
-assign EIAB = PC;
+assign EIAB     = PC;
 
 endmodule
