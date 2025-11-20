@@ -86,6 +86,18 @@ wire [XLEN-1:0] MEM_FW_ALU_out_EX;
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
 
+//RS1_addr
+wire [4:0] ID_RS1_addr_HCU;
+
+//RS2_addr
+wire [4:0] ID_RS2_addr_HCU;
+
+//HCU_opa
+wire [1:0] HCU_sel_opa_EX;
+
+//HCU_opa
+wire [1:0] HCU_sel_opb_EX;
+
 //------------------------------------- Control (Not for buses)
 
 //sel_next_PC
@@ -195,8 +207,8 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_sel_writeback(ID_sel_writeback_EX),
 
     //---------------------------- HCU (Hazard Control Unit)
-    .HCU_RS1_addr(),
-    .HCU_RS2_addr(),
+    .HCU_RS1_addr(ID_RS1_addr_HCU),
+    .HCU_RS2_addr(ID_RS2_addr_HCU),
 
     //TEMPORARY (ONLY FOR TB PURPOSES)
     .sel_next_PC(sel_next_PC), 
@@ -262,7 +274,11 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_val_wr_type(EX_val_wr_type_MEM),
     .MEM_regfile_we_out(EX_regfile_we_in_MEM),
     
-    .MEM_sel_writeback(EX_sel_writeback_MEM)
+    .MEM_sel_writeback(EX_sel_writeback_MEM),
+
+    //---------------------------- HCU (Hazard Control Unit)
+    .HCU_sel_opa(HCU_sel_opa_EX),
+    .HCU_sel_opb(HCU_sel_opb_EX)
 );
 
 
@@ -336,6 +352,23 @@ WB #(.XLEN(XLEN)) u_WB (
     .WB_sel_writeback(MEM_sel_writeback_WB)
 );
 
+HCU #(.XLEN(XLEN)) u_HCU (
+    // ID Stage
+    .EX_RS1_addr      (ID_RS1_addr_HCU),
+    .EX_RS2_addr      (ID_RS2_addr_HCU),
+
+    // EX Stage
+    .EX_sel_opa       (HCU_sel_opa_EX),
+    .EX_sel_opb       (HCU_sel_opb_EX),
+
+    // MEM Stage
+    .MEM_RD_addr_in   (EX_RD_addr_in_MEM),
+    .MEM_regfile_we_in(EX_regfile_we_in_MEM),
+
+    // WB Stage
+    .WB_RD_addr_in    (MEM_RD_addr_in_WB),
+    .WB_regfile_we_in (MEM_regfile_we_in_WB)
+);
 
 
 endmodule
