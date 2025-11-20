@@ -7,18 +7,18 @@ module WB #(parameter XLEN = 32)(
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    input [XLEN-1:0] MEM_PC_4,
-    input [XLEN-1:0] MEM_ALU_out,
-    input [XLEN-1:0] MEM_EMDB,
-    input [4:0]      MEM_RD_addr_in,
-    input            MEM_regfile_we_in,
+    input [XLEN-1:0]      MEM_PC_4,
+    input [XLEN-1:0]      MEM_ALU_out,
+    input [XLEN-1:0]      MEM_EMDB,
+    input [4:0]           MEM_RD_addr_in,
+    input                 MEM_regfile_we_in,
 
     output reg [XLEN-1:0] MEM_RD,
     output [4:0]          MEM_RD_addr_out,
     output                MEM_regfile_we_out,
 
     //Control from/to WB stage
-    input [2:0] WB_sel_writeback
+    input [2:0]           WB_sel_writeback
 );
     
 // ---------------------------------- Implementation of modules
@@ -33,6 +33,6 @@ always @(WB_sel_writeback, MEM_PC_4, MEM_ALU_out, MEM_EMDB) begin
 end
 
 // ------------------------------------- Connection to adjacent stage(s)
-assign MEM_RD_addr_out = MEM_RD_addr_in;
-assign MEM_regfile_we_out = MEM_regfile_we_in;
+assign MEM_RD_addr_out      = MEM_RD_addr_in;
+assign MEM_regfile_we_out   = MEM_regfile_we_in;
 endmodule

@@ -6,19 +6,19 @@ module IF_HK #(parameter XLEN = 32)(
     input reset,
     
     //Buses
-    input [XLEN-1:0] EIB,  //External Instruction Bus
+    input [XLEN-1:0]  EIB,  //External Instruction Bus
     output [XLEN-1:0] EIAB, //External Instruction Address Bus 
     
     //----------------------------ID Stage
     //Data from/to ID stage
-    input [XLEN-1:0] ID_ALU_out,
+    input [XLEN-1:0]  ID_ALU_out,
 
     output [XLEN-1:0] ID_PC_4,
     output [XLEN-1:0] ID_PC,
     output [XLEN-1:0] ID_EIB,
 
     //Control from/to ID stage
-    input [1:0] ID_sel_next_PC
+    input [1:0]       ID_sel_next_PC
 );
 
 // ---------------------------------- Internal physical registers
@@ -53,6 +53,6 @@ assign ID_PC    = PC;
 assign ID_EIB   = EIB;
 
 // -------------------------------------- Connection to buses (if any)
-assign EIAB = PC;
+assign EIAB     = PC;
 
 endmodule

@@ -5,7 +5,7 @@ module extend_imm #(parameter XLEN = 32)(
     output reg [XLEN-1:0] out, //After extension
 
     //Control
-    input [2:0] imm_type
+    input [2:0]           imm_type
 );
 
 //Parameters of extension according to the imm type
