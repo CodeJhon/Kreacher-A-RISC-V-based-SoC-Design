@@ -6,9 +6,9 @@ module MEM #(parameter XLEN = 32)(
     input reset,
 
     //Buses
-    output [XLEN-1:0] EMAB,            //External Memory Address Bus
-    output            EMCB,            //External Memory Control Bus
-    input [XLEN-1:0]  EMDB_in,            //External Memory Input Data Bus
+    output [XLEN-1:0]  EMAB,            //External Memory Address Bus
+    output             EMCB,            //External Memory Control Bus
+    input  [XLEN-1:0]  EMDB_in,            //External Memory Input Data Bus
     output [XLEN-1:0]  EMDB_out,          //External Memory Output Data Bus
 
     //----------------------------EX Stage
@@ -57,9 +57,10 @@ sign_extension #(.XLEN(XLEN)) sign_ex_wr (
     .extension_type(EX_val_wr_type)
 );
 
+wire [XLEN-1:0] EMDB_in_extended;
 sign_extension #(.XLEN(XLEN)) sign_ex_rd (
     .in(EMDB_in),
-    .out(WB_EMDB),
+    .out(EMDB_in_extended),
     .extension_type(EX_val_rd_type)
 );
 
@@ -72,6 +73,7 @@ assign EX_regfile_we_out = WB_regfile_we_in;
 //WB
 assign WB_PC_4 = EX_PC_4;
 assign WB_ALU_out = EX_ALU_out;
+assign WB_EMDB = EMDB_in_extended;
 assign WB_RD_addr_out = EX_RD_addr_in;
 assign WB_regfile_we_out = EX_regfile_we_in;
 
