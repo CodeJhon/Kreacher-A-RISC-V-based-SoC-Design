@@ -41,10 +41,10 @@ module MEM #(parameter XLEN = 32)(
     output [XLEN-1:0] WB_ALU_out,
     output [XLEN-1:0] WB_EMDB,
     output [4:0]      WB_RD_addr_out,
-    output            WB_regfile_we_out,
 
     //Control from/to WB stage
     output [2:0]      WB_sel_writeback
+    output            WB_regfile_we_out,
 
 );
 
