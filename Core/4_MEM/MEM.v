@@ -25,18 +25,23 @@ module MEM #(parameter XLEN = 32)(
     input            EX_mem_wr_en,
     input [2:0]      EX_val_rd_type,
     input [2:0]      EX_val_wr_type,
+    input            EX_regfile_we_in,
     
     input [2:0]      EX_sel_writeback,
+
+    output           EX_regfile_we_out,
 
     //----------------------------WB Stage
     //Data from/to WB stage
     input [XLEN-1:0] WB_RD,
     input [4:0]      WB_RD_addr_in,
+    input            WB_regfile_we_in,
 
     output [XLEN-1:0] WB_PC_4,
     output [XLEN-1:0] WB_ALU_out,
     output [XLEN-1:0] WB_EMDB,
     output [4:0]      WB_RD_addr_out,
+    output            WB_regfile_we_out,
 
     //Control from/to WB stage
     output [2:0] WB_sel_writeback
@@ -62,11 +67,13 @@ sign_extension #(.XLEN(XLEN)) sign_ex_rd (
 //EX
 assign EX_RD = WB_RD;
 assign EX_RD_addr_out = WB_RD_addr_in;
+assign EX_regfile_we_out = WB_regfile_we_in;
 
 //WB
 assign WB_PC_4 = EX_PC_4;
 assign WB_ALU_out = EX_ALU_out;
 assign WB_RD_addr_out = EX_RD_addr_in;
+assign WB_regfile_we_out = EX_regfile_we_in;
 
 assign WB_sel_writeback = EX_sel_writeback;
 

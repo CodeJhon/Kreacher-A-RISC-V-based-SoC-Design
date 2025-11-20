@@ -21,6 +21,7 @@ module ID #(parameter XLEN = 32)(
     input [XLEN-1:0]  EX_ALU_out,
     input [XLEN-1:0]  EX_RD,
     input [4:0]       EX_RD_addr_in,
+    
 
     output [XLEN-1:0] EX_PC_4,
     output [XLEN-1:0] EX_PC,
@@ -30,9 +31,12 @@ module ID #(parameter XLEN = 32)(
     output [XLEN-1:0] EX_imm,
 
     //Control from/to EX stage
+    input             EX_regfile_we_in,
+
     output [1:0]      EX_sel_opa,
     output [1:0]      EX_sel_opb,
     output [4:0]      EX_sel_op,
+    output            EX_regfile_we_out,
 
     output            EX_mem_wr_en,
     output [2:0]      EX_val_rd_type,
@@ -61,7 +65,6 @@ module ID #(parameter XLEN = 32)(
 // ---------------------------------- Implementation of modules
 
 //Register File
-wire regfile_we;
 regfile #(.XLEN(XLEN)) u_regfile (
     .clk        (clk),
     .reset      (reset),
@@ -77,7 +80,7 @@ regfile #(.XLEN(XLEN)) u_regfile (
     .RS2        (EX_RS2),
 
     // Control
-    .regfile_we (regfile_we)
+    .regfile_we (EX_regfile_we_in)
 );
 
 //Immediate Sign-Extension
@@ -89,6 +92,8 @@ extend_imm #(.XLEN(XLEN)) u_extend_imm (
 );
 
 //TEMPORARY (ONLY FOR TB PURPOSES)
+assign EX_regfile_we_out = regfile_we;
+
 assign IF_sel_next_PC = sel_next_PC;
 assign EX_sel_opa = sel_opa;
 assign EX_sel_opb = sel_opb;
@@ -99,6 +104,7 @@ assign EX_val_wr_type = val_wr_type;
 assign EX_val_rd_type = val_rd_type;
 
 assign EX_sel_writeback = sel_writeback;
+
 
 //Controller (Decoder)
 /*
@@ -114,7 +120,7 @@ control u_control (
     .sel_next_pc(IF_sel_next_PC),
 
     // ID
-    .regfile_we(regfile_we),
+    .regfile_we(EX_regfile_we_out),
     .imm_type(imm_type),
 
     // EX

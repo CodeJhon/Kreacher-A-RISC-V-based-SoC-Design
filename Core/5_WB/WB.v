@@ -11,9 +11,11 @@ module WB #(parameter XLEN = 32)(
     input [XLEN-1:0] MEM_ALU_out,
     input [XLEN-1:0] MEM_EMDB,
     input [4:0]      MEM_RD_addr_in,
+    input            MEM_regfile_we_in,
 
     output reg [XLEN-1:0] MEM_RD,
-    output [4:0]     MEM_RD_addr_out,
+    output [4:0]          MEM_RD_addr_out,
+    output                MEM_regfile_we_out,
 
     //Control from/to WB stage
     input [2:0] WB_sel_writeback
@@ -32,5 +34,5 @@ end
 
 // ------------------------------------- Connection to adjacent stage(s)
 assign MEM_RD_addr_out = MEM_RD_addr_in;
-
+assign MEM_regfile_we_out = MEM_regfile_we_in;
 endmodule
