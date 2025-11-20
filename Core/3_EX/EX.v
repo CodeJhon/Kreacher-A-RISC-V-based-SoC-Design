@@ -48,6 +48,7 @@ module EX #(parameter XLEN = 32)(
     output            MEM_mem_wr_en,
     output [2:0]      MEM_val_rd_type,
     output [2:0]      MEM_val_wr_type,
+    
     output            MEM_regfile_we_out,
     
     output [2:0]      MEM_sel_writeback
@@ -93,10 +94,12 @@ assign ID_regfile_we_out = MEM_regfile_we_in;
 assign MEM_PC_4 = ID_PC_4;
 assign MEM_ALU_out = ALU_out;
 assign MEM_RS2 = ID_RS2;
+assign MEM_RD_addr_out = ID_RD_addr_in;
+
 assign MEM_mem_wr_en = ID_mem_wr_en;
 assign MEM_val_rd_type = ID_val_rd_type;
 assign MEM_val_wr_type = ID_val_wr_type;
-assign MEM_RD_addr_out = ID_RD_addr_in;
+
 assign MEM_regfile_we_out = ID_regfile_we_in;
 
 assign MEM_sel_writeback = ID_sel_writeback;
