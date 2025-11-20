@@ -7,51 +7,51 @@ module EX #(parameter XLEN = 32)(
 
     //----------------------------ID Stage
     //Data from/to ID stage
-    input [XLEN-1:0]  ID_PC_4,
-    input [XLEN-1:0]  ID_PC,
-    input [XLEN-1:0]  ID_RS1,
-    input [XLEN-1:0]  ID_RS2,
-    input [4:0]       ID_RD_addr_in,
-    input [XLEN-1:0]  ID_imm,
+    input [XLEN-1:0]      ID_PC_4,
+    input [XLEN-1:0]      ID_PC,
+    input [XLEN-1:0]      ID_RS1,
+    input [XLEN-1:0]      ID_RS2,
+    input [4:0]           ID_RD_addr_in,
+    input [XLEN-1:0]      ID_imm,
 
-    output [XLEN-1:0] ID_ALU_out,
-    output [XLEN-1:0] ID_RD,
-    output [4:0]      ID_RD_addr_out,
+    output [XLEN-1:0]     ID_ALU_out,
+    output [XLEN-1:0]     ID_RD,
+    output [4:0]          ID_RD_addr_out,
 
     //Control from/to ID stage
-    input [1:0]       ID_sel_opa,
-    input [1:0]       ID_sel_opb,
-    input [4:0]       ID_sel_op,
-    input             ID_regfile_we_in,
+    input [1:0]           ID_sel_opa,
+    input [1:0]           ID_sel_opb,
+    input [4:0]           ID_sel_op,
+    input                 ID_regfile_we_in,
 
-    input             ID_mem_wr_en,
-    input [2:0]       ID_val_rd_type,
-    input [2:0]       ID_val_wr_type,
+    input                 ID_mem_wr_en,
+    input [2:0]           ID_val_rd_type,
+    input [2:0]           ID_val_wr_type,
     
-    input [2:0]       ID_sel_writeback,
-    output            ID_regfile_we_out,
+    input [2:0]           ID_sel_writeback,
+    output                ID_regfile_we_out,
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    input [XLEN-1:0]  MEM_RD,
-    input [4:0]       MEM_RD_addr_in,
+    input [XLEN-1:0]      MEM_RD,
+    input [4:0]           MEM_RD_addr_in,
 
-    output [XLEN-1:0] MEM_PC_4,
-    output [XLEN-1:0] MEM_ALU_out,
-    output [XLEN-1:0] MEM_RS2,
-    output [4:0]      MEM_RD_addr_out,
+    output reg [XLEN-1:0] MEM_PC_4,
+    output reg [XLEN-1:0] MEM_ALU_out,
+    output reg [XLEN-1:0] MEM_RS2,
+    output reg [4:0]      MEM_RD_addr_out,
 
 
     //Control from/to MEM stage
-    input             MEM_regfile_we_in,
+    input                 MEM_regfile_we_in,
 
-    output            MEM_mem_wr_en,
-    output [2:0]      MEM_val_rd_type,
-    output [2:0]      MEM_val_wr_type,
+    output reg            MEM_mem_wr_en,
+    output reg [2:0]      MEM_val_rd_type,
+    output reg [2:0]      MEM_val_wr_type,
     
-    output            MEM_regfile_we_out,
+    output reg            MEM_regfile_we_out,
     
-    output [2:0]      MEM_sel_writeback
+    output reg [2:0]      MEM_sel_writeback
 );
 
 // ---------------------------------- Implementation of modules
@@ -91,17 +91,36 @@ assign ID_RD_addr_out       = MEM_RD_addr_in;
 assign ID_regfile_we_out    = MEM_regfile_we_in;
 
 //MEM
-assign MEM_PC_4             = ID_PC_4;
-assign MEM_ALU_out          = ALU_out;
-assign MEM_RS2              = ID_RS2;
-assign MEM_RD_addr_out      = ID_RD_addr_in;
+always @(posedge clk) begin
+    if(reset)begin
+        MEM_PC_4             <= 0;
+        MEM_ALU_out          <= 0;
+        MEM_RS2              <= 0;
+        MEM_RD_addr_out      <= 0;
 
-assign MEM_mem_wr_en        = ID_mem_wr_en;
-assign MEM_val_rd_type      = ID_val_rd_type;
-assign MEM_val_wr_type      = ID_val_wr_type;
+        MEM_mem_wr_en        <= 0;
+        MEM_val_rd_type      <= 0;
+        MEM_val_wr_type      <= 0;
 
-assign MEM_regfile_we_out   = ID_regfile_we_in;
+        MEM_regfile_we_out   <= 0;
 
-assign MEM_sel_writeback    = ID_sel_writeback;
+        MEM_sel_writeback    <= 0;
+    end
+    else begin
+        MEM_PC_4             <= ID_PC_4;
+        MEM_ALU_out          <= ALU_out;
+        MEM_RS2              <= ID_RS2;
+        MEM_RD_addr_out      <= ID_RD_addr_in;
+
+        MEM_mem_wr_en        <= ID_mem_wr_en;
+        MEM_val_rd_type      <= ID_val_rd_type;
+        MEM_val_wr_type      <= ID_val_wr_type;
+
+        MEM_regfile_we_out   <= ID_regfile_we_in;
+
+        MEM_sel_writeback    <= ID_sel_writeback;
+    end
+end
+
 
 endmodule
