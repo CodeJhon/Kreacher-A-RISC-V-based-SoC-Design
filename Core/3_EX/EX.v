@@ -55,53 +55,54 @@ module EX #(parameter XLEN = 32)(
     output reg [2:0]      MEM_sel_writeback,
     
     //---------------------------- HCU (Hazard Control Unit)
-    input [1:0] HCU_sel_opa,
-    input [1:0] HCU_sel_opb
+    input [1:0] HCU_sel_RS1,
+    input [1:0] HCU_sel_RS2
 
 );
 
 // ---------------------------------- Implementation of modules
 
-//Muxes for opa_1 & opb_1 (left muxes)
-reg  [XLEN-1:0]  ALU_opa_1;
-reg  [XLEN-1:0]  ALU_opb_1;
-always @(ID_sel_opa, ID_sel_opb, ID_PC, ID_RS1, ID_imm, ID_RS2) begin
+//Muxes for RS1 & RS2 (left  muxes)
+reg  [XLEN-1:0]  RS1;
+reg  [XLEN-1:0]  RS2;
+always @(HCU_sel_RS1, HCU_sel_RS2, ID_RS1, ID_RS2, MEM_FW_ALU_out, MEM_RD) begin
+    case (HCU_sel_RS1)
+        `HCU_NO_BYPASS:  RS1 = ID_RS1;
+        `HCU_BYPASS_MEM: RS1 = MEM_FW_ALU_out;
+        `HCU_BYPASS_WB:  RS1 = MEM_RD;
+        default:         RS1 = 0;
+    endcase
+    case (HCU_sel_RS2)
+        `HCU_NO_BYPASS:  RS2 = ID_RS2;
+        `HCU_BYPASS_MEM: RS2 = MEM_FW_ALU_out;
+        `HCU_BYPASS_WB:  RS2 = MEM_RD;
+        default:         RS2 = 0;
+    endcase
+end
+
+//Muxes for opa & opb (right muxes)
+reg  [XLEN-1:0]  ALU_opa;
+reg  [XLEN-1:0]  ALU_opb;
+always @(ID_sel_opa, ID_sel_opb, ID_PC, RS1, RS2, ID_imm) begin
     case (ID_sel_opa)
-        `OPA_PC:  ALU_opa_1 = ID_PC;
-        `OPA_RS1: ALU_opa_1 = ID_RS1;
-        default:  ALU_opa_1 = 0;
+        `OPA_PC:  ALU_opa = ID_PC;
+        `OPA_RS1: ALU_opa = RS1;
+        default:  ALU_opa = 0;
     endcase
 
     case (ID_sel_opb)
-        `OPB_IMM: ALU_opb_1 = ID_imm;
-        `OPB_RS2: ALU_opb_1 = ID_RS2;
-        default:  ALU_opb_1 = 0;
+        `OPB_IMM: ALU_opb = ID_imm;
+        `OPB_RS2: ALU_opb = RS2;
+        default:  ALU_opb = 0;
     endcase
 end
 
-//Muxes for opa_2 & opb_2 (right  muxes)
-reg  [XLEN-1:0]  ALU_opa_2;
-reg  [XLEN-1:0]  ALU_opb_2;
-always @(HCU_sel_opa, HCU_sel_opb, ALU_opa_1, ALU_opb_1, MEM_FW_ALU_out, MEM_RD) begin
-    case (HCU_sel_opa)
-        `HCU_NO_BYPASS:  ALU_opa_2 = ALU_opa_1;
-        `HCU_BYPASS_MEM: ALU_opa_2 = MEM_FW_ALU_out;
-        `HCU_BYPASS_WB:  ALU_opa_2 = MEM_RD;
-        default:         ALU_opa_2 = 0;
-    endcase
-    case (HCU_sel_opb)
-        `HCU_NO_BYPASS:  ALU_opb_2 = ALU_opb_1;
-        `HCU_BYPASS_MEM: ALU_opb_2 = MEM_FW_ALU_out;
-        `HCU_BYPASS_WB:  ALU_opb_2 = MEM_RD;
-        default:         ALU_opb_2 = 0;
-    endcase
-end
 
 //ALU
 wire [XLEN-1:0]  ALU_out;
 ALU #(.XLEN(XLEN)) u_ALU (
-    .opa(ALU_opa_2),
-    .opb(ALU_opb_2),
+    .opa(ALU_opa),
+    .opb(ALU_opb),
     .sel_operation(ID_sel_op),
     .ALU_result(ALU_out)
 );
@@ -133,7 +134,7 @@ always @(posedge clk) begin
     else begin
         MEM_PC_4             <= ID_PC_4;
         MEM_ALU_out          <= ALU_out;
-        MEM_RS2              <= ID_RS2;
+        MEM_RS2              <= RS2;
         MEM_RD_addr_out      <= ID_RD_addr_in;
 
         MEM_mem_wr_en        <= ID_mem_wr_en;

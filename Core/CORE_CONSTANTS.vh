@@ -92,7 +92,7 @@
 
     //------------------    HCU signals
     
-    //HCU_sel_opa and HCU_sel_opb
+    //HCU_sel_RS1 and HCU_sel_RS2
     `define HCU_NO_BYPASS          2'b00
     `define HCU_BYPASS_MEM         2'b01
     `define HCU_BYPASS_WB          2'b10

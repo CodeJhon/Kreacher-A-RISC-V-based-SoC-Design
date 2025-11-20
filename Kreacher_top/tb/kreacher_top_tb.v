@@ -58,8 +58,7 @@ initial begin
     
     //Wait for reset
     @(negedge reset);
-    //Initial delay
-    //#16;
+
     //First fetch
     sel_next_PC = `NEXT_PC_4;
     #10;
@@ -101,24 +100,6 @@ initial begin
 
     // Wait some cycles
     #10;
-
-    //3 Dummy instructions (because of hazards)
-    sel_next_PC = `NEXT_PC_4;
-
-    imm_type    = `I_IMMEDIATE;
-    regfile_we  = 0;
-
-    sel_opa     = `OPA_RS1;
-    sel_opb     = `OPB_IMM;
-    sel_op      = `ALU_ADD;
-    
-    mem_wr_en   = 0;
-    val_rd_type = 3'b111;
-    val_wr_type = 3'b111;
-
-    sel_writeback = `WBACK_ALU_OUT;
-
-    #30;
 
     // Instruction #3: sw x1 0(x12)
     sel_next_PC = `NEXT_PC_4;

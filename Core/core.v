@@ -93,10 +93,10 @@ wire [4:0] ID_RS1_addr_HCU;
 wire [4:0] ID_RS2_addr_HCU;
 
 //HCU_opa
-wire [1:0] HCU_sel_opa_EX;
+wire [1:0] HCU_sel_RS1_EX;
 
 //HCU_opa
-wire [1:0] HCU_sel_opb_EX;
+wire [1:0] HCU_sel_RS2_EX;
 
 //------------------------------------- Control (Not for buses)
 
@@ -277,8 +277,8 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_sel_writeback(EX_sel_writeback_MEM),
 
     //---------------------------- HCU (Hazard Control Unit)
-    .HCU_sel_opa(HCU_sel_opa_EX),
-    .HCU_sel_opb(HCU_sel_opb_EX)
+    .HCU_sel_RS1(HCU_sel_RS1_EX),
+    .HCU_sel_RS2(HCU_sel_RS2_EX)
 );
 
 
@@ -358,8 +358,8 @@ HCU #(.XLEN(XLEN)) u_HCU (
     .EX_RS2_addr      (ID_RS2_addr_HCU),
 
     // EX Stage
-    .EX_sel_opa       (HCU_sel_opa_EX),
-    .EX_sel_opb       (HCU_sel_opb_EX),
+    .EX_sel_RS1       (HCU_sel_RS1_EX),
+    .EX_sel_RS2       (HCU_sel_RS2_EX),
 
     // MEM Stage
     .MEM_RD_addr_in   (EX_RD_addr_in_MEM),
