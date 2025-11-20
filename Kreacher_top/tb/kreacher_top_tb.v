@@ -56,9 +56,11 @@ end
 // Stimulus
 initial begin
 
-    // Wait for reset release
-    @(negedge reset);
-    #1;
+    //Initial delay
+    #16;
+    //First fetch
+    sel_next_PC = `NEXT_PC_4;
+    #10;
 
     // Instruction #1: lui x1, 0x5
     sel_next_PC = `NEXT_PC_4;
@@ -98,7 +100,25 @@ initial begin
     // Wait some cycles
     #10;
 
-    // Instruction #2: sw x1 0(x12)
+    //3 Dummy instructions (because of hazards)
+    sel_next_PC = `NEXT_PC_4;
+
+    imm_type    = `I_IMMEDIATE;
+    regfile_we  = 0;
+
+    sel_opa     = `OPA_RS1;
+    sel_opb     = `OPB_IMM;
+    sel_op      = `ALU_ADD;
+    
+    mem_wr_en   = 0;
+    val_rd_type = 3'b111;
+    val_wr_type = 3'b111;
+
+    sel_writeback = `WBACK_ALU_OUT;
+
+    #30;
+
+    // Instruction #3: sw x1 0(x12)
     sel_next_PC = `NEXT_PC_4;
 
     imm_type    = `S_IMMEDIATE;
@@ -113,6 +133,9 @@ initial begin
     val_wr_type = `FORWARD_INPUT;
 
     //sel_writeback = `WBACK_ALU_OUT;
+
+    //Wait latency cycles
+    #30;
 
     // Wait final cycles
     #9;
