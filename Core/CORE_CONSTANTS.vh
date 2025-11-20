@@ -77,7 +77,7 @@
     `define SIGN_EXTEND_8   3'b010
     `define ZERO_EXTEND_16  3'b011
     `define ZERO_EXTEND_8   3'b100
-    `define MEM_NOT_USED 3'b101
+    `define MEM_NOT_USED    3'b101
 
     //imm_type
     `define I_IMMEDIATE 3'b000
