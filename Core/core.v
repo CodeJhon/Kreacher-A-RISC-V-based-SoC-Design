@@ -80,6 +80,9 @@ wire [4:0] EX_RD_addr_out_ID;
 //imm
 wire [XLEN-1:0] ID_imm_EX;
 
+//FW_ALU_out
+wire [XLEN-1:0] MEM_FW_ALU_out_EX;
+
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
 
@@ -240,6 +243,7 @@ EX #(.XLEN(XLEN)) u_EX (
     //Data from/to MEM stage
     .MEM_RD(MEM_RD_EX),
     .MEM_RD_addr_in(MEM_RD_addr_out_EX),
+    .MEM_FW_ALU_out(MEM_FW_ALU_out_EX),
 
     .MEM_PC_4(EX_PC_4_MEM),
     .MEM_ALU_out(EX_ALU_out_MEM),
@@ -278,6 +282,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
 
     .EX_RD(MEM_RD_EX),
     .EX_RD_addr_out(MEM_RD_addr_out_EX),
+    .EX_FW_ALU_out(MEM_FW_ALU_out_EX),
 
     //Control from/to EX stage
     .EX_mem_wr_en(EX_mem_wr_en_MEM),

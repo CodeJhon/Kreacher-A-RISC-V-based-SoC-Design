@@ -20,6 +20,7 @@ module MEM #(parameter XLEN = 32)(
     
     output [XLEN-1:0]     EX_RD,
     output [4:0]          EX_RD_addr_out,
+    output [XLEN-1:0]     EX_FW_ALU_out,
 
     //Control from/to EX stage
     input                 EX_mem_wr_en,
@@ -68,6 +69,7 @@ sign_extension #(.XLEN(XLEN)) sign_ex_rd (
 //EX
 assign EX_RD                = WB_RD;
 assign EX_RD_addr_out       = WB_RD_addr_in;
+assign EX_FW_ALU_out        = EX_ALU_out;
 assign EX_regfile_we_out    = WB_regfile_we_in;
 
 //WB

@@ -35,6 +35,7 @@ module EX #(parameter XLEN = 32)(
     //Data from/to MEM stage
     input [XLEN-1:0]      MEM_RD,
     input [4:0]           MEM_RD_addr_in,
+    input [XLEN-1:0]      MEM_FW_ALU_out,
 
     output reg [XLEN-1:0] MEM_PC_4,
     output reg [XLEN-1:0] MEM_ALU_out,
@@ -51,33 +52,56 @@ module EX #(parameter XLEN = 32)(
     
     output reg            MEM_regfile_we_out,
     
-    output reg [2:0]      MEM_sel_writeback
+    output reg [2:0]      MEM_sel_writeback,
+    
+    //---------------------------- HCU (Hazard Control Unit)
+    input [1:0] HCU_sel_opa,
+    input [1:0] HCU_sel_opb
+
 );
 
 // ---------------------------------- Implementation of modules
 
-//Muxes
-reg  [XLEN-1:0]  ALU_opa;
-reg  [XLEN-1:0]  ALU_opb;
+//Muxes for opa_1 & opb_1 (left muxes)
+reg  [XLEN-1:0]  ALU_opa_1;
+reg  [XLEN-1:0]  ALU_opb_1;
 always @(ID_sel_opa, ID_sel_opb, ID_PC, ID_RS1, ID_imm, ID_RS2) begin
     case (ID_sel_opa)
-        `OPA_PC:  ALU_opa = ID_PC;
-        `OPA_RS1: ALU_opa = ID_RS1;
-        default:  ALU_opa = 0;
+        `OPA_PC:  ALU_opa_1 = ID_PC;
+        `OPA_RS1: ALU_opa_1 = ID_RS1;
+        default:  ALU_opa_1 = 0;
     endcase
 
     case (ID_sel_opb)
-        `OPB_IMM: ALU_opb = ID_imm;
-        `OPB_RS2: ALU_opb = ID_RS2;
-        default:  ALU_opb = 0;
+        `OPB_IMM: ALU_opb_1 = ID_imm;
+        `OPB_RS2: ALU_opb_1 = ID_RS2;
+        default:  ALU_opb_1 = 0;
+    endcase
+end
+
+//Muxes for opa_2 & opb_2 (right  muxes)
+reg  [XLEN-1:0]  ALU_opa_2;
+reg  [XLEN-1:0]  ALU_opb_2;
+always @(HCU_sel_opa, HCU_sel_opb, ALU_opa_1, ALU_opa_2, MEM_FW_ALU_out, MEM_RD) begin
+    case (HCU_sel_opa)
+        `HCU_NO_BYPASS:  ALU_opa_2 = ALU_opa_1;
+        `HCU_BYPASS_MEM: ALU_opa_2 = MEM_FW_ALU_out;
+        `HCU_BYPASS_WB:  ALU_opa_2 = MEM_RD;
+        default:         ALU_opa_2 = 0;
+    endcase
+    case (HCU_sel_opb)
+        `HCU_NO_BYPASS:  ALU_opb_2 = ALU_opb_1;
+        `HCU_BYPASS_MEM: ALU_opb_2 = MEM_FW_ALU_out;
+        `HCU_BYPASS_WB:  ALU_opb_2 = MEM_RD;
+        default:         ALU_opb_2 = 0;
     endcase
 end
 
 //ALU
 wire [XLEN-1:0]  ALU_out;
 ALU #(.XLEN(XLEN)) u_ALU (
-    .opa(ALU_opa),
-    .opb(ALU_opb),
+    .opa(ALU_opa_2),
+    .opb(ALU_opb_2),
     .sel_operation(ID_sel_op),
     .ALU_result(ALU_out)
 );

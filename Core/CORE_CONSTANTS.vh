@@ -87,8 +87,15 @@
     `define J_IMMEDIATE 3'b100
     // `define I_IMMEDIATE_shamt 3'b101
 
-
     `define ENABLE 1'b1
     `define DISABLE 1'b0
+
+    //------------------    HCU signals
+    
+    //HCU_sel_opa and HCU_sel_opb
+    `define HCU_NO_BYPASS          2'b00
+    `define HCU_BYPASS_MEM         2'b01
+    `define HCU_BYPASS_WB          2'b10
+
 
     `endif
