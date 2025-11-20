@@ -179,8 +179,6 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_RS2(ID_RS2_EX),
     .EX_RD_addr_out(ID_RD_addr_in_EX),
     .EX_imm(ID_imm_EX),
-    .EX_RS1_addr(),
-    .EX_RS2_addr(),
 
     //Control from/to EX stage
     .EX_regfile_we_in(EX_regfile_we_out_ID),
@@ -195,6 +193,10 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_val_wr_type(ID_val_wr_type_EX),
     
     .EX_sel_writeback(ID_sel_writeback_EX),
+
+    //---------------------------- HCU (Hazard Control Unit)
+    .HCU_RS1_addr(),
+    .HCU_RS2_addr(),
 
     //TEMPORARY (ONLY FOR TB PURPOSES)
     .sel_next_PC(sel_next_PC), 
@@ -333,6 +335,7 @@ WB #(.XLEN(XLEN)) u_WB (
     //Control from/to WB stage
     .WB_sel_writeback(MEM_sel_writeback_WB)
 );
+
 
 
 endmodule

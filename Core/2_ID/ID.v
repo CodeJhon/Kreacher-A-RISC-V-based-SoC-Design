@@ -29,8 +29,6 @@ module ID #(parameter XLEN = 32)(
     output reg [XLEN-1:0] EX_RS2,
     output reg [4:0]      EX_RD_addr_out,
     output reg [XLEN-1:0] EX_imm,
-    output reg [4:0]      EX_RS1_addr,
-    output reg [4:0]      EX_RS2_addr,
 
     //Control from/to EX stage
     input                 EX_regfile_we_in,
@@ -45,6 +43,10 @@ module ID #(parameter XLEN = 32)(
     output reg [2:0]      EX_val_wr_type,
     
     output reg [2:0]      EX_sel_writeback,
+
+    //---------------------------- HCU (Hazard Control Unit)
+    output reg [4:0]      HCU_RS1_addr,
+    output reg [4:0]      HCU_RS2_addr,
 
     //TEMPORARY (ONLY FOR TB PURPOSES)
     input [1:0]       sel_next_PC,
@@ -159,8 +161,6 @@ always @(posedge clk) begin
         EX_RS2               <= 0;
         EX_RD_addr_out       <= 0;
         EX_imm               <= 0;
-        EX_RS1_addr          <= 0;
-        EX_RS2_addr          <= 0;
             //Control
         EX_sel_opa           <= 0;
         EX_sel_opb           <= 0;
@@ -181,8 +181,6 @@ always @(posedge clk) begin
         EX_RS2               <= RS2;
         EX_RD_addr_out       <= IF_EIB[11:7];
         EX_imm               <= imm;
-        EX_RS1_addr          <= IF_EIB[19:15];
-        EX_RS2_addr          <= IF_EIB[24:20];
             //Control
         EX_sel_opa           <= sel_opa;
         EX_sel_opb           <= sel_opb;
@@ -194,6 +192,18 @@ always @(posedge clk) begin
         EX_val_wr_type       <= val_wr_type;
 
         EX_sel_writeback     <= sel_writeback;
+    end
+end
+
+//HCU
+always@(posedge clk)begin
+    if(reset)begin
+        HCU_RS1_addr          <= 0;
+        HCU_RS2_addr          <= 0;
+    end
+    else begin
+        HCU_RS1_addr          <= IF_EIB[19:15];
+        HCU_RS2_addr          <= IF_EIB[24:20];
     end
 end
 
