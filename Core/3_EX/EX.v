@@ -82,7 +82,7 @@ end
 //Muxes for opa_2 & opb_2 (right  muxes)
 reg  [XLEN-1:0]  ALU_opa_2;
 reg  [XLEN-1:0]  ALU_opb_2;
-always @(HCU_sel_opa, HCU_sel_opb, ALU_opa_1, ALU_opa_2, MEM_FW_ALU_out, MEM_RD) begin
+always @(HCU_sel_opa, HCU_sel_opb, ALU_opa_1, ALU_opb_1, MEM_FW_ALU_out, MEM_RD) begin
     case (HCU_sel_opa)
         `HCU_NO_BYPASS:  ALU_opa_2 = ALU_opa_1;
         `HCU_BYPASS_MEM: ALU_opa_2 = MEM_FW_ALU_out;
