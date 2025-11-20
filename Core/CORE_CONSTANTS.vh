@@ -8,6 +8,11 @@
     `define AUIPC 7'b0010111
     `define SHIFT_ARITHMETIC 7'b0110011
 
+    `define JAL 7'b1101111
+    `define JALR 7'b1100111
+
+    `define LOAD  7'b0000011
+
     // ---- func3 ----SHIFT_ARITHMETIC
     `define ARITHMETIC 3'b000
     `define SLL 3'b001
@@ -17,6 +22,14 @@
     `define SHIFT 3'b101
     `define OR 3'b110
     `define AND 3'b111
+
+    // ---- func3 ----LOAD
+    `define LB 3'h000
+    `define LH 3'h001
+    `define LW 3'h010
+    `define LBU 3'h100
+    `define LHU 3'h101
+
 
     // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT
     `define SRL 7'b0000000 
