@@ -27,7 +27,7 @@ reg [XLEN-1:0] regfile [31:1];
 // ---------------------------------- Implementation of modules
 
 //Regfile
-always@(posedge clk, reset)begin
+always@(posedge clk)begin
     if(reset)begin
         for(i=1;i<=31;i=i+1)begin
             regfile[i] <= 0;
