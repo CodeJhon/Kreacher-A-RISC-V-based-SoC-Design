@@ -18,7 +18,7 @@ always @(extension_type) begin
         `SIGN_EXTEND_16: out = {{EXT_16{in[15]}},in[15:0]};
         `SIGN_EXTEND_8:  out = {{EXT_8{in[7]}},in[7:0]};
         `ZERO_EXTEND_16: out = {{EXT_16{1'b0}},in[15:0]};
-        `ZERO_EXTEND_8:  out = {{EXT_8{1'b0}},in[15:0]};
+        `ZERO_EXTEND_8:  out = {{EXT_8{1'b0}},in[7:0]};
         `MEM_NOT_USED: out = 0;
         default:         out = 0; 
     endcase
