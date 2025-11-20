@@ -20,7 +20,7 @@ initial begin
     $display("INFO: Initialized RAM from file: %s", MEM_FILE);
 end
 
-always @(posedge clk) begin
+always @(posedge clk, reset) begin
     if(reset)begin
         for (i=0; i<=DEPTH-1;i = i+1) begin
             memory[i] <= 8'd0;
