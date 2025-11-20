@@ -179,6 +179,8 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_RS2(ID_RS2_EX),
     .EX_RD_addr_out(ID_RD_addr_in_EX),
     .EX_imm(ID_imm_EX),
+    .EX_RS1_addr(),
+    .EX_RS2_addr(),
 
     //Control from/to EX stage
     .EX_regfile_we_in(EX_regfile_we_out_ID),

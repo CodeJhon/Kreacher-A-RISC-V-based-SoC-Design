@@ -29,8 +29,8 @@ module ID #(parameter XLEN = 32)(
     output reg [XLEN-1:0] EX_RS2,
     output reg [4:0]      EX_RD_addr_out,
     output reg [XLEN-1:0] EX_imm,
-    output reg [4:0] EX_RS1_addr,
-    output reg [4:0] EX_RS2_addr,
+    output reg [4:0]      EX_RS1_addr,
+    output reg [4:0]      EX_RS2_addr,
 
     //Control from/to EX stage
     input                 EX_regfile_we_in,
