@@ -11,14 +11,14 @@ module IF_HK #(parameter XLEN = 32)(
     
     //----------------------------ID Stage
     //Data from/to ID stage
-    input [XLEN-1:0]  ID_ALU_out,
+    input      [XLEN-1:0] ID_ALU_out,
 
-    output [XLEN-1:0] ID_PC_4,
-    output [XLEN-1:0] ID_PC,
-    output [XLEN-1:0] ID_EIB,
+    output reg [XLEN-1:0] ID_PC_4,
+    output reg [XLEN-1:0] ID_PC,
+    output reg [XLEN-1:0] ID_EIB,
 
     //Control from/to ID stage
-    input [1:0]       ID_sel_next_PC
+    input      [1:0]      ID_sel_next_PC
 );
 
 // ---------------------------------- Internal physical registers
@@ -48,9 +48,19 @@ end
 
 // ------------------------------------- Connection to adjacent stage(s)
 //ID
-assign ID_PC_4  = PC_4;
-assign ID_PC    = PC;
-assign ID_EIB   = EIB;
+always @(posedge clk) begin
+    if(reset)begin
+        ID_PC_4  <= 0;
+        ID_PC    <= 0;
+        ID_EIB   <= 0;
+    end
+    else begin
+        ID_PC_4  <= PC_4;
+        ID_PC    <= PC;
+        ID_EIB   <= EIB;
+    end
+end
+
 
 // -------------------------------------- Connection to buses (if any)
 assign EIAB     = PC;
