@@ -32,7 +32,7 @@ assign PC_4 = PC + 4;
 
 //PC
 reg [XLEN-1:0] next_PC;
-always@(posedge clk, reset)begin
+always@(posedge clk)begin
     if(reset)   PC <= 0;
     else        PC <= next_PC;
 end
