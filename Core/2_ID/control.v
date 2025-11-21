@@ -9,26 +9,36 @@ module control(
     
     //-------------------------- Control signals generated
     //IF
-    output [1:0] sel_next_pc,
+    output reg [1:0] sel_next_pc,
 
     //ID
-    output       regfile_we,
-    output [2:0] imm_type,
+    output       reg regfile_we,
+    output reg [2:0] imm_type,
 
     //EX
-    output [1:0] sel_opa,
-    output [1:0] sel_opb,
-    output [4:0] sel_op,
+    output reg [1:0] sel_opa,
+    output reg [1:0] sel_opb,
+    output reg  [4:0] sel_op,
 
     //MEM
-    output       mem_wr_en,
-    output [2:0] val_wr_type,
-    output [2:0] val_rd_type,
+    output  reg mem_wr_en,
+    output  reg [2:0] val_wr_type,
+    output  reg [2:0] val_rd_type,
 
     //WB
-    output [2:0] sel_writeback
+    output reg [2:0] sel_writeback
 );
-always@(opcode or funct3 or funct7)begin //combinational circuit
+always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
+    sel_next_pc = `NEXT_PC_4;
+    regfile_we = `ENABLE;
+    imm_type = `IMM_NOT_USED;
+    sel_opa = `OPA_RS1;
+    sel_opb = `OPB_IMM;
+    sel_op = `ALU_ADD;
+    mem_wr_en = `DISABLE;
+    val_wr_type = `MEM_NOT_USED;
+    val_rd_type = `MEM_NOT_USED;
+    sel_writeback = `WBACK_ALU_OUT;
     case(opcode)
         `SHIFT_ARITHMETIC_I:begin
             case(funct3)
@@ -128,6 +138,18 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                     val_rd_type = `MEM_NOT_USED;
                     sel_writeback = `WBACK_ALU_OUT;
                 end
+                default:begin//can be same as NOP operation for now
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `IMM_NOT_USED;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_ALU_OUT;
+                end
             endcase
         end
 
@@ -149,7 +171,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
             regfile_we = `ENABLE;
             imm_type = `U_IMMEDIATE;
             sel_opa = `OPA_PC;
-            sel_opb = `OPB_IMM;;
+            sel_opb = `OPB_IMM;
             sel_op =  `ALU_ADD;
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
@@ -162,7 +184,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                 `AND:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
-                    imm_type = default;
+                    imm_type = `IMM_NOT_USED;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_RS2;
                     sel_op = `ALU_AND;
@@ -174,7 +196,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                 `OR:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
-                    imm_type = default;
+                    imm_type = `IMM_NOT_USED;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_RS2;
                     sel_op = `ALU_OR;
@@ -188,7 +210,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                         `SRA:begin
                             sel_next_pc = `NEXT_PC_4;
                             regfile_we = `ENABLE;
-                            imm_type = default;
+                            imm_type = `IMM_NOT_USED;
                             sel_opa = `OPA_RS1;
                             sel_opb = `OPB_RS2;
                             sel_op = `ALU_SRA;
@@ -200,21 +222,33 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                         `SRL:begin
                             sel_next_pc = `NEXT_PC_4;
                             regfile_we = `ENABLE;
-                            imm_type = default;
+                            imm_type = `IMM_NOT_USED;
                             sel_opa = `OPA_RS1;
                             sel_opb = `OPB_RS2;
-                            sel_op = `ALU_SLA;
+                            sel_op = `ALU_SRL;
                             mem_wr_en = `DISABLE;
                             val_wr_type = `MEM_NOT_USED;
                             val_rd_type = `MEM_NOT_USED;
-                            sel_writeback = `WBACK_ALU_OUT
+                            sel_writeback = `WBACK_ALU_OUT;
+                        end
+                        default:begin//can be same as NOP operation for now
+                            sel_next_pc = `NEXT_PC_4;
+                            regfile_we = `ENABLE;
+                            imm_type = `IMM_NOT_USED;
+                            sel_opa = `OPA_RS1;
+                            sel_opb = `OPB_IMM;
+                            sel_op = `ALU_ADD;
+                            mem_wr_en = `DISABLE;
+                            val_wr_type = `MEM_NOT_USED;
+                            val_rd_type = `MEM_NOT_USED;
+                            sel_writeback = `WBACK_ALU_OUT;
                         end
                     endcase
                 end
                 `XOR:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
-                    imm_type = default;
+                    imm_type = `IMM_NOT_USED;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_RS2;
                     sel_op = `ALU_XOR;
@@ -226,7 +260,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                 `SLTU:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
-                    imm_type = default;
+                    imm_type = `IMM_NOT_USED;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_RS2;
                     sel_op = `ALU_SLTU;
@@ -238,7 +272,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                  `SLT:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
-                    imm_type = default;
+                    imm_type = `IMM_NOT_USED;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_RS2;
                     sel_op = `ALU_SLT;
@@ -250,7 +284,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                 `SLL:begin
                     sel_next_pc = `NEXT_PC_4;
                     regfile_we = `ENABLE;
-                    imm_type = default;
+                    imm_type = `IMM_NOT_USED;
                     sel_opa = `OPA_RS1;
                     sel_opb = `OPB_RS2;
                     sel_op = `ALU_SLL;
@@ -264,7 +298,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                         `ADD:begin
                             sel_next_pc = `NEXT_PC_4;
                             regfile_we = `ENABLE;
-                            imm_type = default;
+                            imm_type = `IMM_NOT_USED;
                             sel_opa = `OPA_RS1;
                             sel_opb = `OPB_RS2;
                             sel_op = `ALU_ADD;
@@ -277,7 +311,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                         `SUB:begin
                             sel_next_pc = `NEXT_PC_4;
                             regfile_we = `ENABLE;
-                            imm_type = default;
+                            imm_type = `IMM_NOT_USED;
                             sel_opa = `OPA_RS1;
                             sel_opb = `OPB_RS2;
                             sel_op = `ALU_SUB;
@@ -286,22 +320,33 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
                             val_rd_type = `MEM_NOT_USED;
                             sel_writeback = `WBACK_ALU_OUT;  
                         end
+                        default:begin//can be same as NOP operation for now
+                            sel_next_pc = `NEXT_PC_4;
+                            regfile_we = `ENABLE;
+                            imm_type = `IMM_NOT_USED;
+                            sel_opa = `OPA_RS1;
+                            sel_opb = `OPB_IMM;
+                            sel_op = `ALU_ADD;
+                            mem_wr_en = `DISABLE;
+                            val_wr_type = `MEM_NOT_USED;
+                            val_rd_type = `MEM_NOT_USED;
+                            sel_writeback = `WBACK_ALU_OUT;
+                        end
                     endcase
                 end
+                default:begin//can be same as NOP operation for now
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `IMM_NOT_USED;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_ALU_OUT;
+                end
             endcase
-        end
-        
-        `NOP:begin
-            sel_next_pc = `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = default;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_ALU_OUT;
         end
 
         `JAL:begin
@@ -405,7 +450,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `ENABLE;
             val_wr_type = `FORWARD_INPUT;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = default;
+            sel_writeback = `WBACK_NONE;
         end
 
         `SH:begin
@@ -418,7 +463,7 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `ENABLE;
             val_wr_type =`SIGN_EXTEND_16;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = default;
+            sel_writeback = `WBACK_NONE;
         end
 
         `SB:begin
@@ -431,15 +476,13 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `ENABLE;
             val_wr_type = `SIGN_EXTEND_8;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = default;
+            sel_writeback = `WBACK_NONE;
         end
-
-        
 
         default:begin//can be same as NOP operation for now
             sel_next_pc = `NEXT_PC_4;
             regfile_we = `ENABLE;
-            imm_type = default;
+            imm_type = `IMM_NOT_USED;
             sel_opa = `OPA_RS1;
             sel_opb = `OPB_IMM;
             sel_op = `ALU_ADD;
@@ -448,7 +491,6 @@ always@(opcode or funct3 or funct7)begin //combinational circuit
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_ALU_OUT;
         end
-
     endcase
 end
 endmodule

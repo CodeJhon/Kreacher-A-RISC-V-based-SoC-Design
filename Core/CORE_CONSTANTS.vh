@@ -30,6 +30,10 @@
     `define LBU 3'h100
     `define LHU 3'h101
 
+    // ---- func3 ----STORE
+    `define SW 3'h010
+    `define SH 3'h001
+    `define SB 3'h000
 
     // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT
     `define SRL 7'b0000000 
@@ -83,6 +87,7 @@
     `define WBACK_ALU_OUT    3'b000
     `define WBACK_PC_4       3'b001
     `define WBACK_EMDB       3'b010
+    `define WBACK_NONE       3'b100
 
     //val_rd_type, val_wr_type (mem stage)
     `define FORWARD_INPUT   3'b000
@@ -98,7 +103,7 @@
     `define B_IMMEDIATE 3'b010
     `define U_IMMEDIATE 3'b011
     `define J_IMMEDIATE 3'b100
-    // `define I_IMMEDIATE_shamt 3'b101
+    `define IMM_NOT_USED 3'b101
 
     `define ENABLE 1'b1
     `define DISABLE 1'b0
