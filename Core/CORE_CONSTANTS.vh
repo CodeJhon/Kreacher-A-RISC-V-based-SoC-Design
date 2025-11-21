@@ -49,10 +49,10 @@
     `define SLLI 3'b001
     `define SLTI 3'b010
     `define SLTIU 3'b011
-    `define ANDI 3'b100
+    `define ANDI 3'b111
     `define SRLI_SRAI 3'b101
-    `define XORI 3'b110
-    `define  ORI 3'b111 
+    `define XORI 3'b100
+    `define  ORI 3'b110 
 
     // ---- func7 ----
 
