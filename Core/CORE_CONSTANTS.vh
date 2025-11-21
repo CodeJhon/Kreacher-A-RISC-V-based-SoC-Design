@@ -25,16 +25,16 @@
     `define AND 3'b111
 
     // ---- func3 ----LOAD
-    `define LB 3'h000
-    `define LH 3'h001
-    `define LW 3'h010
-    `define LBU 3'h100
-    `define LHU 3'h101
+    `define LB 3'b000
+    `define LH 3'b001
+    `define LW 3'b010
+    `define LBU 3'b100
+    `define LHU 3'b101
 
     // ---- func3 ----STORE
-    `define SW 3'h010
-    `define SH 3'h001
-    `define SB 3'h000
+    `define SW 3'b010
+    `define SH 3'b001
+    `define SB 3'b000
 
     // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT
     `define SRL 7'b0000000 
