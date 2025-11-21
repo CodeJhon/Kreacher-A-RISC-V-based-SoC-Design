@@ -1,2 +1,4 @@
 # Ignore Vivado project folder
 Vivado_Kreacher/
+.vscode/
+DMEM_result_rearranged.mem
