@@ -1,0 +1,23 @@
+module ROM #(parameter XLEN = 32, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem", parameter DELAY = 4)(
+    input clk,
+    input reset,
+    input cs,
+    input  [XLEN-1:0] addr,
+    output [XLEN-1:0] data_out
+
+);
+
+reg [7:0] memory [DEPTH-1:0];
+
+//Initialize the memory with the contents of the specified file
+initial begin
+    // $readmemh reads hexadecimal values from the specified file
+    $readmemh(MEM_FILE, memory);
+    $display("INFO: Initialized ROM from file: %s", MEM_FILE);
+end
+
+//WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
+assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]} : {XLEN{1'b0}};
+
+
+endmodule
