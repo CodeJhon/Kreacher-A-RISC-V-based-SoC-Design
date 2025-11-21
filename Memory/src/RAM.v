@@ -1,13 +1,11 @@
-`timescale 1ns/1ps
-
-module RAM #(parameter XLEN = 32, parameter DEPTH = 1024, parameter MEM_FILE = "file_example.txt", parameter DELAY = 4)(
+module RAM #(parameter XLEN = 32, parameter DEPTH = 1024, parameter MEM_FILE = "file_example.txt")(
     input clk,
     input reset,
     input we,
     input cs,
     input  [XLEN-1:0] data_in,
     input  [XLEN-1:0] addr,
-    output [XLEN-1:0] data_out
+    output reg [XLEN-1:0] data_out
 
 );
 
@@ -36,8 +34,10 @@ always @(posedge clk) begin
     end
 end
 
-//WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
-assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]} : {XLEN{1'b0}};
+
+always @(negedge clk) begin
+    if (cs) data_out = {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]}; 
+end
 
 
 endmodule

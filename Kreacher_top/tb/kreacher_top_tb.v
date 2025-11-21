@@ -49,16 +49,19 @@ always #5 clk = ~clk;  // 100 MHz clock
 // Reset logic
 initial begin
     reset = 1;
-    #20;
+    #16;
     reset = 0;
 end
 
 // Stimulus
 initial begin
-
-    // Wait for reset release
+    
+    //Wait for reset
     @(negedge reset);
-    #1;
+
+    //First fetch
+    sel_next_PC = `NEXT_PC_4;
+    #10;
 
     // Instruction #1: lui x1, 0x5
     sel_next_PC = `NEXT_PC_4;
@@ -98,7 +101,7 @@ initial begin
     // Wait some cycles
     #10;
 
-    // Instruction #2: sw x1 0(x12)
+    // Instruction #3: sw x1 0(x12)
     sel_next_PC = `NEXT_PC_4;
 
     imm_type    = `S_IMMEDIATE;
@@ -113,6 +116,9 @@ initial begin
     val_wr_type = `FORWARD_INPUT;
 
     //sel_writeback = `WBACK_ALU_OUT;
+
+    //Wait latency cycles
+    #30;
 
     // Wait final cycles
     #9;

@@ -80,8 +80,23 @@ wire [4:0] EX_RD_addr_out_ID;
 //imm
 wire [XLEN-1:0] ID_imm_EX;
 
+//FW_ALU_out
+wire [XLEN-1:0] MEM_FW_ALU_out_EX;
+
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
+
+//RS1_addr
+wire [4:0] ID_RS1_addr_HCU;
+
+//RS2_addr
+wire [4:0] ID_RS2_addr_HCU;
+
+//HCU_opa
+wire [1:0] HCU_sel_RS1_EX;
+
+//HCU_opa
+wire [1:0] HCU_sel_RS2_EX;
 
 //------------------------------------- Control (Not for buses)
 
@@ -191,6 +206,10 @@ ID #(.XLEN(XLEN)) u_ID (
     
     .EX_sel_writeback(ID_sel_writeback_EX),
 
+    //---------------------------- HCU (Hazard Control Unit)
+    .HCU_RS1_addr(ID_RS1_addr_HCU),
+    .HCU_RS2_addr(ID_RS2_addr_HCU),
+
     //TEMPORARY (ONLY FOR TB PURPOSES)
     .sel_next_PC(sel_next_PC), 
     .imm_type(imm_type),
@@ -240,6 +259,7 @@ EX #(.XLEN(XLEN)) u_EX (
     //Data from/to MEM stage
     .MEM_RD(MEM_RD_EX),
     .MEM_RD_addr_in(MEM_RD_addr_out_EX),
+    .MEM_FW_ALU_out(MEM_FW_ALU_out_EX),
 
     .MEM_PC_4(EX_PC_4_MEM),
     .MEM_ALU_out(EX_ALU_out_MEM),
@@ -254,7 +274,11 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_val_wr_type(EX_val_wr_type_MEM),
     .MEM_regfile_we_out(EX_regfile_we_in_MEM),
     
-    .MEM_sel_writeback(EX_sel_writeback_MEM)
+    .MEM_sel_writeback(EX_sel_writeback_MEM),
+
+    //---------------------------- HCU (Hazard Control Unit)
+    .HCU_sel_RS1(HCU_sel_RS1_EX),
+    .HCU_sel_RS2(HCU_sel_RS2_EX)
 );
 
 
@@ -278,6 +302,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
 
     .EX_RD(MEM_RD_EX),
     .EX_RD_addr_out(MEM_RD_addr_out_EX),
+    .EX_FW_ALU_out(MEM_FW_ALU_out_EX),
 
     //Control from/to EX stage
     .EX_mem_wr_en(EX_mem_wr_en_MEM),
@@ -325,6 +350,24 @@ WB #(.XLEN(XLEN)) u_WB (
 
     //Control from/to WB stage
     .WB_sel_writeback(MEM_sel_writeback_WB)
+);
+
+HCU #(.XLEN(XLEN)) u_HCU (
+    // ID Stage
+    .EX_RS1_addr      (ID_RS1_addr_HCU),
+    .EX_RS2_addr      (ID_RS2_addr_HCU),
+
+    // EX Stage
+    .EX_sel_RS1       (HCU_sel_RS1_EX),
+    .EX_sel_RS2       (HCU_sel_RS2_EX),
+
+    // MEM Stage
+    .MEM_RD_addr_in   (EX_RD_addr_in_MEM),
+    .MEM_regfile_we_in(EX_regfile_we_in_MEM),
+
+    // WB Stage
+    .WB_RD_addr_in    (MEM_RD_addr_in_WB),
+    .WB_regfile_we_in (MEM_regfile_we_in_WB)
 );
 
 

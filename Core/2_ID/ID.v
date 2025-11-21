@@ -7,42 +7,46 @@ module ID #(parameter XLEN = 32)(
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
-    input [XLEN-1:0]  IF_PC_4,
-    input [XLEN-1:0]  IF_PC,
-    input [XLEN-1:0]  IF_EIB, 
+    input [XLEN-1:0]      IF_PC_4,
+    input [XLEN-1:0]      IF_PC,
+    input [XLEN-1:0]      IF_EIB, 
 
-    output [XLEN-1:0] IF_ALU_out,
+    output [XLEN-1:0]     IF_ALU_out,
 
     //Control from/to IF_HK stage
-    output [1:0]      IF_sel_next_PC,
+    output [1:0]          IF_sel_next_PC,
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    input [XLEN-1:0]  EX_ALU_out,
-    input [XLEN-1:0]  EX_RD,
-    input [4:0]       EX_RD_addr_in,
+    input [XLEN-1:0]      EX_ALU_out,
+    input [XLEN-1:0]      EX_RD,
+    input [4:0]           EX_RD_addr_in,
     
 
-    output [XLEN-1:0] EX_PC_4,
-    output [XLEN-1:0] EX_PC,
-    output [XLEN-1:0] EX_RS1,
-    output [XLEN-1:0] EX_RS2,
-    output [4:0]      EX_RD_addr_out,
-    output [XLEN-1:0] EX_imm,
+    output reg [XLEN-1:0] EX_PC_4,
+    output reg [XLEN-1:0] EX_PC,
+    output reg [XLEN-1:0] EX_RS1,
+    output reg [XLEN-1:0] EX_RS2,
+    output reg [4:0]      EX_RD_addr_out,
+    output reg [XLEN-1:0] EX_imm,
 
     //Control from/to EX stage
-    input             EX_regfile_we_in,
+    input                 EX_regfile_we_in,
 
-    output [1:0]      EX_sel_opa,
-    output [1:0]      EX_sel_opb,
-    output [4:0]      EX_sel_op,
-    output            EX_regfile_we_out,
+    output reg [1:0]      EX_sel_opa,
+    output reg [1:0]      EX_sel_opb,
+    output reg [4:0]      EX_sel_op,
+    output reg            EX_regfile_we_out,
 
-    output            EX_mem_wr_en,
-    output [2:0]      EX_val_rd_type,
-    output [2:0]      EX_val_wr_type,
+    output reg            EX_mem_wr_en,
+    output reg [2:0]      EX_val_rd_type,
+    output reg [2:0]      EX_val_wr_type,
     
-    output [2:0]      EX_sel_writeback,
+    output reg [2:0]      EX_sel_writeback,
+
+    //---------------------------- HCU (Hazard Control Unit)
+    output reg [4:0]      HCU_RS1_addr,
+    output reg [4:0]      HCU_RS2_addr,
 
     //TEMPORARY (ONLY FOR TB PURPOSES)
     input [1:0]       sel_next_PC,
@@ -148,23 +152,59 @@ assign IF_ALU_out           = EX_ALU_out;
 assign IF_sel_next_PC       = sel_next_PC;
 
 //EX
-    //Data
-assign EX_PC_4              = IF_PC_4;
-assign EX_PC                = IF_PC;
-assign EX_RS1               = RS1;
-assign EX_RS2               = RS2;
-assign EX_RD_addr_out       = IF_EIB[11:7];
-assign EX_imm               = imm;
-    //Control
-assign EX_sel_opa           = sel_opa;
-assign EX_sel_opb           = sel_opb;
-assign EX_sel_op            = sel_op;
-assign EX_regfile_we_out    = regfile_we;
+always @(posedge clk) begin
+    if(reset)begin
+            //Data
+        EX_PC_4              <= 0;
+        EX_PC                <= 0;
+        EX_RS1               <= 0;
+        EX_RS2               <= 0;
+        EX_RD_addr_out       <= 0;
+        EX_imm               <= 0;
+            //Control
+        EX_sel_opa           <= 0;
+        EX_sel_opb           <= 0;
+        EX_sel_op            <= 0;
+        EX_regfile_we_out    <= 0;
 
-assign EX_mem_wr_en         = mem_wr_en;
-assign EX_val_rd_type       = val_rd_type;
-assign EX_val_wr_type       = val_wr_type;
+        EX_mem_wr_en         <= 0;
+        EX_val_rd_type       <= 0;
+        EX_val_wr_type       <= 0;
 
-assign EX_sel_writeback     = sel_writeback;
+        EX_sel_writeback     <= 0; 
+    end
+    else begin
+            //Data
+        EX_PC_4              <= IF_PC_4;
+        EX_PC                <= IF_PC;
+        EX_RS1               <= RS1;
+        EX_RS2               <= RS2;
+        EX_RD_addr_out       <= IF_EIB[11:7];
+        EX_imm               <= imm;
+            //Control
+        EX_sel_opa           <= sel_opa;
+        EX_sel_opb           <= sel_opb;
+        EX_sel_op            <= sel_op;
+        EX_regfile_we_out    <= regfile_we;
+
+        EX_mem_wr_en         <= mem_wr_en;
+        EX_val_rd_type       <= val_rd_type;
+        EX_val_wr_type       <= val_wr_type;
+
+        EX_sel_writeback     <= sel_writeback;
+    end
+end
+
+//HCU
+always@(posedge clk)begin
+    if(reset)begin
+        HCU_RS1_addr          <= 0;
+        HCU_RS2_addr          <= 0;
+    end
+    else begin
+        HCU_RS1_addr          <= IF_EIB[19:15];
+        HCU_RS2_addr          <= IF_EIB[24:20];
+    end
+end
 
 endmodule

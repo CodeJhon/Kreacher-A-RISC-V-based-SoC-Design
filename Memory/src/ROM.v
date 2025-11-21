@@ -1,9 +1,9 @@
-module ROM #(parameter XLEN = 32, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem", parameter DELAY = 4)(
+module ROM #(parameter XLEN = 32, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem")(
     input clk,
     input reset,
     input cs,
     input  [XLEN-1:0] addr,
-    output [XLEN-1:0] data_out
+    output reg [XLEN-1:0] data_out
 
 );
 
@@ -16,8 +16,11 @@ initial begin
     $display("INFO: Initialized ROM from file: %s", MEM_FILE);
 end
 
-//WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
-assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]} : {XLEN{1'b0}};
+always @(negedge clk) begin
+    if (cs) begin
+       data_out = {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]}; 
+    end
+end
 
 
 endmodule
