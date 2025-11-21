@@ -36,7 +36,7 @@ always@(posedge clk)begin
             regfile[i] <= 0;
         end
     end
-    else if(regfile_we && (RD_addr != 0)) regfile[RD_addr] <= RD;
+    else if(regfile_we) regfile[RD_addr] <= RD;
 end
 
 // Reading register on 2nd part of cycle
