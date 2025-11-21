@@ -12,6 +12,7 @@
     `define JALR 7'b1100111
 
     `define LOAD  7'b0000011
+    `define STORE 7'b0100011
 
     // ---- func3 ----SHIFT_ARITHMETIC
     `define ARITHMETIC 3'b000
