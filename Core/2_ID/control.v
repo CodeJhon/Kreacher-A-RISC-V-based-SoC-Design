@@ -28,7 +28,7 @@ module control(
     //WB
     output reg [2:0] sel_writeback
 );
-always@(*)begin //combinational circuit
+always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
     sel_next_pc = `NEXT_PC_4;
     regfile_we = `ENABLE;
     imm_type = `IMM_NOT_USED;
@@ -171,7 +171,7 @@ always@(*)begin //combinational circuit
             regfile_we = `ENABLE;
             imm_type = `U_IMMEDIATE;
             sel_opa = `OPA_PC;
-            sel_opb = `OPB_IMM;;
+            sel_opb = `OPB_IMM;
             sel_op =  `ALU_ADD;
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
@@ -347,19 +347,6 @@ always@(*)begin //combinational circuit
                     sel_writeback = `WBACK_ALU_OUT;
                 end
             endcase
-        end
-        
-        `NOP:begin
-            sel_next_pc = `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = `IMM_NOT_USED;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_ALU_OUT;
         end
 
         `JAL:begin

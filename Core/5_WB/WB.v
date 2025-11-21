@@ -28,7 +28,7 @@ always @(WB_sel_writeback, MEM_PC_4, MEM_ALU_out, MEM_EMDB) begin
         `WBACK_ALU_OUT:   MEM_RD = MEM_ALU_out;
         `WBACK_PC_4:      MEM_RD = MEM_PC_4;
         `WBACK_EMDB:      MEM_RD = MEM_EMDB;
-        `WBACK_NONE:      MEM_rd = 0;
+        `WBACK_NONE:      MEM_RD = 0;
         default:          MEM_RD = 0;
     endcase
 end

@@ -30,6 +30,10 @@
     `define LBU 3'h100
     `define LHU 3'h101
 
+    // ---- func3 ----STORE
+    `define SW 3'h010
+    `define SH 3'h001
+    `define SB 3'h000
 
     // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT
     `define SRL 7'b0000000 
