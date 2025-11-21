@@ -374,110 +374,141 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_PC_4;
         end
+        `LOAD:begin
+            case(funct3)
+                `LW:begin
+                    sel_next_pc =  `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `I_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `FORWARD_INPUT;
+                    sel_writeback = `WBACK_EMDB;
+                end
 
-        `LW:begin
-            sel_next_pc =  `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = `I_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type = `FORWARD_INPUT;
-            sel_writeback = `WBACK_EMDB;
-        end
+                `LH:begin
+                    sel_next_pc =  `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `I_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `SIGN_EXTEND_16;
+                    sel_writeback = `WBACK_EMDB;
+                end
 
-        `LH:begin
-            sel_next_pc =  `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = `I_IMMEDIATE;
-             sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type = `SIGN_EXTEND_16;
-            sel_writeback = `WBACK_EMDB;
-        end
+                `LHU:begin
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `I_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type =  `ZERO_EXTEND_16;
+                    sel_writeback = `WBACK_EMDB;
+                end
 
-        `LHU:begin
-            sel_next_pc = `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = `I_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type =  `ZERO_EXTEND_16;
-            sel_writeback = `WBACK_EMDB;
-        end
+                `LB:begin
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `I_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `SIGN_EXTEND_8;
+                    sel_writeback = `WBACK_EMDB;
+                end
 
-        `LB:begin
-            sel_next_pc = `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = `I_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type = `SIGN_EXTEND_8;
-            sel_writeback = `WBACK_EMDB;
+                `LBU:begin
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `I_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `ZERO_EXTEND_8;
+                    sel_writeback = `WBACK_EMDB;
+                end
+                default:begin//can be same as NOP operation for now
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `IMM_NOT_USED;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_ALU_OUT;
+                end
+            endcase
         end
+        
+        `STORE:begin
+            case(funct3)
+                `SW:begin
+                    sel_next_pc =  `NEXT_PC_4;
+                    regfile_we =  `DISABLE;
+                    imm_type = `S_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `ENABLE;
+                    val_wr_type = `FORWARD_INPUT;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_NONE;
+                end
 
-        `LBU:begin
-            sel_next_pc = `NEXT_PC_4;
-            regfile_we = `ENABLE;
-            imm_type = `I_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `DISABLE;
-            val_wr_type = `MEM_NOT_USED;
-            val_rd_type = `ZERO_EXTEND_8;
-            sel_writeback = `WBACK_EMDB;
-        end
+                `SH:begin
+                    sel_next_pc =  `NEXT_PC_4;
+                    regfile_we =  `DISABLE;
+                    imm_type = `S_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `ENABLE;
+                    val_wr_type =`SIGN_EXTEND_16;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_NONE;
+                end
 
-        `SW:begin
-            sel_next_pc =  `NEXT_PC_4;
-            regfile_we =  `DISABLE;
-            imm_type = `S_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `ENABLE;
-            val_wr_type = `FORWARD_INPUT;
-            val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_NONE;
+                `SB:begin
+                    sel_next_pc =  `NEXT_PC_4;
+                    regfile_we =  `DISABLE;
+                    imm_type = `S_IMMEDIATE;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `ENABLE;
+                    val_wr_type = `SIGN_EXTEND_8;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_NONE;
+                end
+                default:begin//can be same as NOP operation for now
+                    sel_next_pc = `NEXT_PC_4;
+                    regfile_we = `ENABLE;
+                    imm_type = `IMM_NOT_USED;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `MEM_NOT_USED;
+                end
+            endcase
         end
-
-        `SH:begin
-            sel_next_pc =  `NEXT_PC_4;
-            regfile_we =  `DISABLE;
-            imm_type = `S_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `ENABLE;
-            val_wr_type =`SIGN_EXTEND_16;
-            val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_NONE;
-        end
-
-        `SB:begin
-            sel_next_pc =  `NEXT_PC_4;
-            regfile_we =  `DISABLE;
-            imm_type = `S_IMMEDIATE;
-            sel_opa = `OPA_RS1;
-            sel_opb = `OPB_IMM;
-            sel_op = `ALU_ADD;
-            mem_wr_en = `ENABLE;
-            val_wr_type = `SIGN_EXTEND_8;
-            val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_NONE;
-        end
+        
 
         default:begin//can be same as NOP operation for now
             sel_next_pc = `NEXT_PC_4;

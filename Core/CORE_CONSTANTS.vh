@@ -12,6 +12,7 @@
     `define JALR 7'b1100111
 
     `define LOAD  7'b0000011
+    `define STORE 7'b0100011
 
     // ---- func3 ----SHIFT_ARITHMETIC
     `define ARITHMETIC 3'b000
@@ -24,16 +25,16 @@
     `define AND 3'b111
 
     // ---- func3 ----LOAD
-    `define LB 3'h000
-    `define LH 3'h001
-    `define LW 3'h010
-    `define LBU 3'h100
-    `define LHU 3'h101
+    `define LB 3'b000
+    `define LH 3'b001
+    `define LW 3'b010
+    `define LBU 3'b100
+    `define LHU 3'b101
 
     // ---- func3 ----STORE
-    `define SW 3'h010
-    `define SH 3'h001
-    `define SB 3'h000
+    `define SW 3'b010
+    `define SH 3'b001
+    `define SB 3'b000
 
     // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT
     `define SRL 7'b0000000 
@@ -48,10 +49,10 @@
     `define SLLI 3'b001
     `define SLTI 3'b010
     `define SLTIU 3'b011
-    `define ANDI 3'b100
+    `define ANDI 3'b111
     `define SRLI_SRAI 3'b101
-    `define XORI 3'b110
-    `define  ORI 3'b111 
+    `define XORI 3'b100
+    `define  ORI 3'b110 
 
     // ---- func7 ----
 
