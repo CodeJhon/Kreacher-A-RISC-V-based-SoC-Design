@@ -375,7 +375,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             sel_writeback = `WBACK_PC_4;
         end
         `LOAD:begin
-            case(func3)
+            case(funct3)
                 `LW:begin
                     sel_next_pc =  `NEXT_PC_4;
                     regfile_we = `ENABLE;
@@ -456,7 +456,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
         end
         
         `STORE:begin
-            case(func3)
+            case(funct3)
                 `SW:begin
                     sel_next_pc =  `NEXT_PC_4;
                     regfile_we =  `DISABLE;
