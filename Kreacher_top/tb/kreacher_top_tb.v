@@ -29,18 +29,7 @@ reg [2:0]  sel_writeback;
 // Instantiate DUT
 kreacher_top #(.XLEN(XLEN)) DUT (
     .clk(clk),
-    .reset(reset),
-    //TEMPORARY (ONLY FOR TB PURPOSES)
-    .sel_next_PC(sel_next_PC),
-    .imm_type(imm_type),
-    .regfile_we(regfile_we),
-    .sel_opa(sel_opa),
-    .sel_opb(sel_opb),
-    .sel_op(sel_op),
-    .mem_wr_en(mem_wr_en),
-    .val_rd_type(val_rd_type),
-    .val_wr_type(val_wr_type),
-    .sel_writeback(sel_writeback)
+    .reset(reset)
 );
 
 // Clock generation

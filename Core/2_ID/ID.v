@@ -46,24 +46,8 @@ module ID #(parameter XLEN = 32)(
 
     //---------------------------- HCU (Hazard Control Unit)
     output reg [4:0]      HCU_RS1_addr,
-    output reg [4:0]      HCU_RS2_addr,
+    output reg [4:0]      HCU_RS2_addr
 
-    //TEMPORARY (ONLY FOR TB PURPOSES)
-    input [1:0]       sel_next_PC,
-
-    input [2:0]       imm_type,
-    input             regfile_we,
-
-    input [1:0]       sel_opa,
-    input [1:0]       sel_opb,
-    input [4:0]       sel_op,
-
-    input             mem_wr_en,
-    input [2:0]       val_rd_type,
-    input [2:0]       val_wr_type,
-    
-    input [2:0]       sel_writeback
-    
 );
 
 // ---------------------------------- Implementation of modules
@@ -99,7 +83,7 @@ extend_imm #(.XLEN(XLEN)) u_extend_imm (
 
 
 //Controller (Decoder)
-/*
+
 wire [1:0]      sel_next_PC;
 
 wire [2:0]      imm_type;
@@ -143,7 +127,7 @@ control u_control (
     // WB
     .sel_writeback(sel_writeback)
 );
-*/
+
 
 
 // ------------------------------------- Connection to adjacent stage(s)
