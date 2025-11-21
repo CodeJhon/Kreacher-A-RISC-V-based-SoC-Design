@@ -12,7 +12,7 @@ localparam EXT_16 = XLEN - 16;
 localparam EXT_8 = XLEN - 8;
 
 //Implementation
-always @(extension_type) begin
+always @(extension_type, in) begin
     case(extension_type)
         `FORWARD_INPUT:  out = in;
         `SIGN_EXTEND_16: out = {{EXT_16{in[15]}},in[15:0]};
