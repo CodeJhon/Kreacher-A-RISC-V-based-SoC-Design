@@ -189,7 +189,10 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_val_rd_type(ID_val_rd_type_EX),
     .EX_val_wr_type(ID_val_wr_type_EX),
     
-    .EX_sel_writeback(ID_sel_writeback_EX)
+    .EX_sel_writeback(ID_sel_writeback_EX),
+
+    .HCU_RS1_addr(ID_RS1_addr_HCU),
+    .HCU_RS2_addr(ID_RS2_addr_HCU)
 
 );
 

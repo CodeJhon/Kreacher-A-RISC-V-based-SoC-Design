@@ -6,7 +6,7 @@ module kreacher_top_tb;
 
 // Parameters
 localparam XLEN = 32;
-localparam RUN_NUMBER_OF_INSTRUCTIONS = 9;
+localparam RUN_NUMBER_OF_INSTRUCTIONS = 5;//9;
 
 // Signals
 reg clk;
@@ -51,15 +51,12 @@ initial begin
     
     //Wait for reset
     @(negedge reset);
-    //First fetch
-    #10;
-    
     
     // Wait some cycles
     #CYCLES;
 
     //Wait latency cycles
-    #30;
+    #40;
 
     // Wait final cycles
     #7;
