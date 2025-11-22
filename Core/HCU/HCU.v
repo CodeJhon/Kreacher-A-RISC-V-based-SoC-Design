@@ -2,13 +2,13 @@
 
 module HCU #(parameter XLEN = 32)(
     //----------------------------IF Stage
-    output               IF_stall_PC,
-    output               IF_stall,
+    output reg           IF_stall_PC,
+    output reg           IF_stall,
 
     //----------------------------ID Stage
     input [4:0]          ID_RS1_addr,
     input [4:0]          ID_RS2_addr,
-    output               ID_flush,
+    output reg           ID_flush,
 
     //----------------------------EX Stage
     input [4:0]          EX_RS1_addr,
@@ -51,8 +51,30 @@ always @(EX_RS1_addr, EX_RS2_addr, MEM_RD_addr_in, MEM_regfile_we_in, WB_RD_addr
     
 end
 
-assign               IF_stall_PC = 0;
-assign               IF_stall = 0;
-assign               ID_flush = 0;
+//Stalling logic
+always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback) begin
+    //Default values
+    IF_stall_PC = 0;
+    IF_stall = 0;
+    ID_flush = 0;
+    
+    if((EX_RD_addr_in == ID_RS1_addr) || (EX_RD_addr_in == ID_RS2_addr))begin
+        case (EX_sel_writeback)
+        
+            `WBACK_EMDB: begin//Stall instruction -----> LW
+                IF_stall_PC = 1;
+                IF_stall = 1;
+                ID_flush = 1;
+            end
+
+            default: begin
+                IF_stall_PC = 0;
+                IF_stall = 0;
+                ID_flush = 0;
+            end
+        endcase
+    end
+end
+          
 
 endmodule
