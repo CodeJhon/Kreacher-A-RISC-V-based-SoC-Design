@@ -72,10 +72,10 @@ wire [XLEN-1:0] MEM_FW_ALU_out_EX;
 wire [XLEN-1:0] MEM_EMDB_WB;
 
 //RS1_addr
-wire [4:0] ID_RS1_addr_HCU;
+wire [4:0] EX_RS1_addr_HCU;
 
 //RS2_addr
-wire [4:0] ID_RS2_addr_HCU;
+wire [4:0] EX_RS2_addr_HCU;
 
 //HCU_opa
 wire [1:0] HCU_sel_RS1_EX;
@@ -191,8 +191,8 @@ ID #(.XLEN(XLEN)) u_ID (
     
     .EX_sel_writeback(ID_sel_writeback_EX),
 
-    .HCU_RS1_addr(ID_RS1_addr_HCU),
-    .HCU_RS2_addr(ID_RS2_addr_HCU)
+    .HCU_RS1_addr(EX_RS1_addr_HCU),
+    .HCU_RS2_addr(EX_RS2_addr_HCU)
 
 );
 
@@ -327,8 +327,8 @@ WB #(.XLEN(XLEN)) u_WB (
 
 HCU #(.XLEN(XLEN)) u_HCU (
     // ID Stage
-    .EX_RS1_addr      (ID_RS1_addr_HCU),
-    .EX_RS2_addr      (ID_RS2_addr_HCU),
+    .EX_RS1_addr      (EX_RS1_addr_HCU),
+    .EX_RS2_addr      (EX_RS2_addr_HCU),
 
     // EX Stage
     .EX_sel_RS1       (HCU_sel_RS1_EX),
