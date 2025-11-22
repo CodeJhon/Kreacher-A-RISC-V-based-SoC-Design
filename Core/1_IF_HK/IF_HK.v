@@ -18,7 +18,12 @@ module IF_HK #(parameter XLEN = 32)(
     output reg [XLEN-1:0] ID_EIB,
 
     //Control from/to ID stage
-    input      [1:0]      ID_sel_next_PC
+    input      [1:0]      ID_sel_next_PC,
+
+    //---------------------------- HCU (Hazard Control Unit)
+    input                 IF_stall,
+    input                 IF_stall_PC
+
 );
 
 // ---------------------------------- Internal physical registers
@@ -33,8 +38,8 @@ assign PC_4 = PC + 4;
 //PC
 reg [XLEN-1:0] next_PC;
 always@(posedge clk)begin
-    if(reset)   PC <= 0;
-    else        PC <= next_PC;
+    if(reset)               PC <= 0;
+    else if(!IF_stall_PC)   PC <= next_PC;
 end
 
 //Mux
@@ -54,7 +59,7 @@ always @(posedge clk) begin
         ID_PC    <= 0;
         ID_EIB   <= 0;
     end
-    else begin
+    else if(!IF_stall) begin
         ID_PC_4  <= PC_4;
         ID_PC    <= PC;
         ID_EIB   <= EIB;

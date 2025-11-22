@@ -1,13 +1,23 @@
 `include "../CORE_CONSTANTS.vh"
 
 module HCU #(parameter XLEN = 32)(
+    //----------------------------IF Stage
+    output               IF_stall_PC,
+    output               IF_stall,
+
     //----------------------------ID Stage
-    input [4:0]          EX_RS1_addr,
-    input [4:0]          EX_RS2_addr,
+    input [4:0]          ID_RS1_addr,
+    input [4:0]          ID_RS2_addr,
+    output               ID_flush,
 
     //----------------------------EX Stage
+    input [4:0]          EX_RS1_addr,
+    input [4:0]          EX_RS2_addr,
     output reg [1:0]     EX_sel_RS1,
     output reg [1:0]     EX_sel_RS2,
+
+    input [2:0]          EX_sel_writeback,
+    input [4:0]          EX_RD_addr_in,
 
     //----------------------------MEM Stage
     input [4:0]          MEM_RD_addr_in,
@@ -41,5 +51,8 @@ always @(EX_RS1_addr, EX_RS2_addr, MEM_RD_addr_in, MEM_regfile_we_in, WB_RD_addr
     
 end
 
+assign               IF_stall_PC = 0;
+assign               IF_stall = 0;
+assign               ID_flush = 0;
 
 endmodule

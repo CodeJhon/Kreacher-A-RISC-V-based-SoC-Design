@@ -45,8 +45,13 @@ module ID #(parameter XLEN = 32)(
     output reg [2:0]      EX_sel_writeback,
 
     //---------------------------- HCU (Hazard Control Unit)
-    output reg [4:0]      HCU_RS1_addr,
-    output reg [4:0]      HCU_RS2_addr
+    input                 ID_flush,
+    output [4:0]          ID_RS1_addr,
+    output [4:0]          ID_RS2_addr,
+
+
+    output reg [4:0]      EX_RS1_addr,
+    output reg [4:0]      EX_RS2_addr
 
 );
 
@@ -137,7 +142,7 @@ assign IF_sel_next_PC       = sel_next_PC;
 
 //EX
 always @(posedge clk) begin
-    if(reset)begin
+    if(reset || ID_flush)begin
             //Data
         EX_PC_4              <= 0;
         EX_PC                <= 0;
@@ -182,13 +187,16 @@ end
 //HCU
 always@(posedge clk)begin
     if(reset)begin
-        HCU_RS1_addr          <= 0;
-        HCU_RS2_addr          <= 0;
+        EX_RS1_addr          <= 0;
+        EX_RS2_addr          <= 0;
     end
     else begin
-        HCU_RS1_addr          <= IF_EIB[19:15];
-        HCU_RS2_addr          <= IF_EIB[24:20];
+        EX_RS1_addr          <= IF_EIB[19:15];
+        EX_RS2_addr          <= IF_EIB[24:20];
     end
 end
+
+assign ID_RS1_addr           = IF_EIB[19:15];
+assign ID_RS2_addr           = IF_EIB[24:20];
 
 endmodule

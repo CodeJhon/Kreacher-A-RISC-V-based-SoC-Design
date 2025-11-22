@@ -19,6 +19,21 @@ module core #(parameter XLEN = 32)(
     wire [LENGHT:0] (Fom Stage X)_Signal_Name_(To stage Y)
 */
 
+//------------------------------------- HCU signals 
+
+//Bypassing/Forwarding signals
+wire [4:0] EX_RS1_addr_HCU;
+wire [4:0] EX_RS2_addr_HCU;
+wire [1:0] HCU_sel_RS1_EX;
+wire [1:0] HCU_sel_RS2_EX;
+
+//Stalling/Flushing signals
+wire       HCU_stall_PC_IF;
+wire       HCU_stall_IF;
+wire [4:0] ID_RS1_addr_HCU;
+wire [4:0] ID_RS2_addr_HCU;
+wire       HCU_flush_ID;
+
 //------------------------------------- Data signals (Not for buses)
 
 //ALU_out
@@ -71,17 +86,6 @@ wire [XLEN-1:0] MEM_FW_ALU_out_EX;
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
 
-//RS1_addr
-wire [4:0] EX_RS1_addr_HCU;
-
-//RS2_addr
-wire [4:0] EX_RS2_addr_HCU;
-
-//HCU_opa
-wire [1:0] HCU_sel_RS1_EX;
-
-//HCU_opa
-wire [1:0] HCU_sel_RS2_EX;
 
 //------------------------------------- Control (Not for buses)
 
@@ -144,7 +148,11 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     .ID_EIB(IF_EIB_ID),
 
     //Control from/to ID stage
-    .ID_sel_next_PC(ID_sel_next_PC_IF)
+    .ID_sel_next_PC(ID_sel_next_PC_IF),
+
+    //---------------------------- HCU (Hazard Control Unit)
+    .IF_stall(HCU_stall_IF),
+    .IF_stall_PC(HCU_stall_PC_IF)
 );
 
 
@@ -190,9 +198,14 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_val_wr_type(ID_val_wr_type_EX),
     
     .EX_sel_writeback(ID_sel_writeback_EX),
+    
+    //---------------------------- HCU (Hazard Control Unit)
+    .ID_flush(HCU_flush_ID),
+    .ID_RS1_addr(ID_RS1_addr_HCU),
+    .ID_RS2_addr(ID_RS2_addr_HCU),
 
-    .HCU_RS1_addr(EX_RS1_addr_HCU),
-    .HCU_RS2_addr(EX_RS2_addr_HCU)
+    .EX_RS1_addr(EX_RS1_addr_HCU),
+    .EX_RS2_addr(EX_RS2_addr_HCU)
 
 );
 
@@ -326,21 +339,31 @@ WB #(.XLEN(XLEN)) u_WB (
 );
 
 HCU #(.XLEN(XLEN)) u_HCU (
+    // IF Stage
+    .IF_stall_PC       (HCU_stall_PC_IF),
+    .IF_stall          (HCU_stall_IF),
+
     // ID Stage
-    .EX_RS1_addr      (EX_RS1_addr_HCU),
-    .EX_RS2_addr      (EX_RS2_addr_HCU),
+    .ID_RS1_addr       (ID_RS1_addr_HCU),
+    .ID_RS2_addr       (ID_RS2_addr_HCU),
+    .ID_flush          (HCU_flush_ID),
 
     // EX Stage
-    .EX_sel_RS1       (HCU_sel_RS1_EX),
-    .EX_sel_RS2       (HCU_sel_RS2_EX),
+    .EX_RS1_addr       (EX_RS1_addr_HCU),
+    .EX_RS2_addr       (EX_RS2_addr_HCU),
+    .EX_sel_RS1        (HCU_sel_RS1_EX),
+    .EX_sel_RS2        (HCU_sel_RS2_EX),
+
+    .EX_sel_writeback  (ID_sel_writeback_EX),
+    .EX_RD_addr_in     (ID_RD_addr_in_EX),
 
     // MEM Stage
-    .MEM_RD_addr_in   (EX_RD_addr_in_MEM),
-    .MEM_regfile_we_in(EX_regfile_we_in_MEM),
+    .MEM_RD_addr_in    (EX_RD_addr_in_MEM),
+    .MEM_regfile_we_in (EX_regfile_we_in_MEM),
 
     // WB Stage
-    .WB_RD_addr_in    (MEM_RD_addr_in_WB),
-    .WB_regfile_we_in (MEM_regfile_we_in_WB)
+    .WB_RD_addr_in     (MEM_RD_addr_in_WB),
+    .WB_regfile_we_in  (MEM_regfile_we_in_WB)
 );
 
 
