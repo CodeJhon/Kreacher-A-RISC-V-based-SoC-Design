@@ -72,7 +72,7 @@
 
     // --- CONTROL CONSTANTS ----
 
-    //sel_next_pc
+    //sel_next_PC
     `define NEXT_PC_4         2'b00
     `define NEXT_PC_ALU_OUT   2'b01
 

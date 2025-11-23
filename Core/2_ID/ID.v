@@ -106,7 +106,7 @@ control u_control (
 
     //----------------------- Outputs
     // IF
-    .sel_next_pc(sel_next_PC),
+    .sel_next_PC(sel_next_PC),
 
     // ID
     .regfile_we(regfile_we),
