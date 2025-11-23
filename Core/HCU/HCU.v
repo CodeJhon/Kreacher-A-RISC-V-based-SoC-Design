@@ -4,7 +4,7 @@ module HCU #(parameter XLEN = 32)(
     //----------------------------IF Stage
     output reg           IF_stall_PC,
     output reg           IF_stall,
-    output               IF_flush,
+    output reg           IF_flush,
 
     //----------------------------ID Stage
     input [4:0]          ID_RS1_addr,
@@ -54,14 +54,21 @@ always @(EX_RS1_addr, EX_RS2_addr, MEM_RD_addr_in, MEM_regfile_we_in, WB_RD_addr
     
 end
 
-//Stalling logic
-always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback) begin
+//Stalling & Flushing logic
+always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback, EX_sel_next_PC_in) begin
     //Default values
     IF_stall_PC = 0;
     IF_stall = 0;
     ID_flush = 0;
+    IF_flush = 0;
     
-    if((EX_RD_addr_in == ID_RS1_addr) || (EX_RD_addr_in == ID_RS2_addr))begin
+    //Handling Control hazards by Flushing (Flush if jump recognized in EX stage)
+    if(EX_sel_next_PC_in != `NEXT_PC_4)begin
+        ID_flush = 1;
+        IF_flush = 1;
+    end
+    //Handling Data hazards by stalling & Flushing
+    else if((EX_RD_addr_in == ID_RS1_addr) || (EX_RD_addr_in == ID_RS2_addr))begin
         case (EX_sel_writeback)
         
             `WBACK_EMDB: begin//Stall instruction -----> LW
@@ -78,7 +85,5 @@ always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback) begin
         endcase
     end
 end
-
-assign IF_flush = 0;
 
 endmodule

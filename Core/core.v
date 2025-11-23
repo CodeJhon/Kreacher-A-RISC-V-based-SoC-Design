@@ -33,6 +33,7 @@ wire       HCU_stall_IF;
 wire [4:0] ID_RS1_addr_HCU;
 wire [4:0] ID_RS2_addr_HCU;
 wire       HCU_flush_ID;
+wire       HCU_flush_IF;
 
 //------------------------------------- Data signals (Not for buses)
 
@@ -158,7 +159,8 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 
     //---------------------------- HCU (Hazard Control Unit)
     .IF_stall(HCU_stall_IF),
-    .IF_stall_PC(HCU_stall_PC_IF)
+    .IF_stall_PC(HCU_stall_PC_IF),
+    .IF_flush(HCU_flush_IF)
 );
 
 
@@ -352,6 +354,7 @@ HCU #(.XLEN(XLEN)) u_HCU (
     // IF Stage
     .IF_stall_PC       (HCU_stall_PC_IF),
     .IF_stall          (HCU_stall_IF),
+    .IF_flush          (HCU_flush_IF),
 
     // ID Stage
     .ID_RS1_addr       (ID_RS1_addr_HCU),
@@ -366,6 +369,8 @@ HCU #(.XLEN(XLEN)) u_HCU (
 
     .EX_sel_writeback  (ID_sel_writeback_EX),
     .EX_RD_addr_in     (ID_RD_addr_in_EX),
+
+    .EX_sel_next_PC_in (EX_sel_next_PC_out_ID),
 
     // MEM Stage
     .MEM_RD_addr_in    (EX_RD_addr_in_MEM),
