@@ -4,6 +4,7 @@ module HCU #(parameter XLEN = 32)(
     //----------------------------IF Stage
     output reg           IF_stall_PC,
     output reg           IF_stall,
+    output               IF_flush,
 
     //----------------------------ID Stage
     input [4:0]          ID_RS1_addr,
@@ -18,6 +19,8 @@ module HCU #(parameter XLEN = 32)(
 
     input [2:0]          EX_sel_writeback,
     input [4:0]          EX_RD_addr_in,
+
+    input [1:0]          EX_sel_next_PC_in,
 
     //----------------------------MEM Stage
     input [4:0]          MEM_RD_addr_in,
@@ -75,6 +78,7 @@ always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback) begin
         endcase
     end
 end
-          
+
+assign IF_flush = 0;
 
 endmodule

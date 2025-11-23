@@ -22,7 +22,8 @@ module IF_HK #(parameter XLEN = 32)(
 
     //---------------------------- HCU (Hazard Control Unit)
     input                 IF_stall,
-    input                 IF_stall_PC
+    input                 IF_stall_PC,
+    input                 IF_flush
 
 );
 
@@ -54,7 +55,7 @@ end
 // ------------------------------------- Connection to adjacent stage(s)
 //ID
 always @(posedge clk) begin
-    if(reset)begin
+    if(reset || IF_flush)begin
         ID_PC_4  <= 0;
         ID_PC    <= 0;
         ID_EIB   <= 0;
