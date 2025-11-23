@@ -92,6 +92,12 @@ wire [XLEN-1:0] MEM_EMDB_WB;
 //sel_next_PC
 wire [1:0] ID_sel_next_PC_IF;
 
+//sel_next_PC_in
+wire [1:0] ID_sel_next_PC_in_EX;
+
+//sel_next_PC_out
+wire [1:0] EX_sel_next_PC_out_ID;
+
 //regfile_we_in
 wire ID_regfile_we_in_EX;
 wire EX_regfile_we_in_MEM;
@@ -187,11 +193,13 @@ ID #(.XLEN(XLEN)) u_ID (
 
     //Control from/to EX stage
     .EX_regfile_we_in(EX_regfile_we_out_ID),
+    .EX_sel_next_PC_in(EX_sel_next_PC_out_ID),
 
     .EX_sel_opa(ID_sel_opa_EX),
     .EX_sel_opb(ID_sel_opb_EX),
     .EX_sel_op(ID_sel_op_EX),
     .EX_regfile_we_out(ID_regfile_we_in_EX),
+    .EX_sel_next_PC_out(ID_sel_next_PC_in_EX),
 
     .EX_mem_wr_en(ID_mem_wr_en_EX),
     .EX_val_rd_type(ID_val_rd_type_EX),
@@ -233,6 +241,7 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_sel_opb(ID_sel_opb_EX),
     .ID_sel_op(ID_sel_op_EX),
     .ID_regfile_we_in(ID_regfile_we_in_EX),
+    .ID_sel_next_PC_in(ID_sel_next_PC_in_EX),
 
     .ID_mem_wr_en(ID_mem_wr_en_EX),
     .ID_val_rd_type(ID_val_rd_type_EX),
@@ -240,6 +249,7 @@ EX #(.XLEN(XLEN)) u_EX (
     
     .ID_sel_writeback(ID_sel_writeback_EX),
     .ID_regfile_we_out(EX_regfile_we_out_ID),
+    .ID_sel_next_PC_out(EX_sel_next_PC_out_ID),
 
     //----------------------------MEM Stage
     //Data from/to MEM stage

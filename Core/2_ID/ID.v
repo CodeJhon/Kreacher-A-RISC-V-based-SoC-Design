@@ -32,11 +32,13 @@ module ID #(parameter XLEN = 32)(
 
     //Control from/to EX stage
     input                 EX_regfile_we_in,
+    input  [1:0]          EX_sel_next_PC_in,
 
     output reg [1:0]      EX_sel_opa,
     output reg [1:0]      EX_sel_opb,
     output reg [4:0]      EX_sel_op,
     output reg            EX_regfile_we_out,
+    output reg [1:0]      EX_sel_next_PC_out,
 
     output reg            EX_mem_wr_en,
     output reg [2:0]      EX_val_rd_type,
@@ -138,7 +140,7 @@ control u_control (
 // ------------------------------------- Connection to adjacent stage(s)
 //IF_HK
 assign IF_ALU_out           = EX_ALU_out;
-assign IF_sel_next_PC       = sel_next_PC;
+assign IF_sel_next_PC       = EX_sel_next_PC_in;
 
 //EX
 always @(posedge clk) begin
@@ -155,6 +157,7 @@ always @(posedge clk) begin
         EX_sel_opb           <= 0;
         EX_sel_op            <= 0;
         EX_regfile_we_out    <= 0;
+        EX_sel_next_PC_out   <= 0;
 
         EX_mem_wr_en         <= 0;
         EX_val_rd_type       <= 0;
@@ -175,6 +178,7 @@ always @(posedge clk) begin
         EX_sel_opb           <= sel_opb;
         EX_sel_op            <= sel_op;
         EX_regfile_we_out    <= regfile_we;
+        EX_sel_next_PC_out   <= sel_next_PC;
 
         EX_mem_wr_en         <= mem_wr_en;
         EX_val_rd_type       <= val_rd_type;
