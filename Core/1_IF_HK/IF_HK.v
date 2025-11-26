@@ -11,14 +11,14 @@ module IF_HK #(parameter XLEN = 32)(
     
     //----------------------------ID Stage
     //Data from/to ID stage
-    input      [XLEN-1:0] ID_ALU_out,
+    input  [XLEN-1:0]     ID_exec_result,
 
     output reg [XLEN-1:0] ID_PC_4,
     output reg [XLEN-1:0] ID_PC,
     output reg [XLEN-1:0] ID_EIB,
 
     //Control from/to ID stage
-    input      [1:0]      ID_sel_next_PC,
+    input                 ID_sel_next_PC,
 
     //---------------------------- HCU (Hazard Control Unit)
     input                 IF_stall,
@@ -44,11 +44,11 @@ always@(posedge clk)begin
 end
 
 //Mux
-always@(ID_sel_next_PC, PC_4, ID_ALU_out)begin
+always@(ID_sel_next_PC, PC_4, ID_exec_result)begin
     case(ID_sel_next_PC)
-        `NEXT_PC_4:         next_PC = PC_4;
-        `NEXT_PC_ALU_OUT:   next_PC = ID_ALU_out;
-        default:            next_PC = 0;
+        1'b0:         next_PC = PC_4;
+        1'b1:         next_PC = ID_exec_result;
+        default:      next_PC = 0;
     endcase
 end
 

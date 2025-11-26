@@ -20,7 +20,7 @@ module HCU #(parameter XLEN = 32)(
     input [2:0]          EX_sel_writeback,
     input [4:0]          EX_RD_addr_in,
 
-    input [1:0]          EX_sel_next_PC_in,
+    input                EX_sel_next_PC,
 
     //----------------------------MEM Stage
     input [4:0]          MEM_RD_addr_in,
@@ -55,7 +55,7 @@ always @(EX_RS1_addr, EX_RS2_addr, MEM_RD_addr_in, MEM_regfile_we_in, WB_RD_addr
 end
 
 //Stalling & Flushing logic
-always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback, EX_sel_next_PC_in) begin
+always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback, EX_sel_next_PC) begin
     //Default values
     IF_stall_PC = 0;
     IF_stall = 0;
@@ -63,7 +63,7 @@ always @(ID_RS1_addr, ID_RS2_addr, EX_RD_addr_in, EX_sel_writeback, EX_sel_next_
     IF_flush = 0;
     
     //Handling Control hazards by Flushing (Flush if jump recognized in EX stage)
-    if(EX_sel_next_PC_in != `NEXT_PC_4)begin
+    if(EX_sel_next_PC != 1'b0)begin
         ID_flush = 1;
         IF_flush = 1;
     end

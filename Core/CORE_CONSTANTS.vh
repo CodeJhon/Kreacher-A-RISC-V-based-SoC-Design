@@ -3,16 +3,18 @@
     `define EXEC_CONSTANTS_VH
 
     // ---- OPCODE CONSTANTS ----
-    `define SHIFT_ARITHMETIC_I 7'b0010011 
+    `define INT_REG_IMM 7'b0010011 
     `define LUI 7'b0110111
     `define AUIPC 7'b0010111
-    `define SHIFT_ARITHMETIC 7'b0110011
+    `define INT_REG_REG 7'b0110011
 
     `define JAL 7'b1101111
     `define JALR 7'b1100111
 
     `define LOAD  7'b0000011
     `define STORE 7'b0100011
+
+    `define BRANCH 7'b1100011
 
     // ---- func3 ----SHIFT_ARITHMETIC
     `define ARITHMETIC 3'b000
@@ -54,8 +56,13 @@
     `define XORI 3'b100
     `define  ORI 3'b110 
 
-    // ---- func7 ----
-
+    // ---- func3 ---- BRANCH
+    `define BEQ  3'b000
+    `define BNE  3'b001
+    `define BLT  3'b100
+    `define BGE  3'b101
+    `define BLTU 3'b110
+    `define BGEU 3'b111
 
     // ---- ALU CONSTANTS ----
     `define ALU_ADD         5'b00000
@@ -69,26 +76,31 @@
     `define ALU_SRL         5'b01000
     `define ALU_SRA         5'b01001
     `define ALU_FORWARD_B   5'b01010
+    `define ALU_EQ          5'b01011
+    `define ALU_NE          5'b01100
+    `define ALU_LT          5'b01101
+    `define ALU_GE          5'b01110
+    `define ALU_LTU         5'b01111
+    `define ALU_GEU         5'b10000
 
     // --- CONTROL CONSTANTS ----
+    //Global (for 1 bit signals)
+    `define ENABLE 1'b1
+    `define DISABLE 1'b0
 
-    //sel_next_PC
-    `define NEXT_PC_4         2'b00
-    `define NEXT_PC_ALU_OUT   2'b01
-
-    //sel_opa
-    `define OPA_PC      2'b00
-    `define OPA_RS1     2'b01
+    //sel_exec_result
+    `define exec_result_ALU             1'b0
+    `define exec_result_PC_plus_imm     1'b1
 
     //sel_opb
     `define OPB_IMM     2'b00
     `define OPB_RS2     2'b01
 
     //sel_writeback
-    `define WBACK_ALU_OUT    3'b000
-    `define WBACK_PC_4       3'b001
-    `define WBACK_EMDB       3'b010
-    `define WBACK_NONE       3'b100
+    `define WBACK_EXEC_RESULT    3'b000
+    `define WBACK_PC_4           3'b001
+    `define WBACK_EMDB           3'b010
+    `define WBACK_NONE           3'b100
 
     //val_rd_type, val_wr_type (mem stage)
     `define FORWARD_INPUT   3'b000
@@ -106,8 +118,7 @@
     `define J_IMMEDIATE 3'b100
     `define IMM_NOT_USED 3'b101
 
-    `define ENABLE 1'b1
-    `define DISABLE 1'b0
+    
 
     //------------------    HCU signals
     

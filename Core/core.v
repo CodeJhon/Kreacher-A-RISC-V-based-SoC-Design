@@ -37,11 +37,11 @@ wire       HCU_flush_IF;
 
 //------------------------------------- Data signals (Not for buses)
 
-//ALU_out
-wire [XLEN-1:0] ID_ALU_out_IF;
-wire [XLEN-1:0] EX_ALU_out_ID;
-wire [XLEN-1:0] EX_ALU_out_MEM;
-wire [XLEN-1:0] MEM_ALU_out_WB;
+//exec_result
+wire [XLEN-1:0] ID_exec_result_IF;
+wire [XLEN-1:0] EX_exec_result_ID;
+wire [XLEN-1:0] EX_exec_result_MEM;
+wire [XLEN-1:0] MEM_exec_result_WB;
 
 //PC_4
 wire [XLEN-1:0] IF_PC_4_ID;
@@ -81,8 +81,8 @@ wire [4:0] EX_RD_addr_out_ID;
 //imm
 wire [XLEN-1:0] ID_imm_EX;
 
-//FW_ALU_out
-wire [XLEN-1:0] MEM_FW_ALU_out_EX;
+//FW_exec_result
+wire [XLEN-1:0] MEM_FW_exec_result_EX;
 
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
@@ -91,13 +91,14 @@ wire [XLEN-1:0] MEM_EMDB_WB;
 //------------------------------------- Control (Not for buses)
 
 //sel_next_PC
-wire [1:0] ID_sel_next_PC_IF;
+wire  EX_sel_next_PC_ID;
+wire  ID_sel_next_PC_IF;
 
-//sel_next_PC_in
-wire [1:0] ID_sel_next_PC_in_EX;
+//jump
+wire  ID_jump_EX;
 
-//sel_next_PC_out
-wire [1:0] EX_sel_next_PC_out_ID;
+//branch
+wire  ID_branch_EX;
 
 //regfile_we_in
 wire ID_regfile_we_in_EX;
@@ -109,8 +110,8 @@ wire WB_regfile_we_out_MEM;
 wire MEM_regfile_we_out_EX;
 wire EX_regfile_we_out_ID;
 
-//sel_opa
-wire [1:0] ID_sel_opa_EX;
+//sel_exec_result
+wire [1:0] ID_sel_exec_result_EX;
 
 //sel_opb
 wire [1:0] ID_sel_opb_EX;
@@ -148,7 +149,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     
     //----------------------------ID Stage
     //Data from/to ID stage
-    .ID_ALU_out(ID_ALU_out_IF),
+    .ID_exec_result(ID_exec_result_IF),
 
     .ID_PC_4(IF_PC_4_ID),
     .ID_PC(IF_PC_ID),
@@ -175,14 +176,14 @@ ID #(.XLEN(XLEN)) u_ID (
     .IF_PC(IF_PC_ID),
     .IF_EIB(IF_EIB_ID),
 
-    .IF_ALU_out(ID_ALU_out_IF),
+    .IF_exec_result(ID_exec_result_IF),
 
     //Control from/to IF_HK stage
     .IF_sel_next_PC(ID_sel_next_PC_IF),
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    .EX_ALU_out(EX_ALU_out_ID),
+    .EX_exec_result(EX_exec_result_ID),
     .EX_RD(EX_RD_ID),
     .EX_RD_addr_in(EX_RD_addr_out_ID),
 
@@ -195,13 +196,14 @@ ID #(.XLEN(XLEN)) u_ID (
 
     //Control from/to EX stage
     .EX_regfile_we_in(EX_regfile_we_out_ID),
-    .EX_sel_next_PC_in(EX_sel_next_PC_out_ID),
+    .EX_sel_next_PC(EX_sel_next_PC_ID),
 
-    .EX_sel_opa(ID_sel_opa_EX),
+    .EX_sel_exec_result(ID_sel_exec_result_EX),
     .EX_sel_opb(ID_sel_opb_EX),
     .EX_sel_op(ID_sel_op_EX),
     .EX_regfile_we_out(ID_regfile_we_in_EX),
-    .EX_sel_next_PC_out(ID_sel_next_PC_in_EX),
+    .EX_jump(ID_jump_EX),
+    .EX_branch(ID_branch_EX),
 
     .EX_mem_wr_en(ID_mem_wr_en_EX),
     .EX_val_rd_type(ID_val_rd_type_EX),
@@ -234,16 +236,17 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_RD_addr_in(ID_RD_addr_in_EX),
     .ID_imm(ID_imm_EX),
 
-    .ID_ALU_out(EX_ALU_out_ID),
+    .ID_exec_result(EX_exec_result_ID),
     .ID_RD(EX_RD_ID),
     .ID_RD_addr_out(EX_RD_addr_out_ID),
 
     //Control from/to ID stage
-    .ID_sel_opa(ID_sel_opa_EX),
     .ID_sel_opb(ID_sel_opb_EX),
     .ID_sel_op(ID_sel_op_EX),
     .ID_regfile_we_in(ID_regfile_we_in_EX),
-    .ID_sel_next_PC_in(ID_sel_next_PC_in_EX),
+    .ID_jump(ID_jump_EX),
+    .ID_branch(ID_branch_EX),
+    .ID_sel_exec_result(ID_sel_exec_result_EX),
 
     .ID_mem_wr_en(ID_mem_wr_en_EX),
     .ID_val_rd_type(ID_val_rd_type_EX),
@@ -251,16 +254,16 @@ EX #(.XLEN(XLEN)) u_EX (
     
     .ID_sel_writeback(ID_sel_writeback_EX),
     .ID_regfile_we_out(EX_regfile_we_out_ID),
-    .ID_sel_next_PC_out(EX_sel_next_PC_out_ID),
+    .ID_sel_next_PC(EX_sel_next_PC_ID),
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
     .MEM_RD(MEM_RD_EX),
     .MEM_RD_addr_in(MEM_RD_addr_out_EX),
-    .MEM_FW_ALU_out(MEM_FW_ALU_out_EX),
+    .MEM_FW_exec_result(MEM_FW_exec_result_EX),
 
     .MEM_PC_4(EX_PC_4_MEM),
-    .MEM_ALU_out(EX_ALU_out_MEM),
+    .MEM_exec_result(EX_exec_result_MEM),
     .MEM_RS2(EX_RS2_MEM),
     .MEM_RD_addr_out(EX_RD_addr_in_MEM),
 
@@ -294,13 +297,13 @@ MEM #(.XLEN(XLEN)) u_MEM (
     //----------------------------EX Stage
     //Data from/to EX stage
     .EX_PC_4(EX_PC_4_MEM),
-    .EX_ALU_out(EX_ALU_out_MEM),
+    .EX_exec_result(EX_exec_result_MEM),
     .EX_RS2(EX_RS2_MEM),
     .EX_RD_addr_in(EX_RD_addr_in_MEM),
 
     .EX_RD(MEM_RD_EX),
     .EX_RD_addr_out(MEM_RD_addr_out_EX),
-    .EX_FW_ALU_out(MEM_FW_ALU_out_EX),
+    .EX_FW_exec_result(MEM_FW_exec_result_EX),
 
     //Control from/to EX stage
     .EX_mem_wr_en(EX_mem_wr_en_MEM),
@@ -319,7 +322,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
     .WB_regfile_we_in(WB_regfile_we_out_MEM),
 
     .WB_PC_4(MEM_PC_4_WB),
-    .WB_ALU_out(MEM_ALU_out_WB),
+    .WB_exec_result(MEM_exec_result_WB),
     .WB_EMDB(MEM_EMDB_WB),
     .WB_RD_addr_out(MEM_RD_addr_in_WB),
     .WB_regfile_we_out(MEM_regfile_we_in_WB),
@@ -337,7 +340,7 @@ WB #(.XLEN(XLEN)) u_WB (
     //----------------------------MEM Stage
     //Data from/to MEM stage
     .MEM_PC_4(MEM_PC_4_WB),
-    .MEM_ALU_out(MEM_ALU_out_WB),
+    .MEM_exec_result(MEM_exec_result_WB),
     .MEM_EMDB(MEM_EMDB_WB),
     .MEM_RD_addr_in(MEM_RD_addr_in_WB),
     .MEM_regfile_we_in(MEM_regfile_we_in_WB),
@@ -370,7 +373,7 @@ HCU #(.XLEN(XLEN)) u_HCU (
     .EX_sel_writeback  (ID_sel_writeback_EX),
     .EX_RD_addr_in     (ID_RD_addr_in_EX),
 
-    .EX_sel_next_PC_in (EX_sel_next_PC_out_ID),
+    .EX_sel_next_PC    (EX_sel_next_PC_ID),
 
     // MEM Stage
     .MEM_RD_addr_in    (EX_RD_addr_in_MEM),
