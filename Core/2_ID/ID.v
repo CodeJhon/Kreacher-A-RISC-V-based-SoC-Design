@@ -11,17 +11,16 @@ module ID #(parameter XLEN = 32)(
     input [XLEN-1:0]      IF_PC,
     input [XLEN-1:0]      IF_EIB, 
 
-    output [XLEN-1:0]     IF_ALU_out,
+    output [XLEN-1:0]     IF_exec_result,
 
     //Control from/to IF_HK stage
-    output [1:0]          IF_sel_next_PC,
+    output                IF_sel_next_PC,
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    input [XLEN-1:0]      EX_ALU_out,
+    input [XLEN-1:0]      EX_exec_result,
     input [XLEN-1:0]      EX_RD,
     input [4:0]           EX_RD_addr_in,
-    
 
     output reg [XLEN-1:0] EX_PC_4,
     output reg [XLEN-1:0] EX_PC,
@@ -32,13 +31,14 @@ module ID #(parameter XLEN = 32)(
 
     //Control from/to EX stage
     input                 EX_regfile_we_in,
-    input  [1:0]          EX_sel_next_PC_in,
+    input  [1:0]          EX_sel_next_PC,
 
-    output reg [1:0]      EX_sel_opa,
     output reg [1:0]      EX_sel_opb,
     output reg [4:0]      EX_sel_op,
     output reg            EX_regfile_we_out,
-    output reg [1:0]      EX_sel_next_PC_out,
+    output reg            EX_jump,
+    output reg            EX_branch,
+    output reg            EX_sel_exec_result,
 
     output reg            EX_mem_wr_en,
     output reg [2:0]      EX_val_rd_type,
@@ -91,14 +91,15 @@ extend_imm #(.XLEN(XLEN)) u_extend_imm (
 
 //Controller (Decoder)
 
-wire [1:0]      sel_next_PC;
+wire            jump;
+wire            branch;
 
 wire [2:0]      imm_type;
 
-wire [1:0]      sel_opa;
 wire [1:0]      sel_opb;
 wire [4:0]      sel_op;
 wire            regfile_we;
+wire            sel_exec_result;
 
 wire            mem_wr_en;
 wire [2:0]      val_wr_type;
@@ -114,17 +115,16 @@ control u_control (
     .funct7(IF_EIB[31:25]),
 
     //----------------------- Outputs
-    // IF
-    .sel_next_PC(sel_next_PC),
-
     // ID
     .regfile_we(regfile_we),
     .imm_type(imm_type),
 
     // EX
-    .sel_opa(sel_opa),
     .sel_opb(sel_opb),
     .sel_op(sel_op),
+    .sel_exec_result(sel_exec_result),
+    .jump(jump),
+    .branch(branch),
 
     // MEM
     .mem_wr_en(mem_wr_en),
@@ -139,8 +139,8 @@ control u_control (
 
 // ------------------------------------- Connection to adjacent stage(s)
 //IF_HK
-assign IF_ALU_out           = EX_ALU_out;
-assign IF_sel_next_PC       = EX_sel_next_PC_in;
+assign IF_exec_result       = EX_exec_result;
+assign IF_sel_next_PC       = EX_sel_next_PC;
 
 //EX
 always @(posedge clk) begin
@@ -153,11 +153,12 @@ always @(posedge clk) begin
         EX_RD_addr_out       <= 0;
         EX_imm               <= 0;
             //Control
-        EX_sel_opa           <= 0;
         EX_sel_opb           <= 0;
         EX_sel_op            <= 0;
         EX_regfile_we_out    <= 0;
-        EX_sel_next_PC_out   <= 0;
+        EX_jump              <= 0;
+        EX_branch            <= 0;
+        EX_sel_exec_result   <= 0;
 
         EX_mem_wr_en         <= 0;
         EX_val_rd_type       <= 0;
@@ -174,11 +175,12 @@ always @(posedge clk) begin
         EX_RD_addr_out       <= IF_EIB[11:7];
         EX_imm               <= imm;
             //Control
-        EX_sel_opa           <= sel_opa;
         EX_sel_opb           <= sel_opb;
         EX_sel_op            <= sel_op;
         EX_regfile_we_out    <= regfile_we;
-        EX_sel_next_PC_out   <= sel_next_PC;
+        EX_jump              <= jump;
+        EX_branch            <= branch;
+        EX_sel_exec_result   <= sel_exec_result;
 
         EX_mem_wr_en         <= mem_wr_en;
         EX_val_rd_type       <= val_rd_type;
