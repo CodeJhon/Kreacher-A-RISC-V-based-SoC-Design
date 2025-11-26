@@ -11,14 +11,14 @@ module ID #(parameter XLEN = 32)(
     input [XLEN-1:0]  IF_PC,
     input [XLEN-1:0]  IF_EIB, 
 
-    output [XLEN-1:0] IF_ALU_out,
+    output [XLEN-1:0] IF_exec_result,
 
     //Control from/to IF_HK stage
-    output [1:0]      IF_sel_next_PC,
+    output            IF_sel_next_PC,
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    input [XLEN-1:0]  EX_ALU_out,
+    input [XLEN-1:0]  EX_exec_result,
     input [XLEN-1:0]  EX_RD,
     input [4:0]       EX_RD_addr_in,
     
@@ -32,13 +32,14 @@ module ID #(parameter XLEN = 32)(
 
     //Control from/to EX stage
     input             EX_regfile_we_in,
-    input  [1:0]      EX_sel_next_PC_in,
+    input             EX_sel_next_PC,
 
-    output [1:0]      EX_sel_opa,
     output [1:0]      EX_sel_opb,
     output [4:0]      EX_sel_op,
     output            EX_regfile_we_out,
-    output [1:0]      EX_sel_next_PC_out,
+    output            EX_jump,
+    output            EX_branch,
+    output            EX_sel_exec_result,
 
     output            EX_mem_wr_en,
     output [2:0]      EX_val_rd_type,
@@ -82,14 +83,15 @@ extend_imm #(.XLEN(XLEN)) u_extend_imm (
 
 //Controller (Decoder)
 
-wire [1:0]      sel_next_PC;
+wire            jump;
+wire            branch;
 
 wire [2:0]      imm_type;
 
-wire [1:0]      sel_opa;
 wire [1:0]      sel_opb;
 wire [4:0]      sel_op;
 wire            regfile_we;
+wire            sel_exec_result;
 
 wire            mem_wr_en;
 wire [2:0]      val_wr_type;
@@ -105,17 +107,16 @@ control u_control (
     .funct7(IF_EIB[31:25]),
 
     //----------------------- Outputs
-    // IF
-    .sel_next_PC(sel_next_PC),
-
     // ID
     .regfile_we(regfile_we),
     .imm_type(imm_type),
 
     // EX
-    .sel_opa(sel_opa),
     .sel_opb(sel_opb),
     .sel_op(sel_op),
+    .sel_exec_result(sel_exec_result),
+    .jump(jump),
+    .branch(branch),
 
     // MEM
     .mem_wr_en(mem_wr_en),
@@ -130,8 +131,8 @@ control u_control (
 
 // ------------------------------------- Connection to adjacent stage(s)
 //IF_HK
-assign IF_ALU_out           = EX_ALU_out;
-assign IF_sel_next_PC       = EX_sel_next_PC_in;
+assign IF_exec_result       = EX_exec_result;
+assign IF_sel_next_PC       = EX_sel_next_PC;
 
 //EX
     //Data
@@ -142,11 +143,12 @@ assign EX_RS2               = RS2;
 assign EX_RD_addr_out       = IF_EIB[11:7];
 assign EX_imm               = imm;
     //Control
-assign EX_sel_opa           = sel_opa;
 assign EX_sel_opb           = sel_opb;
 assign EX_sel_op            = sel_op;
 assign EX_regfile_we_out    = regfile_we;
-assign EX_sel_next_PC_out   = sel_next_PC;
+assign EX_jump              = jump;
+assign EX_branch            = branch;
+assign EX_sel_exec_result   = sel_exec_result;
 
 assign EX_mem_wr_en         = mem_wr_en;
 assign EX_val_rd_type       = val_rd_type;
