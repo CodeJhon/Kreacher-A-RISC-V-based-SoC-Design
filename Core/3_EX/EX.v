@@ -1,6 +1,12 @@
 `include "../CORE_CONSTANTS.vh"
 
 module EX #(parameter XLEN = 32)(
+`ifndef SYNTHESIS 
+    input [31:0]   EX_instruction,
+    output [XLEN-1:0]   MEM_PC,
+    output [31:0]   MEM_instruction,
+`endif 
+
     //Global
     input clk,
     input reset,
@@ -128,4 +134,9 @@ assign MEM_regfile_we_out   = ID_regfile_we_in;
 
 assign MEM_sel_writeback    = ID_sel_writeback;
 
+// For verification purposes
+`ifndef SYNTHESIS
+    assign MEM_PC = ID_PC;
+    assign MEM_instruction = EX_instruction;
+`endif
 endmodule

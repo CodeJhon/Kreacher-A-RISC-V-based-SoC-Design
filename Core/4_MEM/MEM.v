@@ -1,6 +1,12 @@
 `include "../CORE_CONSTANTS.vh"
 
 module MEM #(parameter XLEN = 32)(
+`ifndef SYNTHESIS 
+    input [XLEN-1:0]   MEM_PC,
+    input [31:0]   MEM_instruction,
+    output [31:0]   WB_instruction,
+    output [XLEN-1:0]   WB_PC,
+`endif
     //Global
     input clk,
     input reset,

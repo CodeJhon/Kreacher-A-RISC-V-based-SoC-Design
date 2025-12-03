@@ -1,6 +1,9 @@
 `include "../CORE_CONSTANTS.vh"
 
 module ID #(parameter XLEN = 32)(
+`ifndef SYNTHESIS
+    output [31:0]     EX_instruction,
+`endif
     //Global
     input clk,
     input reset,
@@ -156,4 +159,8 @@ assign EX_val_wr_type       = val_wr_type;
 
 assign EX_sel_writeback     = sel_writeback;
 
+// For verification purposes
+`ifndef SYNTHESIS
+    assign EX_instruction = IF_EIB;
+`endif
 endmodule

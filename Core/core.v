@@ -1,4 +1,11 @@
 module core #(parameter XLEN = 32)(
+`ifndef SYNTHESIS
+    output           commit_valid,
+    output [XLEN-1:0]   commit_PC,
+    output [4:0]   commit_rd_addr,
+    output [XLEN-1:0]   commit_rd_value,
+    output [31:0]   commit_instruction,
+`endif
     //Global
     input clk,
     input reset,
@@ -116,6 +123,15 @@ wire [2:0] ID_sel_writeback_EX;
 wire [2:0] EX_sel_writeback_MEM;
 wire [2:0] MEM_sel_writeback_WB;
 
+// For verification purposes
+`ifndef SYNTHESIS
+wire [31:0] EX_instruction;
+wire [XLEN-1:0] MEM_PC;
+wire [31:0] MEM_instruction;
+wire [31:0] WB_instruction;
+wire [XLEN-1:0] WB_PC;
+`endif
+
 // ---------------------------------- Implementation of modules
 
 IF_HK #(.XLEN(XLEN)) u_IF_HK (
@@ -141,6 +157,9 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 
 
 ID #(.XLEN(XLEN)) u_ID (
+`ifndef SYNTHESIS
+    .EX_instruction(EX_instruction),
+`endif
     //Global
     .clk(clk),
     .reset(reset),
@@ -190,6 +209,11 @@ ID #(.XLEN(XLEN)) u_ID (
 
 
 EX #(.XLEN(XLEN)) u_EX (
+`ifndef SYNTHESIS
+    .EX_instruction(EX_instruction),
+    .MEM_PC(MEM_PC),
+    .MEM_instruction(MEM_instruction),
+`endif
     //Global
     .clk(clk),
     .reset(reset),
@@ -246,6 +270,12 @@ EX #(.XLEN(XLEN)) u_EX (
 
 
 MEM #(.XLEN(XLEN)) u_MEM (
+`ifndef SYNTHESIS
+    .MEM_PC(MEM_PC),
+    .MEM_instruction(MEM_instruction),
+    .WB_instruction(WB_instruction),
+    .WB_PC(WB_PC),
+`endif
     //Global
     .clk(clk),
     .reset(reset),
@@ -294,6 +324,15 @@ MEM #(.XLEN(XLEN)) u_MEM (
 
 
 WB #(.XLEN(XLEN)) u_WB (
+`ifndef SYNTHESIS
+    .WB_instruction(WB_instruction),
+    .WB_PC(WB_PC),
+    .commit_valid(commit_valid),
+    .commit_rd_addr(commit_rd_addr),
+    .commit_rd_value(commit_rd_value),
+    .commit_instruction(commit_instruction),
+    .commit_PC(commit_PC),
+`endif
     //Global
     .clk(clk),
     .reset(reset),
