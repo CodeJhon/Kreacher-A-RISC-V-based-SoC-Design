@@ -1,6 +1,9 @@
 `include "../CORE_CONSTANTS.vh"
 
 module ID #(parameter XLEN = 32)(
+`ifndef SYNTHESIS
+    output [31:0]     EX_instruction,
+`endif
     //Global
     input clk,
     input reset,
@@ -205,4 +208,8 @@ end
 assign ID_RS1_addr           = IF_EIB[19:15];
 assign ID_RS2_addr           = IF_EIB[24:20];
 
+// For verification purposes
+`ifndef SYNTHESIS
+    assign EX_instruction = IF_EIB;
+`endif
 endmodule

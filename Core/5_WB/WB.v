@@ -1,6 +1,15 @@
 `include "../CORE_CONSTANTS.vh"
 
 module WB #(parameter XLEN = 32)(
+`ifndef SYNTHESIS
+    input [31:0]          WB_instruction,
+    input [XLEN-1:0]   WB_PC,
+    output           commit_valid,
+    output [4:0]   commit_rd_addr,
+    output [XLEN-1:0]   commit_rd_value,
+    output [31:0]   commit_instruction,
+    output [XLEN-1:0]   commit_PC,
+`endif
     //Global
     input clk,
     input reset,
