@@ -105,4 +105,9 @@ end
 assign EMAB                 = EX_exec_result;
 assign EMCB                 = EX_mem_wr_en;
 
+`ifndef SYNTHESIS
+    assign WB_instruction = MEM_instruction;
+    assign WB_PC = MEM_PC;
+`endif
+
 endmodule

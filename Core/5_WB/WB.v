@@ -45,4 +45,14 @@ end
 // ------------------------------------- Connection to adjacent stage(s)
 assign MEM_RD_addr_out      = MEM_RD_addr_in;
 assign MEM_regfile_we_out   = MEM_regfile_we_in;
+
+// For verification purposes
+`ifndef SYNTHESIS
+assign commit_valid = MEM_regfile_we_in;
+assign commit_rd_addr = MEM_RD_addr_in;
+assign commit_rd_value = MEM_RD;
+assign commit_instruction = WB_instruction;
+assign commit_PC = WB_PC;
+`endif
+
 endmodule
