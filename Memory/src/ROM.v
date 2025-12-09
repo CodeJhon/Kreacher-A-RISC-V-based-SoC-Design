@@ -7,6 +7,10 @@ module ROM #(parameter XLEN = 32, parameter DEPTH= 1024,parameter MEM_FILE = "fi
 
 );
 
+wire [16:0] internal_address;
+
+assign internal_address = addr[16:0];
+
 reg [7:0] memory [DEPTH-1:0];
 
 //Initialize the memory with the contents of the specified file
@@ -17,7 +21,7 @@ initial begin
 end
 
 //WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
-assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]} : {XLEN{1'b0}};
+assign #DELAY data_out = cs ? {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3]} : {XLEN{1'b0}};
 
 
 endmodule
