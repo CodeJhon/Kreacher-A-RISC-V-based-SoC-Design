@@ -20,7 +20,7 @@ module memories_top #(parameter XLEN = 32)(
 
 //Module Implementation
 
-ROM #(.XLEN(XLEN), .DEPTH(1024), .MEM_FILE("PMEM_content.mem")) PMEM(
+ROM #(.XLEN(XLEN), .DEPTH(10240), .MEM_FILE("PMEM_content.mem")) PMEM(
     .clk(clk),
     .reset(reset),
     .cs(PMEM_cs),
@@ -28,7 +28,7 @@ ROM #(.XLEN(XLEN), .DEPTH(1024), .MEM_FILE("PMEM_content.mem")) PMEM(
     .data_out(EIB)
 );
 
-RAM #(.XLEN(XLEN), .DEPTH(3000), .MEM_FILE("DMEM_content.mem")) DMEM(
+RAM #(.XLEN(XLEN), .DEPTH(10240), .MEM_FILE("DMEM_content.mem")) DMEM(
     .clk(clk),
     .reset(reset),
     .we(DMEM_we),

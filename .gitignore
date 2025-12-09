@@ -2,3 +2,5 @@
 Vivado_Kreacher/
 .vscode/
 DMEM_result_rearranged.mem
+temp/
+run_logs/
