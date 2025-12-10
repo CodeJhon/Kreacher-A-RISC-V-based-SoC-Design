@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-module kreacher_top #(parameter XLEN = 64)(
-`ifndef SYNTHESIS 
-    output           commit_valid,
-    output [XLEN-1:0]   commit_PC,
-    output [31:0]   commit_instruction,
-    output [4:0]     commit_rd_addr,
-    output [XLEN-1:0]   commit_rd_value,
-`endif
-=======
-<<<<<<< HEAD
 module kreacher_top #(parameter XLEN = 64)(
     `ifndef SYNTHESIS 
         output           commit_valid,
@@ -18,7 +7,6 @@ module kreacher_top #(parameter XLEN = 64)(
         output [XLEN-1:0]   commit_rd_value,
     `endif
 
->>>>>>> af4600b (Single Cycle Core v2.0)
     //Global
     input clk,
     input reset
