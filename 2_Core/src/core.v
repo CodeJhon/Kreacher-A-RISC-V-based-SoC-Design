@@ -398,6 +398,10 @@ HCU #(.XLEN(XLEN)) u_HCU (
 
 `ifndef SYNTHESIS
     verification_commits #(.XLEN(XLEN)) u_verification_commits(
+        //Global
+        .clk(clk),
+        .reset(reset),
+
         //Signals retrieved from the core
         .IF_PC(IF_PC_ID),
         .IF_EIB(IF_EIB_ID),

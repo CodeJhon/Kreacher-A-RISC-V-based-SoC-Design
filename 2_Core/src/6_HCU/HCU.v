@@ -1,4 +1,4 @@
-`include "../CORE_CONSTANTS.vh"
+`include "../../include/CORE_CONSTANTS.vh"
 
 module HCU #(parameter XLEN = 32)(
     //----------------------------IF Stage

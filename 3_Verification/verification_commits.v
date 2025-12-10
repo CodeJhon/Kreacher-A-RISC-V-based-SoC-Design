@@ -1,4 +1,7 @@
 module verification_commits  #(parameter XLEN = 32)(
+    //Global
+    input clk,
+    input reset,
     
     //Signals retrieved from the core
     input [XLEN-1:0]    IF_PC,
@@ -18,22 +21,40 @@ module verification_commits  #(parameter XLEN = 32)(
 
 //--------------------------Creation of new signals for non-WB stages
     //PC
-wire [XLEN-1:0] ID_PC_EX;
-wire [XLEN-1:0] EX_PC_MEM;
-wire [XLEN-1:0] MEM_PC_WB;
+reg [XLEN-1:0] ID_PC_EX;
+reg [XLEN-1:0] EX_PC_MEM;
+reg [XLEN-1:0] MEM_PC_WB;
 
-assign ID_PC_EX  = IF_PC;
-assign EX_PC_MEM = ID_PC_EX;
-assign MEM_PC_WB = EX_PC_MEM;
+always @(posedge clk) begin
+    if (reset) begin        
+        ID_PC_EX  <= 0;
+        EX_PC_MEM <= 0;
+        MEM_PC_WB <= 0;
+    end
+    else begin
+        ID_PC_EX  <= IF_PC;
+        EX_PC_MEM <= ID_PC_EX;
+        MEM_PC_WB <= EX_PC_MEM;
+    end
+end
 
     //EIB
-wire [31:0] ID_EIB_EX;
-wire [31:0] EX_EIB_MEM;
-wire [31:0] MEM_EIB_WB;
+reg [31:0] ID_EIB_EX;
+reg [31:0] EX_EIB_MEM;
+reg [31:0] MEM_EIB_WB;
 
-assign ID_EIB_EX  = IF_EIB;
-assign EX_EIB_MEM = ID_EIB_EX;
-assign MEM_EIB_WB = EX_EIB_MEM;
+always @(posedge clk) begin
+    if (reset) begin
+        ID_EIB_EX  <= 0;
+        EX_EIB_MEM <= 0;
+        MEM_EIB_WB <= 0;        
+    end
+    else begin
+        ID_EIB_EX  <= IF_EIB;
+        EX_EIB_MEM <= ID_EIB_EX;
+        MEM_EIB_WB <= EX_EIB_MEM;    
+    end
+end
 
 //----------------------------Assignation of signals present in WB stage
 

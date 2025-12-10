@@ -22,7 +22,7 @@ end
 
 always @(negedge clk) begin
     if (cs) begin
-       data_out = {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3]} : {XLEN{1'b0}};
+       data_out = {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3]} ;
     end
 end
 
