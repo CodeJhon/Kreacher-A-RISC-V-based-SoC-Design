@@ -1,4 +1,4 @@
-module memories_top #(parameter XLEN = 32)(
+module memories_top #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
@@ -7,7 +7,7 @@ module memories_top #(parameter XLEN = 32)(
     //PMEM signals
     input PMEM_cs,
     input  [XLEN-1:0] EIAB, // External Instruction Address Bus
-    output [XLEN-1:0] EIB, //  External Instruction Bus
+    output [31:0]     EIB, //  External Instruction Bus
 
     //DMEM signals
     input             DMEM_cs,

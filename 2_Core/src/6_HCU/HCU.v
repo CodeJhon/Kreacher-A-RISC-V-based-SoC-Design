@@ -10,6 +10,8 @@ module HCU #(parameter XLEN = 32)(
     input [4:0]          ID_RS1_addr,
     input [4:0]          ID_RS2_addr,
     output reg           ID_flush,
+    output reg [1:0]     ID_sel_RS1,
+    output reg [1:0]     ID_sel_RS2,
 
     //----------------------------EX Stage
     input [4:0]          EX_RS1_addr,
@@ -36,15 +38,15 @@ module HCU #(parameter XLEN = 32)(
 //Solving some RAW Hazards: Bypass logic -> Attention: X0 must NOT be bypassed
 always @(EX_RS1_addr, EX_RS2_addr, MEM_RD_addr_in, MEM_regfile_we_in, WB_RD_addr_in, WB_regfile_we_in) begin
     
-    //sel_opa MUX logic
+    //------------------------------------------------------------------------------ BYPASSING EX STAGE
+    //sel_RS1 MUX logic
     if(((EX_RS1_addr == MEM_RD_addr_in)&& MEM_regfile_we_in) && (EX_RS1_addr != 0))   
         EX_sel_RS1 = `HCU_BYPASS_MEM;
     else if(((EX_RS1_addr == WB_RD_addr_in)&& WB_regfile_we_in) && (EX_RS1_addr != 0))
         EX_sel_RS1 = `HCU_BYPASS_WB;
     else
         EX_sel_RS1 = `HCU_NO_BYPASS;
-
-    //sel_opb MUX logic
+    //sel_RS2 MUX logic
     if(((EX_RS2_addr == MEM_RD_addr_in)&& MEM_regfile_we_in) && (EX_RS2_addr != 0))   
         EX_sel_RS2 = `HCU_BYPASS_MEM;
     else if(((EX_RS2_addr == WB_RD_addr_in)&& WB_regfile_we_in) && (EX_RS2_addr != 0))
@@ -52,6 +54,18 @@ always @(EX_RS1_addr, EX_RS2_addr, MEM_RD_addr_in, MEM_regfile_we_in, WB_RD_addr
     else
         EX_sel_RS2 = `HCU_NO_BYPASS;
     
+    //------------------------------------------------------------------------------ BYPASSING ID STAGE
+    //sel_RS1 MUX logic
+    if(((ID_RS1_addr == WB_RD_addr_in)&& WB_regfile_we_in) && (ID_RS1_addr != 0))
+        ID_sel_RS1 = `HCU_BYPASS_WB;
+    else
+        ID_sel_RS1 = `HCU_NO_BYPASS;
+    //sel_RS2 MUX logic
+    if(((ID_RS2_addr == WB_RD_addr_in)&& WB_regfile_we_in) && (ID_RS2_addr != 0))
+        ID_sel_RS2 = `HCU_BYPASS_WB;
+    else
+        ID_sel_RS2 = `HCU_NO_BYPASS;
+
 end
 
 //Stalling & Flushing logic
