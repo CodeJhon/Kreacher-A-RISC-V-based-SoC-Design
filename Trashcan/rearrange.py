@@ -14,8 +14,8 @@ with open(input_file, "r") as f:
 
 # Write 4-per-line into the output file
 with open(output_file, "w") as f:
-    for i in range(0, len(hex_values), 4):
-        group = hex_values[i:i+4]
+    for i in range(0, len(hex_values), 8):
+        group = hex_values[i:i+8]
         f.write(" ".join(group) + "\n")
 
 print("Done! Output written to", output_file)

@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module RAM #(parameter XLEN = 32, parameter DEPTH = 1024, parameter MEM_FILE = "file_example.txt", parameter DELAY = 4)(
+module RAM #(parameter XLEN = 64, parameter DEPTH = 1024, parameter MEM_FILE = "file_example.txt", parameter DELAY = 4)(
     input clk,
     input reset,
     input we,
@@ -29,15 +29,19 @@ always @(posedge clk) begin
         end
     end
     else if(we && cs)begin
-        memory[addr+3] <= data_in[7:0];
-        memory[addr+2] <= data_in[15:8];
-        memory[addr+1] <= data_in[23:16];
-        memory[addr] <= data_in[31:24];
+        memory[addr+7] <= data_in[7:0];
+        memory[addr+6] <= data_in[15:8];
+        memory[addr+5] <= data_in[23:16];
+        memory[addr+4] <= data_in[31:24];
+        memory[addr+3] <= data_in[39:32];
+        memory[addr+2] <= data_in[47:40];
+        memory[addr+1] <= data_in[55:48];
+        memory[addr]   <= data_in[63:56];
     end
 end
 
 //WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
-assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]} : {XLEN{1'b0}};
+assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3], memory[addr+4], memory[addr+5], memory[addr+6], memory[addr+7]} : {XLEN{1'b0}};
 
 
 endmodule

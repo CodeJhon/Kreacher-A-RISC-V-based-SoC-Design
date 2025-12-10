@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module EX #(parameter XLEN = 32)(
+module EX #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
@@ -29,6 +29,7 @@ module EX #(parameter XLEN = 32)(
     input             ID_mem_wr_en,
     input [2:0]       ID_val_rd_type,
     input [2:0]       ID_val_wr_type,
+    input             ID_result_type,
     
     input [2:0]       ID_sel_writeback,
     output            ID_regfile_we_out,
@@ -51,6 +52,7 @@ module EX #(parameter XLEN = 32)(
     output            MEM_mem_wr_en,
     output [2:0]      MEM_val_rd_type,
     output [2:0]      MEM_val_wr_type,
+    output            MEM_result_type,
     
     output            MEM_regfile_we_out,
     
@@ -123,6 +125,7 @@ assign MEM_RD_addr_out      = ID_RD_addr_in;
 assign MEM_mem_wr_en        = ID_mem_wr_en;
 assign MEM_val_rd_type      = ID_val_rd_type;
 assign MEM_val_wr_type      = ID_val_wr_type;
+assign MEM_result_type      = ID_result_type;
 
 assign MEM_regfile_we_out   = ID_regfile_we_in;
 

@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module mock_memories_tb #(parameter XLEN = 32)();
+module mock_memories_tb #(parameter XLEN = 64)();
 
 // --- Testbench Signals ---
 reg  clk;
