@@ -9,16 +9,16 @@ _start:
     sw      x1, 0(x12)
 
     auipc   x2, 0x10             # AUIPC
-    sw      x2, 4(x12)
+    sw      x2, 8(x12)
 
     addi    x3, x1, 10           # ADDI
-    sw      x3, 8(x12)
+    sw      x3, 16(x12)
 
     andi    x4, x3, 0xF          # ANDI
-    sw      x4, 12(x12)
+    sw      x4, 24(x12)
 
     slti    x5, x4, -20           # SLTI
-    sw      x5, 16(x12)
+    sw      x5, 32(x12)
 
     sltiu   x6, x4, -20           # SLTIU
     sw      x6, 20(x12)

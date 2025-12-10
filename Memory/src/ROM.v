@@ -1,9 +1,9 @@
-module ROM #(parameter XLEN = 32, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem")(
+module ROM #(parameter XLEN = 64, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem")(
     input clk,
     input reset,
     input cs,
     input  [XLEN-1:0] addr,
-    output reg [XLEN-1:0] data_out
+    output reg [31:0] data_out
 
 );
 

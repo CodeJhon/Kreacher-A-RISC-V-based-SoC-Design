@@ -1,4 +1,4 @@
-module kreacher_top #(parameter XLEN = 32)(
+module kreacher_top #(parameter XLEN = 64)(
 `ifndef SYNTHESIS 
     output           commit_valid,
     output [XLEN-1:0]   commit_PC,
@@ -14,7 +14,7 @@ module kreacher_top #(parameter XLEN = 32)(
 
 // ------------------------------------------------ Buses
 //PMEM
-wire [XLEN-1:0] EIB;  //External Instruction Bus
+wire [31:0]     EIB;  //External Instruction Bus
 wire [XLEN-1:0] EIAB; //External Instruction Address Bus
 //DMEM
 wire [XLEN-1:0] EMAB;            //External Memory Address Bus

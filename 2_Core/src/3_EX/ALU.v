@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module ALU #(parameter XLEN = 32)(
+module ALU #(parameter XLEN = 64)(
     input signed [XLEN-1:0]  opa,
     input signed [XLEN-1:0]  opb,
     input [4:0]              sel_operation, 

@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module sign_extension #(parameter XLEN = 32)(
+module sign_extension #(parameter XLEN = 64)(
     input      [XLEN-1:0]  in,  //Before extension
     output reg [XLEN-1:0]  out, //After extension
 

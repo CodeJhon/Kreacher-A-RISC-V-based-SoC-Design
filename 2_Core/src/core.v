@@ -1,4 +1,4 @@
-module core #(parameter XLEN = 32)(
+module core #(parameter XLEN = 64)(//RV64I
     //Signals for verification purposes only
     `ifndef SYNTHESIS
         output              commit_valid,
@@ -13,8 +13,8 @@ module core #(parameter XLEN = 32)(
     input reset,
 
     //Buses
-    input [XLEN-1:0]  EIB,             //External Instruction Bus
-    output [XLEN-1:0] EIAB,            //External Instruction Address Bus
+    input  [31:0]     EIB,  //External Instruction Bus
+    output [XLEN-1:0] EIAB, //External Instruction Address Bus
 
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
     output            EMCB,            //External Memory Control Bus
@@ -33,8 +33,12 @@ module core #(parameter XLEN = 32)(
 //Bypassing/Forwarding signals
 wire [4:0] EX_RS1_addr_HCU;
 wire [4:0] EX_RS2_addr_HCU;
+
 wire [1:0] HCU_sel_RS1_EX;
 wire [1:0] HCU_sel_RS2_EX;
+
+wire [1:0] HCU_sel_RS1_ID;
+wire [1:0] HCU_sel_RS2_ID;
 
 //Stalling/Flushing signals
 wire       HCU_stall_PC_IF;
@@ -63,7 +67,7 @@ wire [XLEN-1:0] IF_PC_ID;
 wire [XLEN-1:0] ID_PC_EX;
 
 //EIB
-wire [XLEN-1:0] IF_EIB_ID;
+wire [31:0]     IF_EIB_ID;
 
 //RD
 wire [XLEN-1:0] WB_RD_MEM;
@@ -223,6 +227,9 @@ ID #(.XLEN(XLEN)) u_ID (
     
     //---------------------------- HCU (Hazard Control Unit)
     .ID_flush(HCU_flush_ID),
+    .ID_sel_RS1(HCU_sel_RS1_ID),
+    .ID_sel_RS2(HCU_sel_RS2_ID),
+
     .ID_RS1_addr(ID_RS1_addr_HCU),
     .ID_RS2_addr(ID_RS2_addr_HCU),
 
@@ -373,6 +380,8 @@ HCU #(.XLEN(XLEN)) u_HCU (
     .ID_RS1_addr       (ID_RS1_addr_HCU),
     .ID_RS2_addr       (ID_RS2_addr_HCU),
     .ID_flush          (HCU_flush_ID),
+    .ID_sel_RS1        (HCU_sel_RS1_ID),
+    .ID_sel_RS2        (HCU_sel_RS2_ID),
 
     // EX Stage
     .EX_RS1_addr       (EX_RS1_addr_HCU),

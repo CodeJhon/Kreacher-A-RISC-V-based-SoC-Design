@@ -5,8 +5,8 @@
 module kreacher_top_tb;
 
 // Parameters
-localparam XLEN = 32;
-localparam RUN_NUMBER_OF_INSTRUCTIONS = 9;
+localparam XLEN = 64;
+localparam RUN_NUMBER_OF_INSTRUCTIONS = 11;
 
 // Signals
 reg clk;

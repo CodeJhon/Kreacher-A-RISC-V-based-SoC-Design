@@ -4,7 +4,7 @@
 
 module tb_ALU_sim;
 
-localparam XLEN = 32;
+localparam XLEN = 64;
 
 // Inputs
 reg signed [XLEN-1:0] opa;
