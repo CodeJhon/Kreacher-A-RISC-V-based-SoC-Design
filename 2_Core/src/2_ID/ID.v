@@ -43,6 +43,7 @@ module ID #(parameter XLEN = 64)(
     output reg            EX_mem_wr_en,
     output reg [2:0]      EX_val_rd_type,
     output reg [2:0]      EX_val_wr_type,
+    output reg            EX_result_type,
     
     output reg [2:0]      EX_sel_writeback,
 
@@ -99,9 +100,9 @@ always @(regfile_RS1, regfile_RS2, EX_RD, ID_sel_RS1, ID_sel_RS2) begin
     endcase
 end
 
-//Immediate Sign-Extension
+//Immediate Build (& Sign extension)
 wire [XLEN-1:0] imm;
-extend_imm #(.XLEN(XLEN)) u_extend_imm (
+build_imm #(.XLEN(XLEN)) u_build_imm (
     .in(IF_EIB),
     .out(imm),
     .imm_type(imm_type)
@@ -123,6 +124,7 @@ wire            sel_exec_result;
 wire            mem_wr_en;
 wire [2:0]      val_wr_type;
 wire [2:0]      val_rd_type;
+wire            result_type;
 
 wire [2:0]      sel_writeback;
 
@@ -149,6 +151,7 @@ control u_control (
     .mem_wr_en(mem_wr_en),
     .val_wr_type(val_wr_type),
     .val_rd_type(val_rd_type),
+    .result_type(result_type),
 
     // WB
     .sel_writeback(sel_writeback)
@@ -182,6 +185,7 @@ always @(posedge clk) begin
         EX_mem_wr_en         <= 0;
         EX_val_rd_type       <= 0;
         EX_val_wr_type       <= 0;
+        EX_result_type       <= 0;
 
         EX_sel_writeback     <= 0; 
     end
@@ -204,6 +208,7 @@ always @(posedge clk) begin
         EX_mem_wr_en         <= mem_wr_en;
         EX_val_rd_type       <= val_rd_type;
         EX_val_wr_type       <= val_wr_type;
+        EX_result_type       <= result_type;
 
         EX_sel_writeback     <= sel_writeback;
     end

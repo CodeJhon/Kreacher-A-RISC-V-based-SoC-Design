@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module extend_imm #(parameter XLEN = 64)(
+module build_imm #(parameter XLEN = 64)(
     input      [31:0]     in, //Before extension
     output reg [XLEN-1:0] out, //After extension
 

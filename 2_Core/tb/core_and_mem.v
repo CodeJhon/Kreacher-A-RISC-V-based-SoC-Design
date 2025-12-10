@@ -6,6 +6,7 @@ module core_and_mem #(parameter XLEN = 32)(
         output [4:0]     commit_rd_addr,
         output [XLEN-1:0]   commit_rd_value,
     `endif
+    
     //Global
     input clk,
     input reset

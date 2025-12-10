@@ -29,6 +29,7 @@ module EX #(parameter XLEN = 64)(
     input                 ID_mem_wr_en,
     input [2:0]           ID_val_rd_type,
     input [2:0]           ID_val_wr_type,
+    input                 ID_result_type,
     
     input [2:0]           ID_sel_writeback,
     output                ID_regfile_we_out,
@@ -51,6 +52,7 @@ module EX #(parameter XLEN = 64)(
     output reg            MEM_mem_wr_en,
     output reg [2:0]      MEM_val_rd_type,
     output reg [2:0]      MEM_val_wr_type,
+    output reg            MEM_result_type,
     
     output reg            MEM_regfile_we_out,
     
@@ -149,6 +151,7 @@ always @(posedge clk) begin
         MEM_mem_wr_en        <= 0;
         MEM_val_rd_type      <= 0;
         MEM_val_wr_type      <= 0;
+        MEM_result_type      <= 0;
 
         MEM_regfile_we_out   <= 0;
 
@@ -163,6 +166,7 @@ always @(posedge clk) begin
         MEM_mem_wr_en        <= ID_mem_wr_en;
         MEM_val_rd_type      <= ID_val_rd_type;
         MEM_val_wr_type      <= ID_val_wr_type;
+        MEM_result_type      <= ID_result_type;
 
         MEM_regfile_we_out   <= ID_regfile_we_in;
 

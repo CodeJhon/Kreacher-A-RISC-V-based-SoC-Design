@@ -40,9 +40,15 @@ always@(opa, opb , sel_operation, opa_equal_opb, opa_less_than_opb, opa_less_tha
         `ALU_AND:                internal_alu_result = opa & opb;
         `ALU_OR:                 internal_alu_result = opa | opb;
         `ALU_XOR:                internal_alu_result = opa ^ opb;
-        `ALU_SLL:                internal_alu_result = opa << opb[4:0];
-        `ALU_SRL:                internal_alu_result = opa >> opb[4:0];
-        `ALU_SRA:                internal_alu_result = opa >>> opb[4:0];
+        
+        `ALU_SLL:                internal_alu_result = opa << opb[5:0];
+        `ALU_SLLW:               internal_alu_result = opa << opb[4:0];
+
+        `ALU_SRL:                internal_alu_result = opa >> opb[5:0];
+        `ALU_SRLW:               internal_alu_result = opa >> opb[4:0];
+
+        `ALU_SRA:                internal_alu_result = opa >>> opb[5:0];
+        `ALU_SRAW:               internal_alu_result = opa >>> opb[4:0];
         //------------------------------------------------------------------BRANCH CONDITION
         `ALU_EQ:                 branch_condition = opa_equal_opb;
         `ALU_NE:                 branch_condition = ~opa_equal_opb;

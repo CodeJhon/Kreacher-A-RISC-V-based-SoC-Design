@@ -24,11 +24,12 @@ module control(
     output  reg mem_wr_en,
     output  reg [2:0] val_wr_type,
     output  reg [2:0] val_rd_type,
+    output  reg       result_type,
 
     //WB
     output reg [2:0] sel_writeback
 );
-always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
+always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
     //Default values - disable everything
     jump = `DISABLE;
     branch  = `DISABLE;
@@ -41,6 +42,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
     val_wr_type = `MEM_NOT_USED;
     val_rd_type = `MEM_NOT_USED;
     sel_writeback = `WBACK_NONE;
+    result_type = `RESULT_64;
     case(opcode)
         //Instructions with shared opcode
 
@@ -55,6 +57,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_EXEC_RESULT;
+            result_type = `RESULT_64;
             case(funct3)
                 `AND:         sel_op = `ALU_AND;
                 `OR:          sel_op = `ALU_OR;
@@ -77,6 +80,35 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             endcase
         end
 
+        `INT_REG_REG_W:begin
+            jump = `DISABLE;
+            branch  = `DISABLE;
+            regfile_we = `ENABLE;
+            imm_type = `IMM_NOT_USED;
+            sel_exec_result = `exec_result_ALU;
+            sel_opb = `OPB_RS2;
+            mem_wr_en = `DISABLE;
+            val_wr_type = `MEM_NOT_USED;
+            val_rd_type = `MEM_NOT_USED;
+            sel_writeback = `WBACK_EXEC_RESULT;
+            result_type = `RESULT_32;
+            case(funct3)
+                `SLL:         sel_op = `ALU_SLLW;
+                `SHIFT:begin
+                    case(funct7)
+                        `SRA: sel_op = `ALU_SRAW;
+                        `SRL: sel_op = `ALU_SRLW;
+                    endcase
+                end
+                `ARITHMETIC:begin
+                    case(funct7)
+                        `ADD: sel_op = `ALU_ADD;
+                        `SUB: sel_op = `ALU_SUB;
+                    endcase
+                end
+            endcase
+        end
+
         `INT_REG_IMM:begin
             jump = `DISABLE;
             branch  = `DISABLE;
@@ -88,6 +120,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_EXEC_RESULT;
+            result_type = `RESULT_64;
             case(funct3)
                 `ADDI:      sel_op = `ALU_ADD;
                 `SLTI:      sel_op = `ALU_SLT;
@@ -97,6 +130,25 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
                 `ORI:       sel_op = `ALU_OR;
                 `SLLI:      sel_op = `ALU_SLL;
                 `SRLI_SRAI: sel_op = imm_I_10 ? `ALU_SRA : `ALU_SRL;
+            endcase
+        end
+
+        `INT_REG_IMM_W:begin
+            jump = `DISABLE;
+            branch  = `DISABLE;
+            regfile_we = `ENABLE;
+            imm_type = `I_IMMEDIATE;
+            sel_exec_result = `exec_result_ALU;
+            sel_opb = `OPB_IMM;
+            mem_wr_en = `DISABLE;
+            val_wr_type = `MEM_NOT_USED;
+            val_rd_type = `MEM_NOT_USED;
+            sel_writeback = `WBACK_EXEC_RESULT;
+            result_type = `RESULT_32;
+            case(funct3)
+                `ADDI:      sel_op = `ALU_ADD;
+                `SLLI:      sel_op = `ALU_SLLW;
+                `SRLI_SRAI: sel_op = imm_I_10 ? `ALU_SRAW : `ALU_SRLW;
             endcase
         end
 
@@ -111,8 +163,11 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_EMDB;
+            result_type = `RESULT_64;
             case(funct3)
-                `LW:  val_rd_type = `FORWARD_INPUT;
+                `LD:  val_rd_type = `FORWARD_INPUT;
+                `LW:  val_rd_type = `SIGN_EXTEND_32;
+                `LWU: val_rd_type = `ZERO_EXTEND_32;
                 `LH:  val_rd_type = `SIGN_EXTEND_16;
                 `LHU: val_rd_type = `ZERO_EXTEND_16;
                 `LB:  val_rd_type = `SIGN_EXTEND_8;
@@ -131,8 +186,10 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `ENABLE;
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_NONE;
+            result_type = `RESULT_64;
             case(funct3)
-                `SW: val_wr_type = `FORWARD_INPUT;
+                `SD: val_wr_type = `FORWARD_INPUT;
+                `SW: val_wr_type = `SIGN_EXTEND_32;
                 `SH: val_wr_type = `SIGN_EXTEND_16;
                 `SB: val_wr_type = `SIGN_EXTEND_8;
             endcase
@@ -149,6 +206,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_NONE;
+            result_type = `RESULT_64;
             case (funct3)
                 `BEQ:  sel_op = `ALU_EQ;
                 `BNE:  sel_op = `ALU_NE;
@@ -172,7 +230,8 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_EXEC_RESULT;  
+            sel_writeback = `WBACK_EXEC_RESULT;
+            result_type = `RESULT_64;  
         end
         
         `AUIPC:begin
@@ -186,7 +245,8 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_EXEC_RESULT;  
+            sel_writeback = `WBACK_EXEC_RESULT;
+            result_type = `RESULT_64;  
         end
 
         `JAL:begin
@@ -201,6 +261,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_PC_4;
+            result_type = `RESULT_64;
         end
 
         `JALR:begin
@@ -215,6 +276,7 @@ always@(opcode or imm_I_10 or funct3 or funct7)begin //combinational circuit
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_PC_4;
+            result_type = `RESULT_64;
         end
     endcase
 end
