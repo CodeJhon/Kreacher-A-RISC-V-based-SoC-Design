@@ -1,4 +1,4 @@
-module core #(parameter XLEN = 32)(
+module core #(parameter XLEN = 64)(//RV64I
     //Signals for verification purposes only
     `ifndef SYNTHESIS
         output              commit_valid,
@@ -13,7 +13,7 @@ module core #(parameter XLEN = 32)(
     input reset,
 
     //Buses
-    input [XLEN-1:0]  EIB,             //External Instruction Bus
+    input  [31:0]     EIB,             //External Instruction Bus
     output [XLEN-1:0] EIAB,            //External Instruction Address Bus
 
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
@@ -47,7 +47,7 @@ wire [XLEN-1:0] IF_PC_ID;
 wire [XLEN-1:0] ID_PC_EX;
 
 //EIB
-wire [XLEN-1:0] IF_EIB_ID;
+wire [31:0]     IF_EIB_ID;
 
 //RD
 wire [XLEN-1:0] WB_RD_MEM;
@@ -119,6 +119,10 @@ wire [2:0] EX_val_rd_type_MEM;
 //val_wr_type
 wire [2:0] ID_val_wr_type_EX;
 wire [2:0] EX_val_wr_type_MEM;
+
+//result_type
+wire       ID_result_type_EX;
+wire       EX_result_type_MEM;
 
 //sel_writeback
 wire [2:0] ID_sel_writeback_EX;
@@ -193,6 +197,7 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_mem_wr_en(ID_mem_wr_en_EX),
     .EX_val_rd_type(ID_val_rd_type_EX),
     .EX_val_wr_type(ID_val_wr_type_EX),
+    .EX_result_type(ID_result_type_EX),
     
     .EX_sel_writeback(ID_sel_writeback_EX)
 
@@ -228,6 +233,7 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_mem_wr_en(ID_mem_wr_en_EX),
     .ID_val_rd_type(ID_val_rd_type_EX),
     .ID_val_wr_type(ID_val_wr_type_EX),
+    .ID_result_type(ID_result_type_EX),
     
     .ID_sel_writeback(ID_sel_writeback_EX),
     .ID_regfile_we_out(EX_regfile_we_out_ID),
@@ -249,6 +255,8 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_mem_wr_en(EX_mem_wr_en_MEM),
     .MEM_val_rd_type(EX_val_rd_type_MEM),
     .MEM_val_wr_type(EX_val_wr_type_MEM),
+    .MEM_result_type(EX_result_type_MEM),
+
     .MEM_regfile_we_out(EX_regfile_we_in_MEM),
     
     .MEM_sel_writeback(EX_sel_writeback_MEM)
@@ -280,6 +288,8 @@ MEM #(.XLEN(XLEN)) u_MEM (
     .EX_mem_wr_en(EX_mem_wr_en_MEM),
     .EX_val_rd_type(EX_val_rd_type_MEM),
     .EX_val_wr_type(EX_val_wr_type_MEM),
+    .EX_result_type(EX_result_type_MEM),
+    
     .EX_regfile_we_in(EX_regfile_we_in_MEM),
 
     .EX_sel_writeback(EX_sel_writeback_MEM),

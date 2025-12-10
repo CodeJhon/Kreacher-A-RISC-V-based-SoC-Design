@@ -1,12 +1,12 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module IF_HK #(parameter XLEN = 32)(
+module IF_HK #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
     
     //Buses
-    input [XLEN-1:0]  EIB,  //External Instruction Bus
+    input  [31:0]     EIB,  //External Instruction Bus
     output [XLEN-1:0] EIAB, //External Instruction Address Bus 
     
     //----------------------------ID Stage
@@ -15,7 +15,7 @@ module IF_HK #(parameter XLEN = 32)(
 
     output [XLEN-1:0] ID_PC_4,
     output [XLEN-1:0] ID_PC,
-    output [XLEN-1:0] ID_EIB,
+    output [31:0]     ID_EIB,
 
     //Control from/to ID stage
     input             ID_sel_next_PC

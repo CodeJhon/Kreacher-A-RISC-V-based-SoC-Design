@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module ID #(parameter XLEN = 32)(
+module ID #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
@@ -9,7 +9,7 @@ module ID #(parameter XLEN = 32)(
     //Data from/to IF_HK stage
     input [XLEN-1:0]  IF_PC_4,
     input [XLEN-1:0]  IF_PC,
-    input [XLEN-1:0]  IF_EIB, 
+    input [31:0]      IF_EIB, 
 
     output [XLEN-1:0] IF_exec_result,
 
@@ -44,6 +44,7 @@ module ID #(parameter XLEN = 32)(
     output            EX_mem_wr_en,
     output [2:0]      EX_val_rd_type,
     output [2:0]      EX_val_wr_type,
+    output            EX_result_type,
     
     output [2:0]      EX_sel_writeback
 
@@ -72,9 +73,9 @@ regfile #(.XLEN(XLEN)) u_regfile (
     .regfile_we (EX_regfile_we_in)
 );
 
-//Immediate Sign-Extension
+//Immediate Build (& Sign extension)
 wire [XLEN-1:0] imm;
-extend_imm #(.XLEN(XLEN)) u_extend_imm (
+build_imm #(.XLEN(XLEN)) u_build_imm (
     .in(IF_EIB),
     .out(imm),
     .imm_type(imm_type)
@@ -96,6 +97,7 @@ wire            sel_exec_result;
 wire            mem_wr_en;
 wire [2:0]      val_wr_type;
 wire [2:0]      val_rd_type;
+wire            result_type;
 
 wire [2:0]      sel_writeback;
 
@@ -122,6 +124,7 @@ control u_control (
     .mem_wr_en(mem_wr_en),
     .val_wr_type(val_wr_type),
     .val_rd_type(val_rd_type),
+    .result_type(result_type),
 
     // WB
     .sel_writeback(sel_writeback)
@@ -153,6 +156,7 @@ assign EX_sel_exec_result   = sel_exec_result;
 assign EX_mem_wr_en         = mem_wr_en;
 assign EX_val_rd_type       = val_rd_type;
 assign EX_val_wr_type       = val_wr_type;
+assign EX_result_type       = result_type;
 
 assign EX_sel_writeback     = sel_writeback;
 

@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module WB #(parameter XLEN = 32)(
+module WB #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,

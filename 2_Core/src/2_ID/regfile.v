@@ -1,4 +1,4 @@
-module regfile #(parameter XLEN = 32)(
+module regfile #(parameter XLEN = 64)(
     //global
     input clk,
     input reset,
@@ -26,11 +26,10 @@ reg [XLEN-1:0] regfile [31:1];
 
 // ---------------------------------- Implementation of modules
 
-//Regfile (Written in 1st part of the cycle and Read on 2nd part) 
-    //-> Allows Writing & Reading by/to 2 different stages in the same cycle
+//Regfile 
 
-//Writing register on 1st part of cycle (negedge)
-always@(negedge clk)begin
+// Writing register synchronously
+always@(posedge clk)begin
     if(reset)begin
         for(i=1;i<=31;i=i+1)begin
             regfile[i] <= 0;
@@ -39,7 +38,7 @@ always@(negedge clk)begin
     else if(regfile_we) regfile[RD_addr] <= RD;
 end
 
-// Reading register on 2nd part of cycle (asynchronously)
+// Reading register asynchronously
 assign RS1 = (RS1_addr == 0) ? {XLEN{1'b0}} : regfile[RS1_addr];
 assign RS2 = (RS2_addr == 0) ? {XLEN{1'b0}} : regfile[RS2_addr];        
 

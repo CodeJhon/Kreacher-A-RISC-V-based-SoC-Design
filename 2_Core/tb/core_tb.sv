@@ -3,7 +3,7 @@
 module tb_core;
 
   // Parameters
-  localparam XLEN = 32;
+  localparam XLEN = 64;
   localparam CLK_PERIOD_NS = 10;           
   localparam RESET_CYCLES = 2;            
   localparam MAX_CYCLES = 10000;       

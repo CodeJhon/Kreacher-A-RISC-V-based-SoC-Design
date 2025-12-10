@@ -1,6 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
-module MEM #(parameter XLEN = 32)(
+module MEM #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
@@ -25,6 +25,8 @@ module MEM #(parameter XLEN = 32)(
     input             EX_mem_wr_en,
     input [2:0]       EX_val_rd_type,
     input [2:0]       EX_val_wr_type,
+    input             EX_result_type,
+
     input             EX_regfile_we_in,
     
     input [2:0]       EX_sel_writeback,
@@ -51,18 +53,26 @@ module MEM #(parameter XLEN = 32)(
 
 // ---------------------------------- Implementation of modules
 
-sign_extension #(.XLEN(XLEN)) sign_ex_wr (
+extension_wr_rd #(.XLEN(XLEN)) extend_write (
     .in(EX_RS2),
     .out(EMDB_out),
     .extension_type(EX_val_wr_type)
 );
 
 wire [XLEN-1:0] EMDB_in_extended;
-sign_extension #(.XLEN(XLEN)) sign_ex_rd (
+extension_wr_rd #(.XLEN(XLEN)) extend_read (
     .in(EMDB_in),
     .out(EMDB_in_extended),
     .extension_type(EX_val_rd_type)
 );
+
+wire[XLEN-1:0] exec_result;
+extension_exec_result #(.XLEN(XLEN)) extend_result (
+    .in(EX_exec_result),
+    .out(exec_result),
+    .extension_type(EX_result_type)
+);
+
 
 // ------------------------------------- Connection to adjacent stage(s)
 //EX
@@ -72,7 +82,7 @@ assign EX_regfile_we_out    = WB_regfile_we_in;
 
 //WB
 assign WB_PC_4              = EX_PC_4;
-assign WB_exec_result           = EX_exec_result;
+assign WB_exec_result       = exec_result;
 assign WB_EMDB              = EMDB_in_extended;
 assign WB_RD_addr_out       = EX_RD_addr_in;
 assign WB_regfile_we_out    = EX_regfile_we_in;

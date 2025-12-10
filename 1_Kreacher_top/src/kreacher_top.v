@@ -1,11 +1,13 @@
-module kreacher_top #(parameter XLEN = 32)(
-`ifndef SYNTHESIS 
-    output           commit_valid,
-    output [XLEN-1:0]   commit_PC,
-    output [31:0]   commit_instruction,
-    output [4:0]     commit_rd_addr,
-    output [XLEN-1:0]   commit_rd_value,
-`endif
+<<<<<<< HEAD
+module kreacher_top #(parameter XLEN = 64)(
+    `ifndef SYNTHESIS 
+        output           commit_valid,
+        output [XLEN-1:0]   commit_PC,
+        output [31:0]   commit_instruction,
+        output [4:0]     commit_rd_addr,
+        output [XLEN-1:0]   commit_rd_value,
+    `endif
+
     //Global
     input clk,
     input reset
@@ -14,7 +16,7 @@ module kreacher_top #(parameter XLEN = 32)(
 
 // ------------------------------------------------ Buses
 //PMEM
-wire [XLEN-1:0] EIB;  //External Instruction Bus
+wire [31:0]     EIB;  //External Instruction Bus
 wire [XLEN-1:0] EIAB; //External Instruction Address Bus
 //DMEM
 wire [XLEN-1:0] EMAB;            //External Memory Address Bus
