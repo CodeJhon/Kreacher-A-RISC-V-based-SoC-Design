@@ -8,7 +8,7 @@ module verification_commits  #(parameter XLEN = 32)(
     input [31:0]        IF_EIB,
 
     input               WB_regfile_we,
-    input [XLEN-1:0]    WB_RD_addr,
+    input [4:0]         WB_RD_addr,
     input [XLEN-1:0]    WB_RD,
 
     //Outputs used for the framework
