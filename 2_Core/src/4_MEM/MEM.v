@@ -95,7 +95,7 @@ always @(posedge clk) begin
     end
     else begin
         WB_PC_4              <= EX_PC_4;
-        WB_exec_result       <= EX_exec_result;
+        WB_exec_result       <= exec_result;
         WB_EMDB              <= EMDB_in_extended;
         WB_RD_addr_out       <= EX_RD_addr_in;
 
