@@ -124,7 +124,7 @@ wire MEM_regfile_we_out_EX;
 wire EX_regfile_we_out_ID;
 
 //sel_exec_result
-wire [1:0] ID_sel_exec_result_EX;
+wire       ID_sel_exec_result_EX;
 
 //sel_opb
 wire [1:0] ID_sel_opb_EX;

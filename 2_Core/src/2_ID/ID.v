@@ -63,52 +63,6 @@ module ID #(parameter XLEN = 64)(
 
 // ---------------------------------- Implementation of modules
 
-//Register File
-wire [XLEN-1:0] regfile_RS1;
-wire [XLEN-1:0] regfile_RS2;
-regfile #(.XLEN(XLEN)) u_regfile (
-    .clk        (clk),
-    .reset      (reset),
-
-    // Addresses
-    .RS1_addr   (IF_EIB[19:15]),
-    .RS2_addr   (IF_EIB[24:20]),
-    .RD_addr    (EX_RD_addr_in),
-
-    // Sources & Destinations
-    .RD         (EX_RD),
-    .RS1        (regfile_RS1),
-    .RS2        (regfile_RS2),
-
-    // Control
-    .regfile_we (EX_regfile_we_in)
-);
-
-// HCU Bypass muxes for RS1 & RS2
-reg [XLEN-1:0] RS1;
-reg [XLEN-1:0] RS2;
-always @(regfile_RS1, regfile_RS2, EX_RD, ID_sel_RS1, ID_sel_RS2) begin
-    case (ID_sel_RS1)
-        `HCU_NO_BYPASS: RS1 = regfile_RS1;
-        `HCU_BYPASS_WB: RS1 = EX_RD;
-        default:        RS1 = 0;
-    endcase
-    case (ID_sel_RS2)
-        `HCU_NO_BYPASS: RS2 = regfile_RS2;
-        `HCU_BYPASS_WB: RS2 = EX_RD;
-        default:        RS2 = 0;
-    endcase
-end
-
-//Immediate Build (& Sign extension)
-wire [XLEN-1:0] imm;
-build_imm #(.XLEN(XLEN)) u_build_imm (
-    .in(IF_EIB),
-    .out(imm),
-    .imm_type(imm_type)
-);
-
-
 //Controller (Decoder)
 
 wire            jump;
@@ -157,6 +111,51 @@ control u_control (
     .sel_writeback(sel_writeback)
 );
 
+
+//Register File
+wire [XLEN-1:0] regfile_RS1;
+wire [XLEN-1:0] regfile_RS2;
+regfile #(.XLEN(XLEN)) u_regfile (
+    .clk        (clk),
+    .reset      (reset),
+
+    // Addresses
+    .RS1_addr   (IF_EIB[19:15]),
+    .RS2_addr   (IF_EIB[24:20]),
+    .RD_addr    (EX_RD_addr_in),
+
+    // Sources & Destinations
+    .RD         (EX_RD),
+    .RS1        (regfile_RS1),
+    .RS2        (regfile_RS2),
+
+    // Control
+    .regfile_we (EX_regfile_we_in)
+);
+
+// HCU Bypass muxes for RS1 & RS2
+reg [XLEN-1:0] RS1;
+reg [XLEN-1:0] RS2;
+always @(regfile_RS1, regfile_RS2, EX_RD, ID_sel_RS1, ID_sel_RS2) begin
+    case (ID_sel_RS1)
+        `HCU_NO_BYPASS: RS1 = regfile_RS1;
+        `HCU_BYPASS_WB: RS1 = EX_RD;
+        default:        RS1 = 0;
+    endcase
+    case (ID_sel_RS2)
+        `HCU_NO_BYPASS: RS2 = regfile_RS2;
+        `HCU_BYPASS_WB: RS2 = EX_RD;
+        default:        RS2 = 0;
+    endcase
+end
+
+//Immediate Build (& Sign extension)
+wire [XLEN-1:0] imm;
+build_imm #(.XLEN(XLEN)) u_build_imm (
+    .in(IF_EIB),
+    .out(imm),
+    .imm_type(imm_type)
+);
 
 
 // ------------------------------------- Connection to adjacent stage(s)
