@@ -90,7 +90,7 @@ assign ALU_opa = RS1;
 
 reg  [XLEN-1:0]  ALU_opb;
 //Mux opb
-always @(ID_sel_opb, ID_imm, ID_RS2) begin
+always @(ID_sel_opb, ID_imm, RS2) begin
     case (ID_sel_opb)
         `OPB_IMM: ALU_opb = ID_imm;
         `OPB_RS2: ALU_opb = RS2;
