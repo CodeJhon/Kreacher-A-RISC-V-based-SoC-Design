@@ -88,22 +88,8 @@ module tb_core;
         // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
         $fwrite(trace_fd, "%0d,0x%08h,0x%08h,%0d,0x%0h\n",
                 $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
-
-        // End simulation on ECALL (common signal for program termination on RISC-V)
-        if (commit_instruction == ECALL_INSTR) begin
-          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, cycle_count);
-            // Clean up
-          $fclose(trace_fd);
-        #100; // let final events settle
-          //print_coverage_report();
-          $finish;
-        end
       end
       else begin
-        $display("[%0t ns] NO_COMMIT: PC=0x%08h INST=0x%08h",
-                 $time, commit_PC, commit_instruction);
-        $fwrite(trace_fd, "%0d,0x%08h,0x%08h\n",
-                $time, commit_PC, commit_instruction);
         if (commit_instruction == ECALL_INSTR) begin
           $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, cycle_count);
             // Clean up
