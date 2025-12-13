@@ -2,7 +2,7 @@ module ROM #(parameter XLEN = 64, parameter DEPTH= 1024,parameter MEM_FILE = "fi
     input clk,
     input reset,
     input cs,
-    input  [XLEN-1:0] addr,
+    input  [31:0] addr,
     output [31:0] data_out
 
 );
