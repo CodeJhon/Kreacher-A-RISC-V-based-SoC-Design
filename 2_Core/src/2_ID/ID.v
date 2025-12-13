@@ -52,36 +52,6 @@ module ID #(parameter XLEN = 64)(
 
 // ---------------------------------- Implementation of modules
 
-//Register File
-wire [XLEN-1:0] RS1;
-wire [XLEN-1:0] RS2;
-regfile #(.XLEN(XLEN)) u_regfile (
-    .clk        (clk),
-    .reset      (reset),
-
-    // Addresses
-    .RS1_addr   (IF_EIB[19:15]),
-    .RS2_addr   (IF_EIB[24:20]),
-    .RD_addr    (EX_RD_addr_in),
-
-    // Sources & Destinations
-    .RD         (EX_RD),
-    .RS1        (RS1),
-    .RS2        (RS2),
-
-    // Control
-    .regfile_we (EX_regfile_we_in)
-);
-
-//Immediate Build (& Sign extension)
-wire [XLEN-1:0] imm;
-build_imm #(.XLEN(XLEN)) u_build_imm (
-    .in(IF_EIB),
-    .out(imm),
-    .imm_type(imm_type)
-);
-
-
 //Controller (Decoder)
 
 wire            jump;
@@ -128,6 +98,35 @@ control u_control (
 
     // WB
     .sel_writeback(sel_writeback)
+);
+
+//Register File
+wire [XLEN-1:0] RS1;
+wire [XLEN-1:0] RS2;
+regfile #(.XLEN(XLEN)) u_regfile (
+    .clk        (clk),
+    .reset      (reset),
+
+    // Addresses
+    .RS1_addr   (IF_EIB[19:15]),
+    .RS2_addr   (IF_EIB[24:20]),
+    .RD_addr    (EX_RD_addr_in),
+
+    // Sources & Destinations
+    .RD         (EX_RD),
+    .RS1        (RS1),
+    .RS2        (RS2),
+
+    // Control
+    .regfile_we (EX_regfile_we_in)
+);
+
+//Immediate Build (& Sign extension)
+wire [XLEN-1:0] imm;
+build_imm #(.XLEN(XLEN)) u_build_imm (
+    .in(IF_EIB),
+    .out(imm),
+    .imm_type(imm_type)
 );
 
 
