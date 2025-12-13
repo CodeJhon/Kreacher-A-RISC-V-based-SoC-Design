@@ -33,17 +33,12 @@ with open(spike_path, "r", encoding="utf-8") as f:
             reg_str = match.group(3)
             val_hex = match.group(4)
 
-            # Convert hex to decimal
-            pc.append(int(pc_hex, 16))
-            instruction.append(int(inst_hex, 16))
-
             # Handle optional write-back information
             if reg_str is not None and val_hex is not None:
                 wb_reg.append(int(reg_str))
                 wb_val.append(int(val_hex, 16))
-            else:
-                wb_reg.append(0)
-                wb_val.append(0)
+                pc.append(int(pc_hex, 16))
+                instruction.append(int(inst_hex, 16))
 
 # Print results for verification
 # print("PC =", PC)
@@ -76,13 +71,14 @@ with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreach
         except ValueError:
             # Skip this row if any conversion fails (especially illegal instruction)
             continue
-        rd_val = int(rd_str) if rd_str != "" else ""
-        wb_hex_val = int(val_hex, 16) if val_hex != "" else ""
+        # rd_val = int(rd_str) if rd_str != "" else ""
+        # wb_hex_val = int(val_hex, 16) if val_hex != "" else ""
         # Convert hex strings to decimal (int), rd is already a decimal string
-        pc_sim.append(int(pc_hex, 16))
-        instruction_sim.append(int(inst_hex, 16))
-        wb_reg_sim.append(rd_val)
-        wb_val_sim.append(wb_hex_val)
+        if (rd_str != '0'):
+            pc_sim.append(int(pc_hex, 16))
+            instruction_sim.append(int(inst_hex, 16))
+            wb_reg_sim.append(int(rd_str))
+            wb_val_sim.append(int(val_hex, 16))
 
 # Print results for verification
 # pc_hex_list = [hex(pc) for pc in pc_sim]
@@ -118,6 +114,40 @@ with open(instruction_file_path, "r", encoding="utf-8") as f:
 
         instruction_text.append(instruction_part)
 
+pc_i = 100000
+ins_i = 100000
+wb_reg_i = 100000
+wb_val_i = 100000
+for i in range(min(len(pc), len(pc_sim))):
+    if pc[i] != pc_sim[i]:
+        pc_i = i
+        break
+for i in range(min(len(instruction), len(instruction_sim))):
+    if instruction[i] != instruction_sim[i]:
+        ins_i = i
+        break
+for i in range(min(len(wb_reg), len(wb_reg_sim))):
+    if wb_reg[i] != wb_reg_sim[i]:
+        wb_reg_i = i
+        break
+for i in range(min(len(wb_val), len(wb_val_sim))):
+    if wb_val[i] != wb_val_sim[i]:
+        wb_val_i = i
+        break
+
+i_min = min(pc_i, ins_i, wb_reg_i, wb_val_i)
+if i_min != 100000:
+    print(f"First mismatch at item {i_min+1}")
+    print(f"Simulated PC:{hex(pc_sim[i])}")
+    print(f"Reference PC:{hex(pc[i])}")
+    print(f"Simulated instruction:{hex(instruction_sim[i])}")
+    print(f"Reference instruction:{hex(instruction[i])}")
+    print(f"Simulated wb_reg:{wb_reg_sim[i]}")
+    print(f"Reference wb_reg:{wb_reg[i]}")
+    print(f"Simulated wb_val:{hex(wb_val_sim[i])}")
+    print(f"Reference wb_val:{hex(wb_val[i])}")
+    raise ValueError("A mismatch has been found.")
+
     # First check whether the lengths are equal
 if len(pc) != len(pc_sim):
     print("Length of reference PC list:", len(pc))
@@ -125,6 +155,8 @@ if len(pc) != len(pc_sim):
     for i in range(min(len(pc), len(pc_sim))):
         if pc[i] != pc_sim[i]:
             print(f"First mismatch at item {i+1}")
+            print(f"Simulated PC:{hex(pc_sim[i])}")
+            print(f"Reference PC:{hex(pc[i])}")
             break
     raise ValueError("The two PC lists have different lengths.")
 if len(instruction) != len(instruction_sim):
