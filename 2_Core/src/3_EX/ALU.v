@@ -10,6 +10,7 @@ module ALU #(parameter XLEN = 64)(
 );
 
 localparam ZERO_PAD = XLEN-1;
+localparam PAD_32   = 32;
 
 wire                  opa_less_than_opb;
 wire                  opa_less_than_opb_unsigned;
@@ -45,10 +46,10 @@ always@(opa, opb , sel_operation, opa_equal_opb, opa_less_than_opb, opa_less_tha
         `ALU_SLLW:               internal_alu_result = opa << opb[4:0];
 
         `ALU_SRL:                internal_alu_result = opa >> opb[5:0];
-        `ALU_SRLW:               internal_alu_result = opa >> opb[4:0];
+        `ALU_SRLW:               internal_alu_result = {32'd0 , opa[31:0] >> opb[4:0]};
 
         `ALU_SRA:                internal_alu_result = opa >>> opb[5:0];
-        `ALU_SRAW:               internal_alu_result = opa >>> opb[4:0];
+        `ALU_SRAW:               internal_alu_result = {32'd0, $signed(opa[31:0]) >>> opb[4:0]};
         //------------------------------------------------------------------BRANCH CONDITION
         `ALU_EQ:                 branch_condition = opa_equal_opb;
         `ALU_NE:                 branch_condition = ~opa_equal_opb;
