@@ -13,6 +13,10 @@ module RAM #(parameter XLEN = 64, parameter DEPTH = 1024, parameter MEM_FILE = "
 
 integer i;
 
+wire [16:0] internal_address;
+
+assign internal_address = addr[16:0];
+
 reg [7:0] memory [DEPTH-1:0];
 
 //Initialize the memory with the contents of the specified file
@@ -29,19 +33,19 @@ always @(posedge clk) begin
         end
     end
     else if(we && cs)begin
-        memory[addr+7] <= data_in[7:0];
-        memory[addr+6] <= data_in[15:8];
-        memory[addr+5] <= data_in[23:16];
-        memory[addr+4] <= data_in[31:24];
-        memory[addr+3] <= data_in[39:32];
-        memory[addr+2] <= data_in[47:40];
-        memory[addr+1] <= data_in[55:48];
-        memory[addr]   <= data_in[63:56];
+        memory[internal_address+7] <= data_in[7:0];
+        memory[internal_address+6] <= data_in[15:8];
+        memory[internal_address+5] <= data_in[23:16];
+        memory[internal_address+4] <= data_in[31:24];
+        memory[internal_address+3] <= data_in[39:32];
+        memory[internal_address+2] <= data_in[47:40];
+        memory[internal_address+1] <= data_in[55:48];
+        memory[internal_address]   <= data_in[63:56];
     end
 end
 
 //WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
-assign #DELAY data_out = cs ? {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3], memory[addr+4], memory[addr+5], memory[addr+6], memory[addr+7]} : {XLEN{1'b0}};
+assign #DELAY data_out = cs ? {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3], memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]} : {XLEN{1'b0}};
 
 
 endmodule
