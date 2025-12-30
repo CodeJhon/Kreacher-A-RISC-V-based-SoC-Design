@@ -79,7 +79,7 @@ module tb_core;
       cycle_count = cycle_count + 1;
 
 `ifndef SYNTHESIS
-      if (commit_valid) begin
+      if (commit_valid && commit_PC <= 32'h80001208) begin
         // Print to console for interactive debugging
         $display("[%0t ns] COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h",
                  $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
@@ -126,6 +126,7 @@ module tb_core;
 
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
+    $writememh("DMEM_result.mem", RAM.memory);
     $display("Simulation finished at time %0t ns, cycles = %0d", $time, cycle_count);
   end
 

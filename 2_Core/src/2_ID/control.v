@@ -189,9 +189,9 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
             result_type = `RESULT_64;
             case(funct3)
                 `SD: val_wr_type = `FORWARD_INPUT;
-                `SW: val_wr_type = `SIGN_EXTEND_32;
-                `SH: val_wr_type = `SIGN_EXTEND_16;
-                `SB: val_wr_type = `SIGN_EXTEND_8;
+                `SW: val_wr_type = `ZERO_EXTEND_32;
+                `SH: val_wr_type = `ZERO_EXTEND_16;
+                `SB: val_wr_type = `ZERO_EXTEND_8;
             endcase
         end
         

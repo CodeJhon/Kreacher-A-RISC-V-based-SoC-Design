@@ -27,12 +27,7 @@ initial begin
 end
 
 always @(posedge clk) begin
-    if(reset)begin
-        for (i=0; i<=DEPTH-1;i = i+1) begin
-            memory[i] <= 8'd0;
-        end
-    end
-    else if(we && cs)begin
+    if(we && cs)begin
         memory[internal_address+7] <= data_in[7:0];
         memory[internal_address+6] <= data_in[15:8];
         memory[internal_address+5] <= data_in[23:16];
@@ -45,7 +40,10 @@ always @(posedge clk) begin
 end
 
 //WARNING: In a real design, make sure that DELAY is not more than half the cycle of your processor, otherwise probably change architecture (Partition decode into 2 stages)
-assign #DELAY data_out = cs ? {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3], memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]} : {XLEN{1'b0}};
+assign #DELAY data_out = cs ? {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3], 
+                               memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]} 
+                               
+                               : {XLEN{1'b0}};
 
 
 endmodule
