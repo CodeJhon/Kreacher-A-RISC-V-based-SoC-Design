@@ -25,12 +25,7 @@ initial begin
 end
 
 always @(posedge clk) begin
-    if(reset)begin
-        for (i=0; i<=DEPTH-1;i = i+1) begin
-            memory[i] <= 8'd0;
-        end
-    end
-    else if(we && cs)begin
+    if(we && cs)begin
         memory[internal_address+7] <= data_in[7:0];
         memory[internal_address+6] <= data_in[15:8];
         memory[internal_address+5] <= data_in[23:16];
@@ -44,7 +39,8 @@ end
 
 
 always @(negedge clk) begin
-    if (cs) data_out = {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3], memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]}; 
+    if (cs) data_out = {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3], 
+                        memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]}; 
 end
 
 

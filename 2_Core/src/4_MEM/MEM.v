@@ -54,14 +54,14 @@ module MEM #(parameter XLEN = 64)(
 
 // ---------------------------------- Implementation of modules
 
-extension_wr_rd #(.XLEN(XLEN)) extend_write (
+extension_wr #(.XLEN(XLEN)) extend_write (
     .in(EX_RS2),
     .out(EMDB_out),
     .extension_type(EX_val_wr_type)
 );
 
 wire [XLEN-1:0] EMDB_in_extended;
-extension_wr_rd #(.XLEN(XLEN)) extend_read (
+extension_rd #(.XLEN(XLEN)) extend_read (
     .in(EMDB_in),
     .out(EMDB_in_extended),
     .extension_type(EX_val_rd_type)
