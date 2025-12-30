@@ -2,7 +2,7 @@ module verification_commits  #(parameter XLEN = 32)(
     
     //Signals retrieved from the core
     input [XLEN-1:0]    IF_PC,
-    input [31:0]        IF_EIB,
+    input [31:0]        IF_canonical_instruction,
 
     input               WB_regfile_we,
     input [4:0]         WB_RD_addr,
@@ -26,14 +26,14 @@ assign ID_PC_EX  = IF_PC;
 assign EX_PC_MEM = ID_PC_EX;
 assign MEM_PC_WB = EX_PC_MEM;
 
-    //EIB
-wire [31:0] ID_EIB_EX;
-wire [31:0] EX_EIB_MEM;
-wire [31:0] MEM_EIB_WB;
+    //canonical_instruction
+wire [31:0] ID_canonical_instruction_EX;
+wire [31:0] EX_canonical_instruction_MEM;
+wire [31:0] MEM_canonical_instruction_WB;
 
-assign ID_EIB_EX  = IF_EIB;
-assign EX_EIB_MEM = ID_EIB_EX;
-assign MEM_EIB_WB = EX_EIB_MEM;
+assign ID_canonical_instruction_EX  = IF_canonical_instruction;
+assign EX_canonical_instruction_MEM = ID_canonical_instruction_EX;
+assign MEM_canonical_instruction_WB = EX_canonical_instruction_MEM;
 
 //----------------------------Assignation of signals present in WB stage
 
@@ -41,6 +41,6 @@ assign commit_valid       = WB_regfile_we;
 assign commit_PC          = MEM_PC_WB;
 assign commit_rd_addr     = WB_RD_addr;
 assign commit_rd_value    = WB_RD;
-assign commit_instruction = MEM_EIB_WB;
+assign commit_instruction = MEM_canonical_instruction_WB;
 
 endmodule
