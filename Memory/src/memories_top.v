@@ -6,7 +6,7 @@ module memories_top #(parameter XLEN = 64)(
 
     //PMEM signals
     input PMEM_cs,
-    input  [XLEN-1:0] EIAB, // External Instruction Address Bus
+    input  [16:0]     EIAB, // External Instruction Address Bus
     output [31:0]     EIB, //  External Instruction Bus
 
     //DMEM signals
