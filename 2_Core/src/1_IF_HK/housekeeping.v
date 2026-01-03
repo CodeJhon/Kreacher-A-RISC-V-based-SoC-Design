@@ -6,28 +6,27 @@ module housekeeping #(parameter XLEN = 64)(
     input reset,
     
     //Control
-    input sel_next_PC,
-    input sel_concatenation,
-    input sel_PC_step,
+    input                 sel_next_PC,
+    input                 sel_concatenation,
+    input                 sel_PC_step,
 
     //addr coming from EX stage -> to jump at
-    input [XLEN-1:0] exec_result,
+    input [XLEN-1:0]      exec_result,
 
     //Outputs
-    output [16:0] EIAB,
+    output [16:0]         EIAB,
 
-    output [XLEN-1:0] PC,
-    output [XLEN-1:0] PC_2,
-    output [XLEN-1:0] PC_4
+    output reg [XLEN-1:0] PC,
+    output     [XLEN-1:0] PC_2,
+    output [XLEN-1:0]     PC_4
 
 );
 
 
-reg  [XLEN-1:0] PC, next_PC;
+reg  [XLEN-1:0] next_PC;
 wire [XLEN-1:0] PC_to_EIAB;
 
 //PC+4 & PC+2
-wire [XLEN-1:0] PC_2, PC_4;
 assign PC_2 = PC + 2;
 assign PC_4 = PC + 4;
 
