@@ -26,7 +26,6 @@ always @(extension_type, in) begin
         `ZERO_EXTEND_8:  out = {{EXT_8{1'b0}},in[XLEN-1:XLEN-8]};
 
         `MEM_NOT_USED: out = 0;
-        default:         out = 0; 
     endcase
 
 end

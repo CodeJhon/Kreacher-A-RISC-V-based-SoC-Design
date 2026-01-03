@@ -14,7 +14,6 @@ always @(in, extension_type) begin
     case (extension_type)
         `RESULT_64: out = in;
         `RESULT_32: out = {{EXTENSION{in[31]}}, in[31:0]};
-        default:    out = 0;
     endcase
 end
 
