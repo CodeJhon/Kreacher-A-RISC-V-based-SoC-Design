@@ -20,16 +20,6 @@ wire [4:0] rd_rs1   = compressed_instruction[11:7];
 wire [4:0] rd_rs2_p = { 2'b01 , compressed_instruction[4:2]};
 wire [4:0] rd_rs1_p = { 2'b01 , compressed_instruction[9:7]};
 
-//-------------------------------------------------Internal control
-wire sel_sign_extension = !(
-    // Quadrant 1: C.SRLI, C.SRAI
-    (quadrant == `QUADRANT_1 && funct3   == 3'd4 && (funct2_p == 2'd0 || funct2_p == 2'd1))
-    ||
-    // Quadrant 2: C.SLLI
-    (quadrant == `QUADRANT_2 && funct3   == 3'd0)
-     );
-
-
 //-------------------------------------------------Functions
 
 wire [1:0] funct2   = compressed_instruction[6:5];
@@ -40,6 +30,15 @@ wire [2:0] funct3   = compressed_instruction[15:13];
 wire [3:0] funct4   = compressed_instruction[15:12];
 
 wire [5:0] funct6   = compressed_instruction[15:10];
+
+//-------------------------------------------------Internal control
+wire sel_sign_extension = !(
+    // Quadrant 1: C.SRLI, C.SRAI
+    (quadrant == `QUADRANT_1 && funct3   == 3'd4 && (funct2_p == 2'd0 || funct2_p == 2'd1))
+    ||
+    // Quadrant 2: C.SLLI
+    (quadrant == `QUADRANT_2 && funct3   == 3'd0)
+     );
 
 //INFO: 
 //      1. This case statement is organized as in the instruction set listing
