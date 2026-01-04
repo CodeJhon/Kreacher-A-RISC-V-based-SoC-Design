@@ -183,7 +183,7 @@ always @(compressed_instruction) begin
         `QUADRANT_1: begin
             case (funct3)
                 3'd0://                                              C.ADDI     -> addi  rd, rd, nzimm
-                    if((rd_rs1 != 0) & (imm_c_alu != 0))             extended_instruction = {imm_c_alu, rd_rs1, `ADDI, rd_rs1, `INT_REG_IMM};
+                    if((rd_rs1 != 0) && (imm_c_alu != 0))             extended_instruction = {imm_c_alu, rd_rs1, `ADDI, rd_rs1, `INT_REG_IMM};
                 3'd1://                                              C.ADDIW    -> addiw rd, rd, nzimm
                     if(rd_rs1 != 0)                                  extended_instruction = {imm_c_alu, rd_rs1, `ADDI, rd_rs1, `INT_REG_IMM_W};
                 3'd2://                                              C.LI       -> addi rd, x0, imm
@@ -239,7 +239,7 @@ always @(compressed_instruction) begin
         `QUADRANT_2: begin
             case (funct3)
                 3'd0://                                              C.SLLI      -> slli rd, rd, nzuimm[5:0]
-                    if((imm_c_alu != 0) & (rd_rs1 != 0))              extended_instruction = {`FUNCT6_SHIFT_LOGICAL, imm_c_alu[5:0], rd_rs1, `SLLI, rd_rs1, `INT_REG_IMM};
+                    if((imm_c_alu != 0) && (rd_rs1 != 0))              extended_instruction = {`FUNCT6_SHIFT_LOGICAL, imm_c_alu[5:0], rd_rs1, `SLLI, rd_rs1, `INT_REG_IMM};
                 3'd2://                                              C.LWSP     -> lw rd, uimm(x2)
                     if(rd_rs1 != 0)                                  extended_instruction = {imm_c_lwsp, `X_2, `LW, rd_rs1, `LOAD};
                 3'd3://                                              C.LDSP     -> ld rd, uimm(x2)
