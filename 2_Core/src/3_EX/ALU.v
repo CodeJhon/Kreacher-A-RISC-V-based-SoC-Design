@@ -72,8 +72,6 @@ wire [31:0] srlw_by_4;
 wire [31:0] srlw_by_8;
 wire [31:0] srlw_by_16;
 
-wire [31:0] opa_lo32 = opa[31:0];
-
 assign srlw_by_1  = shamt64[0] ? (opa_lo32     >> 1)  : opa_lo32;
 assign srlw_by_2  = shamt64[1] ? (srlw_by_1    >> 2)  : srlw_by_1;
 assign srlw_by_4  = shamt64[2] ? (srlw_by_2    >> 4)  : srlw_by_2;
