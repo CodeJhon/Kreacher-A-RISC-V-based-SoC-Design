@@ -158,7 +158,10 @@ wire [11:0] imm_c_swsp_sdsp = {
                             2'd0 };                          //imm[1:0]
 
 
-always @(compressed_instruction) begin
+always @(quadrant, funct2, funct2_p, funct3, funct4, funct6, 
+        rd_rs1, rd_rs1_p, rd_rs2_p, rs2, 
+        imm_c_addi16sp, imm_c_alu, imm_c_lui, imm_c_jal, imm_c_addi4spn, 
+        imm_c_lw_sw, imm_c_ld_sd, imm_c_branch, imm_c_swsp_sdsp, imm_c_lwsp, imm_c_ldsp) begin
     //Default reconstruction -> NOP (addi x0, x0, 0)
     extended_instruction = 32'h00000013;
     
