@@ -2,7 +2,7 @@
     `ifndef CORE_CONSTANTS_VH
     `define CORE_CONSTANTS_VH
     // PC STARTING POINT
-    `define PC_BASE_ADDRESS 32'h80000000
+    `define PC_BASE_ADDRESS 64'h00000000_80000000
     
     // ---- OPCODE CONSTANTS ----
         //Instructions with shared opcode
