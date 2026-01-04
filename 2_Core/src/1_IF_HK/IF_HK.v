@@ -29,7 +29,6 @@ wire [31:0]     canonical_instruction;
 //------------Control signals
     //Housekeeping
 wire sel_PC_step;
-wire sel_PC_to_EIAB;
     //Fetch
 wire sel_EIB_2;
 wire sel_comp_instr;
