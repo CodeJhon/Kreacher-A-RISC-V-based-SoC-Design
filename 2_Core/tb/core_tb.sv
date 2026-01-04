@@ -66,11 +66,11 @@ module tb_core;
 
     // Apply reset
     
-    reset = 1;
+    reset = 0;
     cycle_count = 0;
     repeat (RESET_CYCLES) @(posedge clk);
     # 1
-    reset = 0;
+    reset = 1;
 
     // Main simulation loop: monitor commits, write trace, stop on ECALL or timeout
     // We'll run until ECALL commit is observed or MAX_CYCLES reached.
