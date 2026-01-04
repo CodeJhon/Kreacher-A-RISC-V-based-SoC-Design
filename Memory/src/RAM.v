@@ -2,7 +2,7 @@
 
 module RAM #(parameter XLEN = 64, parameter DEPTH = 1024, parameter MEM_FILE = "file_example.txt", parameter DELAY = 4)(
     input clk,
-    input reset,
+    input reset_n,
     input we,
     input cs,
     input  [XLEN-1:0] data_in,

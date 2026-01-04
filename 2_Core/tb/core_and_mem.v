@@ -9,7 +9,7 @@ module core_and_mem #(parameter XLEN = 64)(
     
     //Global
     input clk,
-    input reset
+    input reset_n
 
 );
 
@@ -33,7 +33,7 @@ core #(.XLEN(XLEN)) core_inst (
     .commit_rd_value(commit_rd_value),
 `endif
     .clk(clk), 
-    .reset(reset),
+    .reset_n(reset_n),
     //PMEM signals
     .EIB(EIB),
     .EIAB(EIAB),
@@ -49,7 +49,7 @@ core #(.XLEN(XLEN)) core_inst (
 memories_top #(.XLEN(XLEN)) memories_top_inst (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     //PMEM signals
     .PMEM_cs(1'b1),

@@ -3,7 +3,7 @@
 module IF_HK #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     
     //Buses
     input  [31:0]     EIB,  //External Instruction Bus
@@ -42,7 +42,7 @@ assign sel_comp_instr = PC[1];
 mini_controller u_mini_controller (
     // Global
     .clk                (clk),
-    .reset              (reset),
+    .reset_n              (reset_n),
 
     // Quadrants of upper and lower halves of EIB
     .EIB_1_quad         (EIB[1:0]),
@@ -65,7 +65,7 @@ mini_controller u_mini_controller (
 fetch u_fetch (
     // Global
     .clk                   (clk),
-    .reset                 (reset),
+    .reset_n                 (reset_n),
 
     .EIB                   (EIB),
 
@@ -83,7 +83,7 @@ fetch u_fetch (
 housekeeping #(.XLEN(XLEN)) u_housekeeping (
     // Global
     .clk                (clk),
-    .reset              (reset),
+    .reset_n              (reset_n),
 
     // Control
     .sel_next_PC        (ID_sel_next_PC),

@@ -3,7 +3,7 @@
 module WB #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //----------------------------MEM Stage
     //Data from/to MEM stage

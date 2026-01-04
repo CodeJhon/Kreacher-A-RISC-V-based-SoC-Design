@@ -3,7 +3,7 @@
 module EX #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //----------------------------ID Stage
     //Data from/to ID stage

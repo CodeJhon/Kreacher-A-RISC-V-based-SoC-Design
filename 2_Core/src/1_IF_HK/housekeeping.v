@@ -3,7 +3,7 @@
 module housekeeping #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     
     //Control
     input                 sel_next_PC,
@@ -40,8 +40,8 @@ always @(sel_next_PC, sel_PC_step, exec_result, PC_2, PC_4) begin
 end
 
 //PC
-always@(posedge clk, negedge reset)begin
-    if(!reset)   PC <= `PC_BASE_ADDRESS;
+always@(posedge clk, negedge reset_n)begin
+    if(!reset_n)   PC <= `PC_BASE_ADDRESS;
     else        PC <= next_PC;
 end
 

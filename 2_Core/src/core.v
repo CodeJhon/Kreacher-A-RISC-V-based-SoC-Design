@@ -10,7 +10,7 @@ module core #(parameter XLEN = 64)(//RV64I
 
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //Buses
     input  [31:0]     EIB,             //External Instruction Bus
@@ -135,7 +135,7 @@ wire [2:0] MEM_sel_writeback_WB;
 IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     
     //Buses
     .EIB(EIB),      //External Instruction Bus
@@ -157,7 +157,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 ID #(.XLEN(XLEN)) u_ID (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
@@ -207,7 +207,7 @@ ID #(.XLEN(XLEN)) u_ID (
 EX #(.XLEN(XLEN)) u_EX (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     //----------------------------ID Stage
     //Data from/to ID stage
@@ -266,7 +266,7 @@ EX #(.XLEN(XLEN)) u_EX (
 MEM #(.XLEN(XLEN)) u_MEM (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     // Buses
     .EMAB(EMAB), //Memory Address
@@ -316,7 +316,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
 WB #(.XLEN(XLEN)) u_WB (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     //----------------------------MEM Stage
     //Data from/to MEM stage

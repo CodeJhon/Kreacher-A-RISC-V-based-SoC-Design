@@ -1,7 +1,7 @@
 module memories_top #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     
 
     //PMEM signals
@@ -22,7 +22,7 @@ module memories_top #(parameter XLEN = 64)(
 
 ROM #(.XLEN(XLEN), .DEPTH(10240), .MEM_FILE("PMEM_content.mem")) PMEM(
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     .cs(PMEM_cs),
     .addr(EIAB),
     .data_out(EIB)
@@ -30,7 +30,7 @@ ROM #(.XLEN(XLEN), .DEPTH(10240), .MEM_FILE("PMEM_content.mem")) PMEM(
 
 RAM #(.XLEN(XLEN), .DEPTH(10240), .MEM_FILE("DMEM_content.mem")) DMEM(
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     .we(DMEM_we),
     .cs(DMEM_cs),
     .data_in(EMDB_out),

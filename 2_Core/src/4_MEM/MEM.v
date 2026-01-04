@@ -3,7 +3,7 @@
 module MEM #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //Buses
     output [XLEN-1:0] EMAB,            //External Memory Address Bus

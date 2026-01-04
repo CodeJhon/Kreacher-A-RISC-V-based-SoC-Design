@@ -3,7 +3,7 @@
 module ID #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
@@ -105,7 +105,7 @@ wire [XLEN-1:0] RS1;
 wire [XLEN-1:0] RS2;
 regfile #(.XLEN(XLEN)) u_regfile (
     .clk        (clk),
-    .reset      (reset),
+    .reset_n      (reset_n),
 
     // Addresses
     .RS1_addr   (IF_canonical_instruction[19:15]),

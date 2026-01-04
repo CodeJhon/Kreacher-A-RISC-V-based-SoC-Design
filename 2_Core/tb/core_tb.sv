@@ -10,9 +10,9 @@ module tb_core;
   localparam ECALL_INSTR = 32'h00000073;   
 
 
-  // Clock & reset
+  // Clock & reset_n
   reg clk;
-  reg reset;
+  reg reset_n;
 
   // Wires to connect to DUT
 `ifndef SYNTHESIS
@@ -26,7 +26,7 @@ module tb_core;
   // Instantiate DUT (core_and_mem)
   core_and_mem #(.XLEN(XLEN)) dut (
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
 `ifndef SYNTHESIS
     .commit_valid(commit_valid),
@@ -45,7 +45,7 @@ module tb_core;
     forever #(CLK_PERIOD_NS/2) clk = ~clk;
   end
 
-  // Simulation control: reset, waveform, trace file
+  // Simulation control: reset_n, waveform, trace file
   integer cycle_count;
   integer trace_fd;
 
@@ -64,13 +64,13 @@ module tb_core;
     // Write CSV header
     $fwrite(trace_fd, "time_ns,pc,inst,rd,rd_value\n");
 
-    // Apply reset
+    // Apply reset_n
     
-    reset = 0;
+    reset_n = 0;
     cycle_count = 0;
     repeat (RESET_CYCLES) @(posedge clk);
     # 1
-    reset = 1;
+    reset_n = 1;
 
     // Main simulation loop: monitor commits, write trace, stop on ECALL or timeout
     // We'll run until ECALL commit is observed or MAX_CYCLES reached.

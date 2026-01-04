@@ -1,7 +1,7 @@
 module fetch (
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     input [31:0]  EIB,
 
@@ -18,8 +18,8 @@ module fetch (
 
 //Control
 reg old_sel_next_PC;
-always @(posedge clk, negedge reset) begin
-    if(!reset) old_sel_next_PC <= 1'b0;
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n) old_sel_next_PC <= 1'b0;
     else      old_sel_next_PC <= sel_next_PC;
 end
 
@@ -33,8 +33,8 @@ assign EIB_1 = EIB[15:0];
 assign EIB_2 = old_sel_next_PC ? EIB[31:16] : EIB_2_temp; //Added to cover the case when we arrive from a jump and want to execute something from the upper part
 //EIB_2_temp -> Defined as temporal register
 //         - stores the upper part of EIB; can be either RVC or 1_RVI
-always @(posedge clk, negedge reset) begin    
-    if(!reset)          EIB_2_temp <= 16'd0;
+always @(posedge clk, negedge reset_n) begin    
+    if(!reset_n)          EIB_2_temp <= 16'd0;
     else begin
         //Stores in temporal register if the lower 16 bits are a C instruction, or if you need to concatenate your lower 16 bits
         if(sel_EIB_2)   EIB_2_temp <= EIB[31:16];
