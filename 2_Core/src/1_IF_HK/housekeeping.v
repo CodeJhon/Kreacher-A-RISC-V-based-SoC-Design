@@ -27,8 +27,8 @@ reg  [XLEN-1:0] next_PC;
 wire [XLEN-1:0] PC_to_EIAB;
 
 //PC+4 & PC+2
-assign PC_2 = PC + 2;
-assign PC_4 = PC + 4;
+assign PC_2 = PC + 64'd2;
+assign PC_4 = PC + 64'd4;
 
 //next_PC
 always @(sel_next_PC, sel_PC_step, exec_result, PC_2, PC_4) begin

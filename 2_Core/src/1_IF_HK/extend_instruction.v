@@ -7,7 +7,7 @@ module extend_instruction (
     output reg [31:0] extended_instruction
 );
 
-wire [2:0] quadrant;
+wire [1:0] quadrant;
 assign quadrant = compressed_instruction[1:0];
 
 //-----------------------------------------------------Operands
