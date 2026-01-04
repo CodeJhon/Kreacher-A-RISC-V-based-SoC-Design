@@ -124,8 +124,8 @@ regfile #(.XLEN(XLEN)) u_regfile (
 //Immediate Build (& Sign extension)
 wire [XLEN-1:0] imm;
 build_imm #(.XLEN(XLEN)) u_build_imm (
-    .in(IF_canonical_instruction),
-    .out(imm),
+    .build_in(IF_canonical_instruction),
+    .build_out(imm),
     .imm_type(imm_type)
 );
 
