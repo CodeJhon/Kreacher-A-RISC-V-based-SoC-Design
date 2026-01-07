@@ -65,13 +65,13 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
                 `SLTU:        sel_op = `ALU_SLTU;
                 `SLT:         sel_op = `ALU_SLT;
                 `SLL:         sel_op = `ALU_SLL;
-                `SHIFT:begin
+                `SHIFT_RIGHT:begin
                     case(funct7)
                         `SRA: sel_op = `ALU_SRA;
                         `SRL: sel_op = `ALU_SRL;
                     endcase
                 end
-                `ARITHMETIC:begin
+                `ADD_SUB:begin
                     case(funct7)
                         `ADD: sel_op = `ALU_ADD;
                         `SUB: sel_op = `ALU_SUB;
@@ -94,13 +94,13 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
             result_type = `RESULT_32;
             case(funct3)
                 `SLL:         sel_op = `ALU_SLLW;
-                `SHIFT:begin
+                `SHIFT_RIGHT:begin
                     case(funct7)
                         `SRA: sel_op = `ALU_SRAW;
                         `SRL: sel_op = `ALU_SRLW;
                     endcase
                 end
-                `ARITHMETIC:begin
+                `ADD_SUB:begin
                     case(funct7)
                         `ADD: sel_op = `ALU_ADD;
                         `SUB: sel_op = `ALU_SUB;
