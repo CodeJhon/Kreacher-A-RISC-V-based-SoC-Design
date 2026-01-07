@@ -4,6 +4,7 @@ module housekeeping #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
+    input pause,
     
     //Control
     input sel_next_PC,
@@ -16,9 +17,9 @@ module housekeeping #(parameter XLEN = 64)(
     //Outputs
     output [16:0] EIAB,
 
-    output [XLEN-1:0] PC,
-    output [XLEN-1:0] PC_2,
-    output [XLEN-1:0] PC_4,
+    output reg [XLEN-1:0] PC,
+    output     [XLEN-1:0] PC_2,
+    output     [XLEN-1:0] PC_4,
 
     //---------------------------- HCU (Hazard Control Unit)
     input stall
@@ -26,25 +27,17 @@ module housekeeping #(parameter XLEN = 64)(
 );
 
 
-reg  [XLEN-1:0] PC, next_PC;
-wire [XLEN-1:0] PC_to_EIAB;
+reg  [XLEN-1:0] next_PC;
 
 //PC+4 & PC+2
 wire [XLEN-1:0] PC_2, PC_4;
 assign PC_2 = PC + 2;
 assign PC_4 = PC + 4;
 
-//Mask -> controlled by reset and pause signals
-reg mask;
-always @(posedge clk, negedge reset) begin
-    if(reset)   mask <= 1'b1;
-    else        mask <= 1'b0;
-end
-
 //next_PC
-always @(sel_next_PC, sel_PC_step, exec_result, PC_2, PC_4, mask, stall) begin
-    if(mask)                    next_PC = `PC_BASE_ADDRESS;
-    else if(stall)              next_PC = PC;
+always @(sel_next_PC, sel_PC_step, exec_result, PC_2, PC_4, pause, stall) begin
+    if(pause | stall)
+                                next_PC = PC;
     else begin
         if      (sel_next_PC)   next_PC = exec_result;  // Jump / Branch
         else if (sel_PC_step)   next_PC = PC_2;         //  | 1_RVI |  RVC  | 
@@ -56,8 +49,8 @@ end
 
 //PC
 always@(posedge clk)begin
-    if(reset)              PC <= `PC_BASE_ADDRESS;
-    else if(!stall)        PC <= next_PC;
+    if(reset)                   PC <= `PC_BASE_ADDRESS;
+    else if(!pause & !stall)    PC <= next_PC;
 end
 
 //Output to EIAB

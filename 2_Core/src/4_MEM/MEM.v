@@ -4,6 +4,7 @@ module MEM #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
+    input pause,
 
     //Buses
     output [XLEN-1:0]     EMAB,            //External Memory Address Bus
@@ -93,7 +94,7 @@ always @(posedge clk) begin
         WB_regfile_we_out    <= 0;
         WB_sel_writeback     <= 0;
     end
-    else begin
+    else if(!pause) begin
         WB_PC_4              <= EX_PC_4;
         WB_exec_result       <= exec_result;
         WB_EMDB              <= EMDB_in_extended;

@@ -4,6 +4,7 @@ module IF_HK #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
+    input pause,
     
     //Buses
     input  [31:0]     EIB,  //External Instruction Bus
@@ -49,6 +50,7 @@ mini_controller u_mini_controller (
     // Global
     .clk                (clk),
     .reset              (reset),
+    .pause              (pause),
 
     // Quadrants of upper and lower halves of EIB
     .EIB_1_quad         (EIB[1:0]),
@@ -75,6 +77,7 @@ fetch u_fetch (
     // Global
     .clk                   (clk),
     .reset                 (reset),
+    .pause                 (pause),
 
     .EIB                   (EIB),
 
@@ -97,6 +100,7 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
     // Global
     .clk                (clk),
     .reset              (reset),
+    .pause              (pause),
 
     // Control
     .sel_next_PC        (ID_sel_next_PC),
@@ -124,7 +128,7 @@ always @(posedge clk) begin
         ID_PC                       <= 0;
         ID_canonical_instruction   <= 0;
     end
-    else if(!IF_stall) begin
+    else if(!pause & !IF_stall) begin
         ID_PC_4                     <= PC_4;
         ID_PC                       <= PC;
         ID_canonical_instruction   <= canonical_instruction;

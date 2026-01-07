@@ -2,6 +2,7 @@ module regfile #(parameter XLEN = 64)(
     //global
     input clk,
     input reset,
+    input pause,
 
     //Addresses
     input [4:0]           RS1_addr,
@@ -35,7 +36,8 @@ always@(posedge clk)begin
             regfile[i] <= 0;
         end
     end
-    else if(regfile_we) regfile[RD_addr] <= RD;
+    else if(regfile_we & !pause) 
+            regfile[RD_addr] <= RD;
 end
 
 // Reading register asynchronously

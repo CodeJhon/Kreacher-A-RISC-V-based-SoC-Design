@@ -2,6 +2,7 @@ module mini_controller (
     //Global
     input clk,
     input reset,
+    input pause,
 
     // Quadrants of upper and lower halfs of EIB
     input [1:0] EIB_1_quad,
@@ -37,7 +38,7 @@ assign c_2 = ~(EIB_2_quad == 2'b11);
 reg sel_concatenate_rvi;
 always @(posedge clk) begin
     if(reset | flush)           sel_concatenate_rvi <= 1'b0;
-    else if(!stall) begin
+    else if(!pause & !stall) begin
         if(sel_next_PC)         sel_concatenate_rvi <= 1'b0;
                                 //Signal is activated if it recognizes it is in a row type -> | 1_RVI |  RVC  | 
         else                    sel_concatenate_rvi <= ({c_2 , c_1} == 2'b01);     

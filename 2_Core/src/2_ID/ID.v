@@ -4,6 +4,7 @@ module ID #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
+    input pause,
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
@@ -118,6 +119,7 @@ wire [XLEN-1:0] regfile_RS2;
 regfile #(.XLEN(XLEN)) u_regfile (
     .clk        (clk),
     .reset      (reset),
+    .pause      (pause),
 
     // Addresses
     .RS1_addr   (IF_canonical_instruction[19:15]),
@@ -188,7 +190,7 @@ always @(posedge clk) begin
 
         EX_sel_writeback     <= 0; 
     end
-    else begin
+    else if(!pause) begin
             //Data
         EX_PC_4              <= IF_PC_4;
         EX_PC                <= IF_PC;
@@ -219,7 +221,7 @@ always@(posedge clk)begin
         EX_RS1_addr          <= 0;
         EX_RS2_addr          <= 0;
     end
-    else begin
+    else if(!pause) begin
         EX_RS1_addr          <= IF_canonical_instruction[19:15];
         EX_RS2_addr          <= IF_canonical_instruction[24:20];
     end

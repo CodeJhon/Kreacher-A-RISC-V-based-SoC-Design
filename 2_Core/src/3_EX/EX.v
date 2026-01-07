@@ -4,6 +4,7 @@ module EX #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset,
+    input pause,
 
     //----------------------------ID Stage
     //Data from/to ID stage
@@ -157,7 +158,7 @@ always @(posedge clk) begin
 
         MEM_sel_writeback    <= 0;
     end
-    else begin
+    else if(!pause) begin
         MEM_PC_4             <= ID_PC_4;
         MEM_exec_result      <= exec_result;
         MEM_RS2              <= RS2;
