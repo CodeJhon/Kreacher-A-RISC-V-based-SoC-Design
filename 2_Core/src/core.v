@@ -23,6 +23,15 @@ module core #(parameter XLEN = 64)(//RV64I
     
 );
 
+// Reset synchronizer -> async assert / sync deassert
+reg reset_sync;
+always @(posedge clk or posedge reset) begin
+    if (reset)  reset_sync <= 1'b1;
+    else        reset_sync <= 1'b0;
+end
+
+wire internal_core_pause = reset_sync;
+
 /*
     --- Wire terminology ---
     wire [LENGHT:0] (Fom Stage X)_Signal_Name_(To stage Y)
@@ -136,6 +145,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Global
     .clk(clk),
     .reset(reset),
+    .pause(internal_core_pause),
     
     //Buses
     .EIB(EIB),      //External Instruction Bus
@@ -158,6 +168,7 @@ ID #(.XLEN(XLEN)) u_ID (
     //Global
     .clk(clk),
     .reset(reset),
+    .pause(internal_core_pause),
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
