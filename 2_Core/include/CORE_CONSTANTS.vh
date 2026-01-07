@@ -20,12 +20,12 @@
     `define JALR          7'b1100111
 
     // ---- func3 ---- INT_REG_REG
-    `define ARITHMETIC 3'b000
+    `define ADD_SUB 3'b000
     `define SLL 3'b001
     `define SLT 3'b010
     `define SLTU 3'b011
     `define XOR  3'b100
-    `define SHIFT 3'b101
+    `define SHIFT_RIGHT 3'b101
     `define OR 3'b110
     `define AND 3'b111
 
@@ -45,11 +45,11 @@
     `define SW 3'b010
     `define SD 3'b011
 
-    // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT
+    // ---- func7 ---- SHIFT_ARITHMETIC-SHIFT_RIGHT
     `define SRL 7'b0000000 
     `define SRA 7'b0100000
 
-    // ---- func7 ---- SHIFT_ARITHMETIC - ARITHMETIC
+    // ---- func7 ---- SHIFT_ARITHMETIC - ADD_SUB
     `define ADD 7'b0000000 
     `define SUB 7'b0100000
 

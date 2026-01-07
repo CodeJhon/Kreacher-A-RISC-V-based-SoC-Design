@@ -5,7 +5,7 @@ module verification_commits  #(parameter XLEN = 32)(
     
     //Signals retrieved from the core
     input [XLEN-1:0]    IF_PC,
-    input [31:0]        IF_EIB,
+    input [31:0]        IF_canonical_instruction,
 
     input               WB_regfile_we,
     input [4:0]         WB_RD_addr,
@@ -38,21 +38,21 @@ always @(posedge clk) begin
     end
 end
 
-    //EIB
-reg [31:0] ID_EIB_EX;
-reg [31:0] EX_EIB_MEM;
-reg [31:0] MEM_EIB_WB;
+    //canonical_instruction
+reg [31:0] ID_canonical_instruction_EX;
+reg [31:0] EX_canonical_instruction_MEM;
+reg [31:0] MEM_canonical_instruction_WB;
 
 always @(posedge clk) begin
     if (reset) begin
-        ID_EIB_EX  <= 0;
-        EX_EIB_MEM <= 0;
-        MEM_EIB_WB <= 0;        
+        ID_canonical_instruction_EX  <= 0;
+        EX_canonical_instruction_MEM <= 0;
+        MEM_canonical_instruction_WB <= 0;        
     end
     else begin
-        ID_EIB_EX  <= IF_EIB;
-        EX_EIB_MEM <= ID_EIB_EX;
-        MEM_EIB_WB <= EX_EIB_MEM;    
+        ID_canonical_instruction_EX  <= IF_canonical_instruction;
+        EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
+        MEM_canonical_instruction_WB <= EX_canonical_instruction_MEM;    
     end
 end
 
@@ -62,6 +62,6 @@ assign commit_valid       = WB_regfile_we;
 assign commit_PC          = MEM_PC_WB;
 assign commit_rd_addr     = WB_RD_addr;
 assign commit_rd_value    = WB_RD;
-assign commit_instruction = MEM_EIB_WB;
+assign commit_instruction = MEM_canonical_instruction_WB;
 
 endmodule

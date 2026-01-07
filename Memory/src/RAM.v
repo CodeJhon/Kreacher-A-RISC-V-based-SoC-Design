@@ -40,7 +40,7 @@ end
 
 always @(negedge clk) begin
     if (cs) data_out = {memory[internal_address], memory[internal_address+1], memory[internal_address+2], memory[internal_address+3], 
-                        memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]}; 
+                        memory[internal_address+4], memory[internal_address+5], memory[internal_address+6], memory[internal_address+7]};
 end
 
 

@@ -14,7 +14,7 @@ module core #(parameter XLEN = 64)(//RV64I
 
     //Buses
     input  [31:0]     EIB,             //External Instruction Bus
-    output [XLEN-1:0] EIAB,            //External Instruction Address Bus
+    output [16:0]     EIAB,            //External Instruction Address Bus
 
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
     output            EMCB,            //External Memory Control Bus
@@ -66,8 +66,8 @@ wire [XLEN-1:0] MEM_PC_4_WB;
 wire [XLEN-1:0] IF_PC_ID;
 wire [XLEN-1:0] ID_PC_EX;
 
-//EIB
-wire [31:0]     IF_EIB_ID;
+//canonical_instruction
+wire [31:0]     IF_canonical_instruction_ID;
 
 //RD
 wire [XLEN-1:0] WB_RD_MEM;
@@ -171,7 +171,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 
     .ID_PC_4(IF_PC_4_ID),
     .ID_PC(IF_PC_ID),
-    .ID_EIB(IF_EIB_ID),
+    .ID_canonical_instruction(IF_canonical_instruction_ID),
 
     //Control from/to ID stage
     .ID_sel_next_PC(ID_sel_next_PC_IF),
@@ -192,7 +192,7 @@ ID #(.XLEN(XLEN)) u_ID (
     //Data from/to IF_HK stage
     .IF_PC_4(IF_PC_4_ID),
     .IF_PC(IF_PC_ID),
-    .IF_EIB(IF_EIB_ID),
+    .IF_canonical_instruction(IF_canonical_instruction_ID),
 
     .IF_exec_result(ID_exec_result_IF),
 
@@ -423,7 +423,7 @@ HCU #(.XLEN(XLEN)) u_HCU (
 
         //Signals retrieved from the core
         .IF_PC(IF_PC_ID),
-        .IF_EIB(IF_EIB_ID),
+        .IF_canonical_instruction(IF_canonical_instruction_ID),
         
         .WB_regfile_we(WB_regfile_we_out_MEM),
         .WB_RD_addr(WB_RD_addr_out_MEM),

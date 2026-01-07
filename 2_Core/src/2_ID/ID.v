@@ -9,7 +9,7 @@ module ID #(parameter XLEN = 64)(
     //Data from/to IF_HK stage
     input [XLEN-1:0]      IF_PC_4,
     input [XLEN-1:0]      IF_PC,
-    input [31:0]          IF_EIB, 
+    input [31:0]          IF_canonical_instruction, 
 
     output [XLEN-1:0]     IF_exec_result,
 
@@ -84,10 +84,10 @@ wire [2:0]      sel_writeback;
 
 control u_control (
     //---------------------- Inputs
-    .opcode(IF_EIB[6:0]),
-    .imm_I_10(IF_EIB[30]),
-    .funct3(IF_EIB[14:12]),
-    .funct7(IF_EIB[31:25]),
+    .opcode(IF_canonical_instruction[6:0]),
+    .imm_I_10(IF_canonical_instruction[30]),
+    .funct3(IF_canonical_instruction[14:12]),
+    .funct7(IF_canonical_instruction[31:25]),
 
     //----------------------- Outputs
     // ID
@@ -120,8 +120,8 @@ regfile #(.XLEN(XLEN)) u_regfile (
     .reset      (reset),
 
     // Addresses
-    .RS1_addr   (IF_EIB[19:15]),
-    .RS2_addr   (IF_EIB[24:20]),
+    .RS1_addr   (IF_canonical_instruction[19:15]),
+    .RS2_addr   (IF_canonical_instruction[24:20]),
     .RD_addr    (EX_RD_addr_in),
 
     // Sources & Destinations
@@ -152,7 +152,7 @@ end
 //Immediate Build (& Sign extension)
 wire [XLEN-1:0] imm;
 build_imm #(.XLEN(XLEN)) u_build_imm (
-    .in(IF_EIB),
+    .in(IF_canonical_instruction),
     .out(imm),
     .imm_type(imm_type)
 );
@@ -194,7 +194,7 @@ always @(posedge clk) begin
         EX_PC                <= IF_PC;
         EX_RS1               <= RS1;
         EX_RS2               <= RS2;
-        EX_RD_addr_out       <= IF_EIB[11:7];
+        EX_RD_addr_out       <= IF_canonical_instruction[11:7];
         EX_imm               <= imm;
             //Control
         EX_sel_opb           <= sel_opb;
@@ -220,12 +220,12 @@ always@(posedge clk)begin
         EX_RS2_addr          <= 0;
     end
     else begin
-        EX_RS1_addr          <= IF_EIB[19:15];
-        EX_RS2_addr          <= IF_EIB[24:20];
+        EX_RS1_addr          <= IF_canonical_instruction[19:15];
+        EX_RS2_addr          <= IF_canonical_instruction[24:20];
     end
 end
 
-assign ID_RS1_addr           = IF_EIB[19:15];
-assign ID_RS2_addr           = IF_EIB[24:20];
+assign ID_RS1_addr           = IF_canonical_instruction[19:15];
+assign ID_RS2_addr           = IF_canonical_instruction[24:20];
 
 endmodule
