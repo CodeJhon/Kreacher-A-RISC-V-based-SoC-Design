@@ -47,7 +47,7 @@ with open(spike_path, "r", encoding="utf-8") as f:
         # Try to match store pattern first (most specific)
         match_store = pattern_store.search(line)
         if match_store:
-            # Store instruction: record memory address and data
+            # Store instruction: record Memories address and data
             mem_addr = int(match_store.group(3), 16)
             mem_data = int(match_store.group(4), 16)
             DMEM_addr.append(mem_addr)
@@ -336,7 +336,7 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
         DMEM_addr: List of DMEM addresses
         DMEM_data: List of DMEM data
     """
-    mem_file_path = "../../Memory/src/DMEM_content.mem"
+    mem_file_path = "../../Memories/src/DMEM_content.mem"
     with open(mem_file_path, "r") as f:
         for byte_data in f.read().split():
             if byte_data != "xx":

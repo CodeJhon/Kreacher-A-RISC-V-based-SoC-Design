@@ -1,6 +1,6 @@
 `include "MEMORY_CONSTANT.vh"
 
-module PMEM_memory_interface
+module PMEM_interface
 #(
     parameter PRAMs = 2,
     parameter XLEN = 64,     // Full data width

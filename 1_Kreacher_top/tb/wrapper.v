@@ -3,8 +3,8 @@
 module top_wrapper#(
   parameter ADDR_BYTE_W = 17,
   parameter DATA_W      = 64,
-  parameter RAM_WORDS   = 8192,
-  parameter RAM_ADDR_W  = 14
+  parameter external_mem_WORDS   = 8192,
+  parameter external_mem_ADDR_W  = 14
 )(
     `ifndef SYNTHESIS 
         output                commit_valid,
@@ -27,12 +27,12 @@ module top_wrapper#(
     wire spi_miso;
     wire spi_clk;
     
-    //RAM
-    wire                  ram_cs;
-    wire                  ram_we;
-    wire [RAM_ADDR_W-1:0] ram_addr;
-    wire [DATA_W-1:0]     ram_wdata;
-    wire [DATA_W-1:0]     ram_rdata;
+    //external memory
+    wire                  external_mem_cs;
+    wire                  external_mem_we;
+    wire [external_mem_ADDR_W-1:0] external_mem_addr;
+    wire [DATA_W-1:0]     external_mem_wdata;
+    wire [DATA_W-1:0]     external_mem_rdata;
 
     // ----------------------------
     // Interrupt wires
@@ -40,7 +40,7 @@ module top_wrapper#(
     wire intr_h;
     wire intr_ack;
 
-    kreacher_top s (
+    kreacher_top dut (
         `ifndef SYNTHESIS
             .commit_valid(commit_valid),
             .commit_PC(commit_PC),
@@ -74,27 +74,29 @@ module top_wrapper#(
         .I_MOSI    (spi_mosi),
         .O_MISO    (spi_miso),
 
-        .ram_we    (ram_we),
-        .ram_cs    (ram_cs),
-        .ram_addr  (ram_addr),
-        .ram_wdata (ram_wdata),
-        .ram_rdata (ram_rdata)
+        .external_mem_we    (external_mem_we),
+        .external_mem_cs    (external_mem_cs),
+        .external_mem_addr  (external_mem_addr),
+        .external_mem_wdata (external_mem_wdata),
+        .external_mem_rdata (external_mem_rdata)
     );
    
     RAM #(
+        .ADDR_LINES(14)
         .WORDS  (8192),
-        .ADDR_W (14),
-        .IXLEN  (64)
-    ) u_ram (
+        .FILE_LOAD(1),
+        .ROW_WIDTH(64),
+        .MEM_FILE("MEM_INIT_content.mem")
+    ) external_memory (
         .clk      (I_CLK),
         .reset_n    (I_A_RESET_L),
 
-        .cs       (ram_cs),
-        .we       (ram_we),
+        .cs       (external_mem_cs),
+        .we       (external_mem_we),
 
-        .addr     (ram_addr),
-        .data_in  (ram_wdata),
-        .data_out (ram_rdata)
+        .addr     (external_mem_addr),
+        .data_in  (external_mem_wdata),
+        .data_out (external_mem_rdata)
     );
 
 endmodule

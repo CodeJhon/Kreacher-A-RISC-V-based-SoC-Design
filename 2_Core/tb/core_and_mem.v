@@ -50,23 +50,34 @@ core #(.XLEN(XLEN)) core_inst (
 
 );
 
-memories_top #(.XLEN(XLEN)) memories_top_inst (
-    //Global
-    .clk(clk),
-    .reset_n(reset_n),
-
-    //PMEM signals
-    .PMEM_cs(1'b1),
-    .EIAB(EIAB),
-    .EIB(EIB),
-
-    //DMEM signals
-    .DMEM_cs(1'b1),
-    .DMEM_we(EMCB),
-    .EMAB(EMAB),
-    .EMDB_out(EMDB_out),
-    .EMDB_in(EMDB_in)
+RAM #( .ADDR_LINES(17),
+        .WORDS(10240), 
+        .FILE_LOAD(1),
+        .ROW_WIDTH(32),
+        .MEM_FILE("PMEM_content.mem")
+) program_memory (
     
+    .clk(clk),
+    .we(1'b0),
+    .cs(1'b1),
+    .data_in(),
+    .addr({2'b00, EIAB[16:2]}),
+    .data_out(EIB)
+);
+
+RAM #( .ADDR_LINES(14),
+        .WORDS  (8192),
+        .FILE_LOAD(1),
+        .ROW_WIDTH(64),
+        .MEM_FILE("DMEM_content.mem")
+       ) external_memory (
+    
+    .clk(clk),
+    .we(EMCB),
+    .cs(1'b1),
+    .data_in(EMDB_out),
+    .addr(EMAB[16:0]),
+    .data_out(EMDB_in)
 );
 
 

@@ -11,15 +11,15 @@ module spi_slave_interface #(
   input  wire                 I_MOSI,
   output reg                  O_MISO,
 
-  // RAM interface
-  output wire                 ram_we,    
-  output wire                 ram_cs,
-  output reg  [ADDR14_W-1:0]  ram_addr,
-  output wire [XLEN-1:0]      ram_wdata, 
-  input  wire [XLEN-1:0]      ram_rdata
+  // external memory interface
+  output wire                 external_mem_we,    
+  output wire                 external_mem_cs,
+  output reg  [ADDR14_W-1:0]  external_mem_addr,
+  output wire [XLEN-1:0]      external_mem_wdata, 
+  input  wire [XLEN-1:0]      external_mem_rdata
 );
 
-  assign ram_cs = ~I_SS_N;
+  assign external_mem_cs = ~I_SS_N;
 
   // FSM States
   localparam [1:0] S_IDLE=2'd0, S_HDR=2'd1, S_DATA=2'd2;
@@ -40,11 +40,11 @@ module spi_slave_interface #(
   // ---------------------------------------------------------
   // Assert WE immediately when we are at the last bit (bit_cnt==0) 
   // of the DATA state, and it is a write operation.
-  assign ram_we = (state == S_DATA && is_write && bit_cnt == 7'd0 && !I_SS_N);
+  assign external_mem_we = (state == S_DATA && is_write && bit_cnt == 7'd0 && !I_SS_N);
 
   // Assemble the Write Data immediately using the current MOSI bit
   // so it is ready for the upcoming clock edge.
-  assign ram_wdata = {rx_shift[DATA_W-2:0], I_MOSI};
+  assign external_mem_wdata = {rx_shift[DATA_W-2:0], I_MOSI};
   // ---------------------------------------------------------
 
   always @(posedge I_CLK or negedge I_RSTN) begin
@@ -53,8 +53,8 @@ module spi_slave_interface #(
       hdr_shift <= 0;
       hdr_cnt   <= 0;
       is_write  <= 0;
-      ram_addr  <= 0;
-      // ram_we / ram_wdata removed from reset (now wires)
+      external_mem_addr  <= 0;
+      // external_mem_we / external_mem_wdata removed from reset (now wires)
       rx_shift  <= 0;
       tx_shift  <= 0;
       bit_cnt   <= 0;
@@ -73,17 +73,17 @@ module spi_slave_interface #(
             
             // Pre-fetch Address Logic
             if (hdr_cnt == 5'd1) begin
-               ram_addr <= hdr_assembled[14:1];
+               external_mem_addr <= hdr_assembled[14:1];
             end
 
             if (hdr_cnt != 5'd0) begin
               hdr_cnt <= hdr_cnt - 1;
             end else begin
               is_write <= hdr_assembled[15];
-              ram_addr <= hdr_assembled[14:1]; 
+              external_mem_addr <= hdr_assembled[14:1]; 
               state    <= S_DATA;
               bit_cnt  <= DATA_W - 1;
-              if (!hdr_assembled[15]) tx_shift <= ram_rdata;
+              if (!hdr_assembled[15]) tx_shift <= external_mem_rdata;
             end
           end
 
@@ -94,7 +94,7 @@ module spi_slave_interface #(
 
             // Burst Read Pre-fetch
             if (!is_write && bit_cnt == 32) begin
-               ram_addr <= ram_addr + 1;
+               external_mem_addr <= external_mem_addr + 1;
             end
 
             if (bit_cnt != 0) begin
@@ -105,14 +105,14 @@ module spi_slave_interface #(
 
                if (is_write) begin
                   // WRITE MODE:
-                  // The 'ram_we' wire is ALREADY High right now (combinatorial).
-                  // The RAM will capture the write on this clock edge.
+                  // The 'external_mem_we' wire is ALREADY High right now (combinatorial).
+                  // The external memory will capture the write on this clock edge.
                   
                   // We only need to increment address for the NEXT word.
-                  ram_addr <= ram_addr + 1; 
+                  external_mem_addr <= external_mem_addr + 1; 
                end else begin
                   // READ MODE:
-                  tx_shift <= ram_rdata;
+                  tx_shift <= external_mem_rdata;
                end
             end
           end
