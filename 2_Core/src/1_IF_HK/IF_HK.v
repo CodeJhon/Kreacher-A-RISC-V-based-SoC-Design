@@ -3,7 +3,7 @@
 module IF_HK #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     //Flags
@@ -33,7 +33,6 @@ wire [31:0]     canonical_instruction;
 //------------Control signals
     //Housekeeping
 wire sel_PC_step;
-wire sel_PC_to_EIAB;
     //Fetch
 wire sel_EIB_2;
 wire sel_comp_instr;
@@ -46,7 +45,7 @@ assign sel_comp_instr = PC[1];
 mini_controller u_mini_controller (
     // Global
     .clk                (clk),
-    .reset              (reset),
+    .reset_n              (reset_n),
     .pause              (pause),
 
     // Quadrants of upper and lower halves of EIB
@@ -70,7 +69,7 @@ mini_controller u_mini_controller (
 fetch u_fetch (
     // Global
     .clk                   (clk),
-    .reset                 (reset),
+    .reset_n               (reset_n),
     .pause                 (pause),
 
     .EIB                   (EIB),
@@ -89,7 +88,7 @@ fetch u_fetch (
 housekeeping #(.XLEN(XLEN)) u_housekeeping (
     // Global
     .clk                (clk),
-    .reset              (reset),
+    .reset_n            (reset_n),
     .pause              (pause),
 
     // Control

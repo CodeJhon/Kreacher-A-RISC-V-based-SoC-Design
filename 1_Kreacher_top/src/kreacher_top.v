@@ -88,7 +88,7 @@ core #(.XLEN(XLEN)) core_inst (
     .commit_rd_value(commit_rd_value),
 `endif
     .clk(clk), 
-    .reset(reset),
+    .reset_n(reset_n),
     .EMAB(EMAB),
     .EMCB(EMCB),
     .EMDB_out(EMDB_write),

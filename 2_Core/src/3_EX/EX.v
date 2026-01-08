@@ -3,7 +3,7 @@
 module EX #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //----------------------------ID Stage
     //Data from/to ID stage
@@ -107,7 +107,6 @@ always @(ID_sel_exec_result, ALU_out, PC_plus_imm) begin
     case (ID_sel_exec_result)
         `exec_result_ALU:          exec_result = ALU_out;
         `exec_result_PC_plus_imm:  exec_result = PC_plus_imm;
-        default:                   exec_result = ALU_out;
     endcase
 end
 

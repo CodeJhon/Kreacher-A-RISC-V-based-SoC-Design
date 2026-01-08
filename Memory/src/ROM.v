@@ -1,6 +1,6 @@
 module ROM #(parameter XLEN = 64, parameter DEPTH= 1024,parameter MEM_FILE = "file_example.mem", parameter DELAY = 4)(
     input clk,
-    input reset,
+    input reset_n,
     input cs,
     input  [16:0] addr,
     output reg  [31:0] data_out

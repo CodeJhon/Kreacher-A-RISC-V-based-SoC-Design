@@ -1,4 +1,4 @@
-module core_and_mem #(parameter XLEN = 32)(
+module core_and_mem #(parameter XLEN = 64)(
     `ifndef SYNTHESIS 
         output           commit_valid,
         output [XLEN-1:0]   commit_PC,
@@ -9,14 +9,14 @@ module core_and_mem #(parameter XLEN = 32)(
     
     //Global
     input clk,
-    input reset
+    input reset_n
 
 );
 
 // ------------------------------------------------ Buses
 //PMEM
-wire [XLEN-1:0] EIB;  //External Instruction Bus
-wire [XLEN-1:0] EIAB; //External Instruction Address Bus
+wire [31:0]     EIB;  //External Instruction Bus
+wire [16:0]     EIAB;  //External Instruction Address Bus
 //DMEM
 wire [XLEN-1:0] EMAB;            //External Memory Address Bus
 wire            EMCB;            //External Memory Control Bus
@@ -33,7 +33,7 @@ core #(.XLEN(XLEN)) core_inst (
     .commit_rd_value(commit_rd_value),
 `endif
     .clk(clk), 
-    .reset(reset),
+    .reset_n(reset_n),
     
     //Control
     .pause_core(1'b0),
@@ -53,7 +53,7 @@ core #(.XLEN(XLEN)) core_inst (
 memories_top #(.XLEN(XLEN)) memories_top_inst (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     //PMEM signals
     .PMEM_cs(1'b1),

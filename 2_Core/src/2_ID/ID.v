@@ -3,7 +3,7 @@
 module ID #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     //----------------------------IF_HK Stage
@@ -117,7 +117,7 @@ wire [XLEN-1:0] RS1;
 wire [XLEN-1:0] RS2;
 regfile #(.XLEN(XLEN)) u_regfile (
     .clk        (clk),
-    .reset      (reset),
+    .reset_n    (reset_n),
     .pause      (pause),
 
     // Addresses
@@ -137,8 +137,8 @@ regfile #(.XLEN(XLEN)) u_regfile (
 //Immediate Build (& Sign extension)
 wire [XLEN-1:0] imm;
 build_imm #(.XLEN(XLEN)) u_build_imm (
-    .in(IF_canonical_instruction),
-    .out(imm),
+    .build_in(IF_canonical_instruction),
+    .build_out(imm),
     .imm_type(imm_type)
 );
 

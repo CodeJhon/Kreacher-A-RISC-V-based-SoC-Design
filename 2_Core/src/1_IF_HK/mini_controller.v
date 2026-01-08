@@ -1,7 +1,7 @@
 module mini_controller (
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     // Quadrants of upper and lower halfs of EIB
@@ -33,8 +33,8 @@ assign c_2 = ~(EIB_2_quad == 2'b11);
 //----------------------------------------sel_concatenate_rvi 
 //                                         -> Used for when wanting to concatenate 1_RV1 and 2_RVI in | 1_RVI |  RVC  | , |  RVC  | 2_RVI |   
 reg sel_concatenate_rvi;
-always @(posedge clk) begin
-    if(reset)                   sel_concatenate_rvi <= 1'b0;
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)                   sel_concatenate_rvi <= 1'b0;
     else if(!pause) begin
         if(sel_next_PC)         sel_concatenate_rvi <= 1'b0;
                                 //Signal is activated if it recognizes it is in a row type -> | 1_RVI |  RVC  | 
