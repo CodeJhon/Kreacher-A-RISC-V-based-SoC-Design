@@ -47,7 +47,11 @@ module ID #(parameter XLEN = 64)(
     output [2:0]      EX_val_wr_type,
     output            EX_result_type,
     
-    output [2:0]      EX_sel_writeback
+    output [2:0]      EX_sel_writeback,
+
+    //Flags
+    output            EX_valid_data_read,
+    output            EX_valid_data_write
 
 );
 
@@ -72,6 +76,9 @@ wire            result_type;
 
 wire [2:0]      sel_writeback;
 
+wire            valid_data_read;
+wire            valid_data_write;
+
 control u_control (
     //---------------------- Inputs
     .opcode(IF_canonical_instruction[6:0]),
@@ -80,6 +87,10 @@ control u_control (
     .funct7(IF_canonical_instruction[31:25]),
 
     //----------------------- Outputs
+    //Flags
+    .valid_data_read(valid_data_read),
+    .valid_data_write(valid_data_write),
+
     // ID
     .regfile_we(regfile_we),
     .imm_type(imm_type),
@@ -160,5 +171,9 @@ assign EX_val_wr_type       = val_wr_type;
 assign EX_result_type       = result_type;
 
 assign EX_sel_writeback     = sel_writeback;
+    
+    //Flags
+assign EX_valid_data_read   = valid_data_read;
+assign EX_valid_data_write  = valid_data_write;
 
 endmodule

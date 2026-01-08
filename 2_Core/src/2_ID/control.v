@@ -8,6 +8,9 @@ module control(
     input [6:0] funct7,
     
     //-------------------------- Control signals generated
+    //Flags
+    output reg       valid_data_read,
+    output reg       valid_data_write,
 
     //ID
     output       reg regfile_we,
@@ -43,6 +46,9 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
     val_rd_type = `MEM_NOT_USED;
     sel_writeback = `WBACK_NONE;
     result_type = `RESULT_64;
+    
+    valid_data_read = `DISABLE;
+    valid_data_write = `DISABLE;
     case(opcode)
         //Instructions with shared opcode
 
@@ -164,6 +170,7 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
             val_wr_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_EMDB;
             result_type = `RESULT_64;
+            valid_data_read = `ENABLE;
             case(funct3)
                 `LD:  val_rd_type = `FORWARD_INPUT;
                 `LW:  val_rd_type = `SIGN_EXTEND_32;
@@ -187,6 +194,7 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
             val_rd_type = `MEM_NOT_USED;
             sel_writeback = `WBACK_NONE;
             result_type = `RESULT_64;
+            valid_data_write = `ENABLE;
             case(funct3)
                 `SD: val_wr_type = `FORWARD_INPUT;
                 `SW: val_wr_type = `ZERO_EXTEND_32;

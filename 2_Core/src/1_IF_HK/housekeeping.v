@@ -53,7 +53,7 @@ end
 //Output to EIAB
 wire [XLEN-1:0] to_EIAB = sel_concatenation ? (next_PC + 2) : next_PC; // <- extra +2 needed when reading "1_RVI" in | 1_RVI |  RVC  |
 
-assign EIAB = {2'b00, to_EIAB[16:2]};
+assign EIAB = to_EIAB[16:0];
 
 
 endmodule

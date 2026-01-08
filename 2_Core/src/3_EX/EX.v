@@ -35,6 +35,10 @@ module EX #(parameter XLEN = 64)(
     output            ID_regfile_we_out,
     output            ID_sel_next_PC,
 
+    //Flags
+    input             ID_valid_data_read,
+    input             ID_valid_data_write,
+
     //----------------------------MEM Stage
     //Data from/to MEM stage
     input [XLEN-1:0]  MEM_RD,
@@ -56,7 +60,11 @@ module EX #(parameter XLEN = 64)(
     
     output            MEM_regfile_we_out,
     
-    output [2:0]      MEM_sel_writeback
+    output [2:0]      MEM_sel_writeback,
+
+    //Flags
+    output            MEM_valid_data_read,
+    output            MEM_valid_data_write
 );
 
 // ---------------------------------- Implementation of modules
@@ -130,5 +138,9 @@ assign MEM_result_type      = ID_result_type;
 assign MEM_regfile_we_out   = ID_regfile_we_in;
 
 assign MEM_sel_writeback    = ID_sel_writeback;
+
+//Flags
+assign MEM_valid_data_read   = ID_valid_data_read;
+assign MEM_valid_data_write  = ID_valid_data_write;
 
 endmodule

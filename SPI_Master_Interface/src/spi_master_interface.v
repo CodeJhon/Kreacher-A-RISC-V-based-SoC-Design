@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 module spi_master_interface #(
-  parameter ADDR_BYTE_W = 14,     // byte address width
+  parameter ADDR_BYTE_W = 17,     // byte address width
   parameter DATA_W      = 64      // data width: 32 or 64 bits
 )(
   input  wire                   I_CLK,
@@ -85,7 +85,7 @@ module spi_master_interface #(
           words_left_next = (burst_len == 16'd0) ? 16'd1 : burst_len;
           // header: {R/W, ADDR[13:0], DUMMY}
           // NOTE: still fixed 16-bit header; only low 14 bits of byte_addr are encoded.
-          hdr_shift_next  = {is_write, byte_addr[13:0], dummy_bit}; // 1+14+1 = 16
+          hdr_shift_next  = {is_write, byte_addr[16:3], dummy_bit}; // 1+14+1 = 16
           hdr_cnt_next    = 5'd15;
           state_next      = S_CS_LOW;
         end

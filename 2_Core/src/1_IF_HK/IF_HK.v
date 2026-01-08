@@ -5,6 +5,9 @@ module IF_HK #(parameter XLEN = 64)(
     input clk,
     input reset,
     input pause,
+
+    //Flags
+    output            valid_instr_fetch,
     
     //Buses
     input  [31:0]     EIB,  //External Instruction Bus
@@ -110,5 +113,9 @@ assign ID_PC_4  = PC_4;
 assign ID_PC    = PC;
 assign ID_canonical_instruction   = canonical_instruction;
 
+
+// -------------------------------------- Connection to buses (if any)
+
+assign valid_instr_fetch = ~pause;
 
 endmodule

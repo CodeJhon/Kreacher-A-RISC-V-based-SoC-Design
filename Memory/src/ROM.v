@@ -7,6 +7,8 @@ module ROM #(parameter XLEN = 64, parameter DEPTH= 1024,parameter MEM_FILE = "fi
 
 );
 
+wire [16:0] internal_addr = {2'b00, addr[16:2]};
+
 reg [31:0] memory [DEPTH-1:0];
 
 //Initialize the memory with the contents of the specified file
@@ -17,7 +19,7 @@ initial begin
 end
 
 always @(posedge clk) begin
-    if(cs) data_out = memory[addr];
+    if(cs) data_out = memory[internal_addr];
     else   data_out = {XLEN{1'b0}};
 end
 
