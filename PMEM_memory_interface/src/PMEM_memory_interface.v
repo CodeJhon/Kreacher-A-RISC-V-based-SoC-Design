@@ -10,7 +10,7 @@ module PMEM_memory_interface
 (
     // Memory controller interface
     input clk,
-    input reset,
+    input reset_n,
     input  [XLEN-1:0] inst_data_write,
     input  [ADDR_BYTE_W-1:0] data_read_write_adr,
     input  addr_data_valid,
@@ -48,7 +48,7 @@ assign addr_inst_valid_h = addr_inst_valid;
 // ---------- Address scheduler ----------
 
 always@(*) begin
-    if(reset)
+    if(!reset_n)
         addr_handler1 = 0;
     else if(addr_data_valid)
         addr_handler1 = data_read_write_adr;
@@ -105,8 +105,8 @@ always @(*) begin
 end
 
 // ---------- Instruction read multiplexer ----------
-always @(posedge clk) begin
-    if (reset)
+always @(posedge clk, negedge reset_n) begin
+    if (!reset_n)
         old_inst_fetch_adr <= 2'b00;
     else if (addr_inst_valid)
         old_inst_fetch_adr <= inst_fetch_adr[14:13];
@@ -121,8 +121,8 @@ endcase
 end
 
 // ---------- Data read multiplexer ----------
-always @(posedge clk) begin
-    if (reset)
+always @(posedge clk, negedge reset_n) begin
+    if (!reset_n)
         old_data_read_write_adr <= 2'b00;
     else if (addr_data_valid)
         old_data_read_write_adr <= data_read_write_adr[14:13];

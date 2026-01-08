@@ -8,7 +8,7 @@ module odd_even_handler
 (
     // Internal memory interface
     input clk,
-    input reset,
+    input reset_n,
     input  [XLEN-1:0]      data_in,
     input  [ADDR_BYTE_W-1:0] addr_handler,
     input  addr_data_valid,
@@ -34,12 +34,12 @@ module odd_even_handler
 
     reg macro_sel_old;
 
-    always @(posedge clk) begin
-        if(addr_inst_valid)begin
-            if (reset)
-                macro_sel_old <= 1'b0;
-            else
-                macro_sel_old <= addr_handler[2];
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            macro_sel_old <= 1'b0;
+        end
+        else if (addr_inst_valid) begin
+            macro_sel_old <= addr_handler[2];
         end
     end
 
