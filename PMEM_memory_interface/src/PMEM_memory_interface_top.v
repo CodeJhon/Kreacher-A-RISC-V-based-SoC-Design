@@ -21,7 +21,7 @@ module PMEM_memory_interface_top
 
     //PRAM
     input clk,
-    input reset
+    input reset_n
 
 );
 
@@ -60,7 +60,7 @@ module PMEM_memory_interface_top
         .ADDR_BYTE_W(ADDR_BYTE_W)
     ) pmem_if (
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
         .inst_data_write(inst_data_write),
         .data_read_write_adr(data_read_write_adr),
         .addr_data_valid(addr_data_valid),
@@ -92,7 +92,7 @@ module PMEM_memory_interface_top
         .ADDR_BYTE_W(ADDR_BYTE_W)
     ) odd_even (
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
         .data_in(data_in_w),
         .addr_handler(addr_handler_w),
         .addr_data_valid(addr_data_valid_w),
@@ -121,7 +121,7 @@ module PMEM_memory_interface_top
     // -------------------------
     PRAM #(.WORDS(WORDS)) PRAM_even (
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
         .we(we_even_w),
         .cs(cs_even_w),
         .data_in(data_in_even_w),
@@ -131,7 +131,7 @@ module PMEM_memory_interface_top
 
     PRAM #(.WORDS(WORDS)) PRAM_odd (
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
         .we(we_odd_w),
         .cs(cs_odd_w),
         .data_in(data_in_odd_w),

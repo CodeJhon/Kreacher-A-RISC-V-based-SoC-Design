@@ -28,8 +28,6 @@ module kreacher_top #(
 //temp wires
 wire clk;
 assign clk = I_CLK;
-wire reset;
-assign reset = ~ I_A_RESET_L;
 
 //core 
 wire  EMCB;
@@ -88,7 +86,7 @@ core #(.XLEN(XLEN)) core_inst (
     .commit_rd_value(commit_rd_value),
 `endif
     .clk(clk), 
-    .reset_n(reset_n),
+    .reset_n(I_A_RESET_L),
     .EMAB(EMAB),
     .EMCB(EMCB),
     .EMDB_out(EMDB_write),
@@ -172,7 +170,7 @@ spi_master_interface #(.ADDR_BYTE_W(ADDR_BYTE_W),.DATA_W(XLEN))spi_master_interf
 
 init_ctrl #(.ADDR_W(ADDR_BYTE_W), .BASE_ADDR(BASE_ADDR),.MEM_LIMIT(MEM_LIMIT),.INCR(INCR)) Init_controller_inst(
     .clk(clk),
-    .rst(reset),
+    .reset_n(I_A_RESET_L),
     .interrupt(interrupt),
     .enable(enable),
     .state(state),
@@ -198,7 +196,7 @@ PMEM_memory_interface_top  #(.ADDR_BYTE_W(ADDR_BYTE_W),.XLEN(XLEN),.IXLEN(IXLEN)
 
     //PRAM
     .clk(clk),
-    .reset(reset)
+    .reset_n(I_A_RESET_L)
 );
 
 endmodule

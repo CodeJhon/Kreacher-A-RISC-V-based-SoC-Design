@@ -6,7 +6,7 @@ module RAM #(
     parameter IXLEN = 64
 )(
     input                      clk,
-    input                      reset,    // Reset usually not used for BRAM data
+    input                      reset_n,    // Reset usually not used for BRAM data
     input                      cs,
     input                      we,
     input      [ADDR_W-1:0]    addr,     

@@ -7,10 +7,10 @@ module top_wrapper#(
   parameter RAM_ADDR_W  = 14
 )(
     `ifndef SYNTHESIS 
-        output           commit_valid,
+        output                commit_valid,
         output [DATA_W-1:0]   commit_PC,
-        output [31:0]   commit_instruction,
-        output [4:0]     commit_rd_addr,
+        output [31:0]         commit_instruction,
+        output [4:0]          commit_rd_addr,
         output [DATA_W-1:0]   commit_rd_value,
     `endif
     
@@ -87,7 +87,7 @@ module top_wrapper#(
         .IXLEN  (64)
     ) u_ram (
         .clk      (I_CLK),
-        .reset    (~I_A_RESET_L),
+        .reset_n    (I_A_RESET_L),
 
         .cs       (ram_cs),
         .we       (ram_we),

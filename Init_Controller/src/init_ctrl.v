@@ -7,7 +7,7 @@ module init_ctrl #(
   parameter [ADDR_W-1:0] INCR      = 17'd8
 )(
   input  wire                 clk,
-  input  wire                 rst,
+  input  wire                 reset_n,
 
   // -------------------------------------------------------------------------
   // Global control inputs
@@ -50,7 +50,7 @@ module init_ctrl #(
   ) u_addr_cnt (
     .clk        (clk),
     .enable     (enable),
-    .reset      (rst),
+    .reset_n      (reset_n),
     .load_value (BASE_ADDR),
     .max_value  (MEM_LIMIT),
     .count      (count)
@@ -59,7 +59,7 @@ module init_ctrl #(
   assign last_initialisation = (INITIALIZATION_addr >= (MEM_LIMIT - INCR)) ? 1'b1 : 1'b0;
 
   always @(*) begin
-  if (rst)
+  if (!reset_n)
     mem_init_done <= 1'b0;
   else if (mem_init && enable && (INITIALIZATION_addr >= (MEM_LIMIT - INCR)))
     mem_init_done <= 1'b1;
@@ -82,8 +82,8 @@ module init_ctrl #(
   // ==========================================================================
   // State register
   // ==========================================================================
-  always @(posedge clk or posedge rst) begin
-    if (rst)
+  always @(posedge clk, negedge reset_n) begin
+    if (!reset_n)
       state <= S_IDLE;
     else
       state <= state_next;

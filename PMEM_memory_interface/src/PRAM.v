@@ -3,7 +3,7 @@ module PRAM #(
     parameter WORDS = 1024
 )(
     input  clk,
-    input  reset,
+    input  reset_n,
     input  cs,
     input  we,
     input  [9:0] addr,        // row index
@@ -14,8 +14,8 @@ module PRAM #(
     reg [31:0] memory [0:WORDS-1];
     integer i;
 
-    always @(posedge clk) begin
-        if (reset) begin
+    always @(posedge clk, negedge reset_n) begin
+        if (!reset_n) begin
             for (i = 0; i < WORDS; i = i + 1)
                 memory[i] <= 32'd0;
         end
