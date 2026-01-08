@@ -3,7 +3,7 @@
 module ID #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     //----------------------------IF_HK Stage
@@ -129,7 +129,7 @@ wire [XLEN-1:0] regfile_RS1;
 wire [XLEN-1:0] regfile_RS2;
 regfile #(.XLEN(XLEN)) u_regfile (
     .clk        (clk),
-    .reset      (reset),
+    .reset_n    (reset_n),
     .pause      (pause),
 
     // Addresses
@@ -165,8 +165,8 @@ end
 //Immediate Build (& Sign extension)
 wire [XLEN-1:0] imm;
 build_imm #(.XLEN(XLEN)) u_build_imm (
-    .in(IF_canonical_instruction),
-    .out(imm),
+    .build_in(IF_canonical_instruction),
+    .build_out(imm),
     .imm_type(imm_type)
 );
 
@@ -177,8 +177,8 @@ assign IF_exec_result       = EX_exec_result;
 assign IF_sel_next_PC       = EX_sel_next_PC;
 
 //EX
-always @(posedge clk) begin
-    if(reset || ID_flush)begin
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n || ID_flush)begin
             //Data
         EX_PC_4              <= 0;
         EX_PC                <= 0;
@@ -235,8 +235,8 @@ always @(posedge clk) begin
 end
 
 //HCU
-always@(posedge clk)begin
-    if(reset)begin
+always@(posedge clk, negedge reset_n)begin
+    if(!reset_n)begin
         EX_RS1_addr          <= 0;
         EX_RS2_addr          <= 0;
     end

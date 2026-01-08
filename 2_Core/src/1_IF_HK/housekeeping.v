@@ -3,19 +3,19 @@
 module housekeeping #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
     
     //Control
-    input sel_next_PC,
-    input sel_concatenation,
-    input sel_PC_step,
+    input                 sel_next_PC,
+    input                 sel_concatenation,
+    input                 sel_PC_step,
 
     //addr coming from EX stage -> to jump at
-    input [XLEN-1:0] exec_result,
+    input [XLEN-1:0]      exec_result,
 
     //Outputs
-    output [16:0] EIAB,
+    output [16:0]         EIAB,
 
     output reg [XLEN-1:0] PC,
     output     [XLEN-1:0] PC_2,
@@ -28,11 +28,9 @@ module housekeeping #(parameter XLEN = 64)(
 
 
 reg  [XLEN-1:0] next_PC;
-
 //PC+4 & PC+2
-wire [XLEN-1:0] PC_2, PC_4;
-assign PC_2 = PC + 2;
-assign PC_4 = PC + 4;
+assign PC_2 = PC + 64'd2;
+assign PC_4 = PC + 64'd4;
 
 //next_PC
 always @(sel_next_PC, sel_PC_step, exec_result, PC_2, PC_4, pause, stall) begin
@@ -48,9 +46,9 @@ always @(sel_next_PC, sel_PC_step, exec_result, PC_2, PC_4, pause, stall) begin
 end
 
 //PC
-always@(posedge clk)begin
-    if(reset)                   PC <= `PC_BASE_ADDRESS;
-    else if(!pause & !stall)    PC <= next_PC;
+always@(posedge clk, negedge reset_n)begin
+    if(!reset_n)                PC <= `PC_BASE_ADDRESS;
+    else if(!pause && !stall)    PC <= next_PC;
 end
 
 //Output to EIAB

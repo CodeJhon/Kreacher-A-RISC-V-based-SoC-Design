@@ -1,7 +1,7 @@
 module regfile #(parameter XLEN = 64)(
     //global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     //Addresses
@@ -23,26 +23,26 @@ module regfile #(parameter XLEN = 64)(
 integer i;
 
 // ---------------------------------- Internal physical registers
-reg [XLEN-1:0] regfile [31:1];
+reg [XLEN-1:0] regfile_bank [31:0];
 
 // ---------------------------------- Implementation of modules
 
 //Regfile 
 
 // Writing register synchronously
-always@(posedge clk)begin
-    if(reset)begin
-        for(i=1;i<=31;i=i+1)begin
-            regfile[i] <= 0;
+always@(posedge clk, negedge reset_n)begin
+    if(!reset_n)begin
+        for(i=0;i<=31;i=i+1)begin
+            regfile_bank[i] <= 0;
         end
     end
-    else if(regfile_we & !pause) 
-            regfile[RD_addr] <= RD;
+    else if(regfile_we && RD_addr != 5'd0 && !pause) 
+        regfile_bank[RD_addr] <= RD;
 end
 
 // Reading register asynchronously
-assign RS1 = (RS1_addr == 0) ? {XLEN{1'b0}} : regfile[RS1_addr];
-assign RS2 = (RS2_addr == 0) ? {XLEN{1'b0}} : regfile[RS2_addr];        
+assign RS1 = (RS1_addr == 5'd0) ? {XLEN{1'b0}} : regfile_bank[RS1_addr];
+assign RS2 = (RS2_addr == 5'd0) ? {XLEN{1'b0}} : regfile_bank[RS2_addr];        
 
 
 

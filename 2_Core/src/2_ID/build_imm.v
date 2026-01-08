@@ -1,8 +1,8 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
 module build_imm #(parameter XLEN = 64)(
-    input      [31:0]     in, //Before extension
-    output reg [XLEN-1:0] out, //After extension
+    input      [31:0]     build_in, //Before extension
+    output reg [XLEN-1:0] build_out, //After extension
 
     //Control
     input [2:0]           imm_type
@@ -14,15 +14,15 @@ localparam EXTENSION_B = XLEN - 12;
 localparam EXTENSION_U = XLEN - 31;
 localparam EXTENSION_J = XLEN - 20;
 
-always @(imm_type, in) begin
+always @(imm_type, build_in) begin
     case (imm_type)
-        `I_IMMEDIATE: out = {{EXTENSION_I_S{in[31]}},in[30:25],in[24:21],in[20]};
-        `S_IMMEDIATE: out = {{EXTENSION_I_S{in[31]}},in[30:25],in[11:8],in[7]};
-        `B_IMMEDIATE: out = {{EXTENSION_B{in[31]}},in[7],in[30:25],in[11:8],1'b0};
-        `U_IMMEDIATE: out = {{EXTENSION_U{in[31]}},in[30:20],in[19:12],12'd0};
-        `J_IMMEDIATE: out = {{EXTENSION_J{in[31]}},in[19:12],in[20],in[30:25],in[24:21],1'b0};
-        `IMM_NOT_USED: out = 0;
-        default:      out = 0;
+        `I_IMMEDIATE: build_out = {{EXTENSION_I_S{build_in[31]}},build_in[30:25],build_in[24:21],build_in[20]};
+        `S_IMMEDIATE: build_out = {{EXTENSION_I_S{build_in[31]}},build_in[30:25],build_in[11:8],build_in[7]};
+        `B_IMMEDIATE: build_out = {{EXTENSION_B{build_in[31]}},build_in[7],build_in[30:25],build_in[11:8],1'b0};
+        `U_IMMEDIATE: build_out = {{EXTENSION_U{build_in[31]}},build_in[30:20],build_in[19:12],12'd0};
+        `J_IMMEDIATE: build_out = {{EXTENSION_J{build_in[31]}},build_in[19:12],build_in[20],build_in[30:25],build_in[24:21],1'b0};
+        `IMM_NOT_USED: build_out = 0;
+        default:      build_out = 0;
     endcase
 end
 

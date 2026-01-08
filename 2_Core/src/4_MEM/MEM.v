@@ -3,7 +3,7 @@
 module MEM #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     //Buses
@@ -56,22 +56,22 @@ module MEM #(parameter XLEN = 64)(
 // ---------------------------------- Implementation of modules
 
 extension_wr #(.XLEN(XLEN)) extend_write (
-    .in(EX_RS2),
-    .out(EMDB_out),
+    .extend_in(EX_RS2),
+    .extend_out(EMDB_out),
     .extension_type(EX_val_wr_type)
 );
 
 wire [XLEN-1:0] EMDB_in_extended;
 extension_rd #(.XLEN(XLEN)) extend_read (
-    .in(EMDB_in),
-    .out(EMDB_in_extended),
+    .extend_in(EMDB_in),
+    .extend_out(EMDB_in_extended),
     .extension_type(EX_val_rd_type)
 );
 
 wire[XLEN-1:0] exec_result;
 extension_exec_result #(.XLEN(XLEN)) extend_result (
-    .in(EX_exec_result),
-    .out(exec_result),
+    .extend_in(EX_exec_result),
+    .extend_out(exec_result),
     .extension_type(EX_result_type)
 );
 
@@ -84,8 +84,8 @@ assign EX_FW_exec_result        = EX_exec_result;
 assign EX_regfile_we_out    = WB_regfile_we_in;
 
 //WB
-always @(posedge clk) begin
-    if(reset)begin
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)begin
         WB_PC_4              <= 0;
         WB_exec_result       <= 0;
         WB_EMDB              <= 0;

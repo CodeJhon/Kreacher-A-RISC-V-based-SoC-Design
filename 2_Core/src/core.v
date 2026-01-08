@@ -10,7 +10,7 @@ module core #(parameter XLEN = 64)(//RV64I
 
     //Global
     input clk,
-    input reset,
+    input reset_n,
 
     //Flags
     output            valid_instr_fetch,
@@ -32,13 +32,13 @@ module core #(parameter XLEN = 64)(//RV64I
 );
 
 // Reset synchronizer -> async assert / sync deassert
-reg reset_sync;
-always @(posedge clk or posedge reset) begin
-    if (reset)  reset_sync <= 1'b1;
-    else        reset_sync <= 1'b0;
+reg reset_n_sync;
+always @(posedge clk or negedge reset_n) begin
+    if (!reset_n)  reset_n_sync <= 1'b0;
+    else           reset_n_sync <= 1'b1;
 end
 
-wire internal_core_pause = reset_sync | pause_core;
+wire internal_core_pause = ~reset_n_sync | pause_core;
 
 /*
     --- Wire terminology ---
@@ -188,7 +188,7 @@ assign     valid_data_write = EX_valid_data_write_MEM;
 IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     .pause(internal_core_pause),
 
     //Flags
@@ -219,7 +219,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 ID #(.XLEN(XLEN)) u_ID (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     .pause(internal_core_pause),
 
     //----------------------------IF_HK Stage
@@ -285,7 +285,7 @@ ID #(.XLEN(XLEN)) u_ID (
 EX #(.XLEN(XLEN)) u_EX (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     .pause(internal_core_pause),
 
     //----------------------------ID Stage
@@ -358,7 +358,7 @@ EX #(.XLEN(XLEN)) u_EX (
 MEM #(.XLEN(XLEN)) u_MEM (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
     .pause(internal_core_pause),
 
     // Buses
@@ -410,7 +410,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
 WB #(.XLEN(XLEN)) u_WB (
     //Global
     .clk(clk),
-    .reset(reset),
+    .reset_n(reset_n),
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
@@ -467,7 +467,7 @@ HCU #(.XLEN(XLEN)) u_HCU (
     verification_commits #(.XLEN(XLEN)) u_verification_commits(
         //Global
         .clk(clk),
-        .reset(reset),
+        .reset_n(reset_n),
 
         //Signals retrieved from the core
         .IF_PC(IF_PC_ID),

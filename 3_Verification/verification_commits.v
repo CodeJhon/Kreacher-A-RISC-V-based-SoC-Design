@@ -1,7 +1,7 @@
 module verification_commits  #(parameter XLEN = 32)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     
     //Signals retrieved from the core
     input [XLEN-1:0]    IF_PC,
@@ -25,8 +25,8 @@ reg [XLEN-1:0] ID_PC_EX;
 reg [XLEN-1:0] EX_PC_MEM;
 reg [XLEN-1:0] MEM_PC_WB;
 
-always @(posedge clk) begin
-    if (reset) begin        
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n) begin        
         ID_PC_EX  <= 0;
         EX_PC_MEM <= 0;
         MEM_PC_WB <= 0;
@@ -43,8 +43,8 @@ reg [31:0] ID_canonical_instruction_EX;
 reg [31:0] EX_canonical_instruction_MEM;
 reg [31:0] MEM_canonical_instruction_WB;
 
-always @(posedge clk) begin
-    if (reset) begin
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n) begin
         ID_canonical_instruction_EX  <= 0;
         EX_canonical_instruction_MEM <= 0;
         MEM_canonical_instruction_WB <= 0;        

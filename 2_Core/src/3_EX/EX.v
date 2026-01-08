@@ -3,7 +3,7 @@
 module EX #(parameter XLEN = 64)(
     //Global
     input clk,
-    input reset,
+    input reset_n,
     input pause,
 
     //----------------------------ID Stage
@@ -132,7 +132,6 @@ always @(ID_sel_exec_result, ALU_out, PC_plus_imm) begin
     case (ID_sel_exec_result)
         `exec_result_ALU:          exec_result = ALU_out;
         `exec_result_PC_plus_imm:  exec_result = PC_plus_imm;
-        default:                   exec_result = ALU_out;
     endcase
 end
 
@@ -150,8 +149,8 @@ assign ID_regfile_we_out    = MEM_regfile_we_in;
 assign ID_sel_next_PC       = sel_next_PC;
 
 //MEM
-always @(posedge clk) begin
-    if(reset)begin
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)begin
         MEM_PC_4             <= 0;
         MEM_exec_result      <= 0;
         MEM_RS2              <= 0;
