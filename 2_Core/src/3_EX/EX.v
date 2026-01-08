@@ -36,6 +36,10 @@ module EX #(parameter XLEN = 64)(
     output                ID_regfile_we_out,
     output                ID_sel_next_PC,
 
+    //Flags
+    input             ID_valid_data_read,
+    input             ID_valid_data_write,
+
     //----------------------------MEM Stage
     //Data from/to MEM stage
     input [XLEN-1:0]      MEM_RD,
@@ -58,6 +62,10 @@ module EX #(parameter XLEN = 64)(
     output reg            MEM_regfile_we_out,
     
     output reg [2:0]      MEM_sel_writeback,
+
+    //Flags
+    output reg            MEM_valid_data_read,
+    output reg            MEM_valid_data_write,
     
     //---------------------------- HCU (Hazard Control Unit)
     input [1:0] HCU_sel_RS1,
@@ -157,6 +165,10 @@ always @(posedge clk) begin
         MEM_regfile_we_out   <= 0;
 
         MEM_sel_writeback    <= 0;
+
+        //Flags
+        MEM_valid_data_read   <= 0;
+        MEM_valid_data_write  <= 0;
     end
     else if(!pause) begin
         MEM_PC_4             <= ID_PC_4;
@@ -172,8 +184,11 @@ always @(posedge clk) begin
         MEM_regfile_we_out   <= ID_regfile_we_in;
 
         MEM_sel_writeback    <= ID_sel_writeback;
+
+        //Flags
+        MEM_valid_data_read   <= ID_valid_data_read;
+        MEM_valid_data_write  <= ID_valid_data_write;
     end
 end
-
 
 endmodule

@@ -12,6 +12,14 @@ module core #(parameter XLEN = 64)(//RV64I
     input clk,
     input reset,
 
+    //Flags
+    output            valid_instr_fetch,
+    output            valid_data_read,
+    output            valid_data_write,
+
+    //Control
+    input             pause_core,
+
     //Buses
     input  [31:0]     EIB,             //External Instruction Bus
     output [16:0]     EIAB,            //External Instruction Address Bus
@@ -30,7 +38,7 @@ always @(posedge clk or posedge reset) begin
     else        reset_sync <= 1'b0;
 end
 
-wire internal_core_pause = reset_sync;
+wire internal_core_pause = reset_sync | pause_core;
 
 /*
     --- Wire terminology ---
@@ -162,6 +170,18 @@ wire [2:0] ID_sel_writeback_EX;
 wire [2:0] EX_sel_writeback_MEM;
 wire [2:0] MEM_sel_writeback_WB;
 
+//valid_data_read
+wire       ID_valid_data_read_EX;
+wire       EX_valid_data_read_MEM;
+
+assign     valid_data_read = EX_valid_data_read_MEM;
+
+//valid_data_write
+wire       ID_valid_data_write_EX;
+wire       EX_valid_data_write_MEM;
+
+assign     valid_data_write = EX_valid_data_write_MEM;
+
 
 // ---------------------------------- Implementation of modules
 
@@ -170,6 +190,9 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     .clk(clk),
     .reset(reset),
     .pause(internal_core_pause),
+
+    //Flags
+    .valid_instr_fetch(valid_instr_fetch),
     
     //Buses
     .EIB(EIB),      //External Instruction Bus
@@ -241,6 +264,10 @@ ID #(.XLEN(XLEN)) u_ID (
     
     .EX_sel_writeback(ID_sel_writeback_EX),
     
+    //Flags
+    .EX_valid_data_read(ID_valid_data_read_EX),
+    .EX_valid_data_write(ID_valid_data_write_EX),
+    
     //---------------------------- HCU (Hazard Control Unit)
     .ID_flush(HCU_flush_ID),
     .ID_sel_RS1(HCU_sel_RS1_ID),
@@ -291,6 +318,10 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_regfile_we_out(EX_regfile_we_out_ID),
     .ID_sel_next_PC(EX_sel_next_PC_ID),
 
+    //Flags
+    .ID_valid_data_read(ID_valid_data_read_EX),
+    .ID_valid_data_write(ID_valid_data_write_EX),
+
     //----------------------------MEM Stage
     //Data from/to MEM stage
     .MEM_RD(MEM_RD_EX),
@@ -313,6 +344,10 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_regfile_we_out(EX_regfile_we_in_MEM),
     
     .MEM_sel_writeback(EX_sel_writeback_MEM),
+
+    //Flags
+    .MEM_valid_data_read(EX_valid_data_read_MEM),
+    .MEM_valid_data_write(EX_valid_data_write_MEM),
 
     //---------------------------- HCU (Hazard Control Unit)
     .HCU_sel_RS1(HCU_sel_RS1_EX),

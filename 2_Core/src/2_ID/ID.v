@@ -48,6 +48,10 @@ module ID #(parameter XLEN = 64)(
     
     output reg [2:0]      EX_sel_writeback,
 
+    //Flags
+    output reg            EX_valid_data_read,
+    output reg            EX_valid_data_write,
+
     //---------------------------- HCU (Hazard Control Unit)
     input                 ID_flush,
     input  [1:0]          ID_sel_RS1,
@@ -83,6 +87,9 @@ wire            result_type;
 
 wire [2:0]      sel_writeback;
 
+wire            valid_data_read;
+wire            valid_data_write;
+
 control u_control (
     //---------------------- Inputs
     .opcode(IF_canonical_instruction[6:0]),
@@ -91,6 +98,10 @@ control u_control (
     .funct7(IF_canonical_instruction[31:25]),
 
     //----------------------- Outputs
+    //Flags
+    .valid_data_read(valid_data_read),
+    .valid_data_write(valid_data_write),
+
     // ID
     .regfile_we(regfile_we),
     .imm_type(imm_type),
@@ -189,6 +200,10 @@ always @(posedge clk) begin
         EX_result_type       <= 0;
 
         EX_sel_writeback     <= 0; 
+
+        //Flags
+        EX_valid_data_read   <= 0;
+        EX_valid_data_write  <= 0;
     end
     else if(!pause) begin
             //Data
@@ -212,6 +227,10 @@ always @(posedge clk) begin
         EX_result_type       <= result_type;
 
         EX_sel_writeback     <= sel_writeback;
+
+        //Flags
+        EX_valid_data_read   <= valid_data_read;
+        EX_valid_data_write  <= valid_data_write;
     end
 end
 

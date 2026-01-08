@@ -34,6 +34,10 @@ core #(.XLEN(XLEN)) core_inst (
 `endif
     .clk(clk), 
     .reset(reset),
+    
+    //Control
+    .pause_core(1'b0),
+
     //PMEM signals
     .EIB(EIB),
     .EIAB(EIAB),
