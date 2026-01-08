@@ -69,9 +69,9 @@ then
 
   cp riscv_random_test/asm_test/${TEST}_0.S ../../vlsi_processor_design_project/3_Verification/auto_test/temp
 
-  if [ -f ../../vlsi_processor_design_project/Memory/src/PMEM_content.mem ]
+  if [ -f ../../vlsi_processor_design_project/Memories/src/PMEM_content.mem ]
   then
-    mv ../../vlsi_processor_design_project/Memory/src/PMEM_content.mem ../../vlsi_processor_design_project/Memory/src/PMEM_content_old.mem
+    mv ../../vlsi_processor_design_project/Memories/src/PMEM_content.mem ../../vlsi_processor_design_project/Memories/src/PMEM_content_old.mem
   fi
 
   cd ../../vlsi_processor_design_project/3_Verification/auto_test
@@ -104,7 +104,7 @@ then
   sed 's/\(..\)\(..\)\(..\)\(..\)/\4\3\2\1/' > temp.mem
 
   sed 's/\(..\)/\1 /g; s/ $//' temp.mem > ${MEM}
-  cp ${MEM}  ../../../Memory/src/
+  cp ${MEM}  ../../../Memories/src/
   cp ${MEM}  ../run_logs/
 
   riscv32-unknown-elf-objdump -D -b binary -m riscv ${BIN} > instructions.txt
@@ -159,14 +159,14 @@ then
     read -p "Do you want to replace the old PMEM file with the new one(y/n): " choice
     case "$choice" in
       (y|yes|YES|Yes)
-        rm ../../Memory/src/PMEM_content_old.mem
+        rm ../../Memories/src/PMEM_content_old.mem
         cp ./run_logs/spike.log ./simulation_reference.log
         echo "Old PMEM is replaced with the new one"
         break
         ;;
       (n|no|NO|No)
-        rm ../../Memory/src/PMEM_content.mem
-        mv ../../Memory/src/PMEM_content_old.mem ../../Memory/src/PMEM_content.mem
+        rm ../../Memories/src/PMEM_content.mem
+        mv ../../Memories/src/PMEM_content_old.mem ../../Memories/src/PMEM_content.mem
         echo "Old PMEM kept. New PMEM discarded"
         break
         ;;

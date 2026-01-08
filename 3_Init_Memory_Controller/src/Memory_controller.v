@@ -1,4 +1,4 @@
-`include "MEMORY_CONSTANT.vh"
+`include "INIT_MEM_CONSTANTS.vh"
 `timescale 1ns/1ps
 
 module Memory_controller #(

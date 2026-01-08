@@ -37,7 +37,7 @@ module tb_PMEM_memory_interface;
     // -------------------------
     // DUT instantiation
     // -------------------------
-    PMEM_memory_interface #(
+    PMEM_interface #(
         .XLEN(XLEN),
         .IXLEN(IXLEN),
         .ADDR_BYTE_W(ADDR_BYTE_W)

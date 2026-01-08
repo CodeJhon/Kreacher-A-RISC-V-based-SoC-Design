@@ -52,9 +52,9 @@ module PMEM_memory_interface_top
     wire we_odd_w;
 
     // -------------------------
-    // PMEM_memory_interface instance
+    // PMEM_interface instance
     // -------------------------
-    PMEM_memory_interface #(
+    PMEM_interface #(
         .XLEN(XLEN),
         .IXLEN(IXLEN),
         .ADDR_BYTE_W(ADDR_BYTE_W)
@@ -119,7 +119,7 @@ module PMEM_memory_interface_top
     // -------------------------
     // PRAM instances
     // -------------------------
-    PRAM #(.WORDS(WORDS)) PRAM_even (
+    RAM #(.WORDS(WORDS)) PRAM_even (
         .clk(clk),
         .reset_n(reset_n),
         .we(we_even_w),
@@ -129,7 +129,7 @@ module PMEM_memory_interface_top
         .data_out(data_out_even_w)
     );
 
-    PRAM #(.WORDS(WORDS)) PRAM_odd (
+    RAM #(.WORDS(WORDS)) PRAM_odd (
         .clk(clk),
         .reset_n(reset_n),
         .we(we_odd_w),

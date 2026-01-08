@@ -126,7 +126,7 @@ module tb_core;
 
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
-    $writememh("DMEM_result.mem", dut.memories_top_inst.DMEM.memory);
+    $writememh("DMEM_result.mem", dut.external_memory.memory);
     $display("Simulation finished at time %0t ns, cycles = %0d", $time, cycle_count);
   end
 
