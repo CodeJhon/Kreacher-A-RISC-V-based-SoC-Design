@@ -28,16 +28,18 @@ module tb_core;
     .clk(clk),
     .reset_n(reset_n),
 
-`ifndef SYNTHESIS
+  verification_commits #(.XLEN(XLEN)) verification_commits_inst (
+    .IF_PC(dut.core_inst.IF_PC_ID),
+    .IF_canonical_instruction(dut.core_inst.IF_canonical_instruction_ID),
+    .WB_regfile_we(dut.core_inst.WB_regfile_we_out_MEM),
+    .WB_RD_addr(dut.core_inst.WB_RD_addr_out_MEM),
+    .WB_RD(dut.core_inst.WB_RD_MEM),
     .commit_valid(commit_valid),
     .commit_PC(commit_PC),
     .commit_instruction(commit_instruction),
     .commit_rd_addr(commit_rd_addr),
     .commit_rd_value(commit_rd_value)
-`endif
   );
-
-
 
   // clock generation
   initial begin

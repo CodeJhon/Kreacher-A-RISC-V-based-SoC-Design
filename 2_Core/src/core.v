@@ -1,13 +1,4 @@
 module core #(parameter XLEN = 64)(//RV64I
-    //Signals for verification purposes only
-    `ifndef SYNTHESIS
-        output              commit_valid,
-        output [XLEN-1:0]   commit_PC,
-        output [4:0]        commit_rd_addr,
-        output [XLEN-1:0]   commit_rd_value,
-        output [31:0]       commit_instruction,
-    `endif
-
     //Global
     input clk,
     input reset_n,
@@ -379,27 +370,5 @@ WB #(.XLEN(XLEN)) u_WB (
     //Control from/to WB stage
     .WB_sel_writeback(MEM_sel_writeback_WB)
 );
-
-//-------------------------------------- Extra -> Module for used for verification commits
-
-`ifndef SYNTHESIS
-    verification_commits #(.XLEN(XLEN)) u_verification_commits(
-        //Signals retrieved from the core
-        .IF_PC(IF_PC_ID),
-        .IF_canonical_instruction(IF_canonical_instruction_ID),
-        
-        .WB_regfile_we(WB_regfile_we_out_MEM),
-        .WB_RD_addr(WB_RD_addr_out_MEM),
-        .WB_RD(WB_RD_MEM),
-
-        //Output used for the framework
-        .commit_valid(commit_valid),
-        .commit_PC(commit_PC),
-        .commit_rd_addr(commit_rd_addr),
-        .commit_rd_value(commit_rd_value),
-        .commit_instruction(commit_instruction)
-    );
-`endif
-
 
 endmodule
