@@ -26,7 +26,8 @@ module tb_core;
   // Instantiate DUT (core_and_mem)
   core_and_mem #(.XLEN(XLEN)) dut (
     .clk(clk),
-    .reset_n(reset_n),
+    .reset_n(reset_n)
+    );
 
   verification_commits #(.XLEN(XLEN)) verification_commits_inst (
     .IF_PC(dut.core_inst.IF_PC_ID),
