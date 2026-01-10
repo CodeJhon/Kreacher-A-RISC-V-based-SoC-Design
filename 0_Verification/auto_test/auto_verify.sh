@@ -82,7 +82,8 @@ then
   cd ./temp
 
   echo "===> [1/6] compiling ELF..."
-  riscv32-unknown-elf-gcc \
+  riscv64-unknown-elf-gcc \
+    -mbig-endian \
     -march=rv32i \
     -mabi=ilp32 \
     -nostdlib \
@@ -94,7 +95,7 @@ then
     -o ${ELF}
 
   echo "===> [2/6] generateing BIN..."
-  riscv32-unknown-elf-objcopy \
+  riscv64-unknown-elf-objcopy \
     -O binary \
     ${ELF} \
     ${BIN}
@@ -107,11 +108,11 @@ then
   cp ${MEM}  ../../../Memories/src/
   cp ${MEM}  ../run_logs/
 
-  riscv32-unknown-elf-objdump -D -b binary -m riscv ${BIN} > instructions.txt
+  riscv64-unknown-elf-objdump -D -b binary -m riscv ${BIN} > instructions.txt
   cp instructions.txt ../PMEM_instructions.txt
 
   echo "===> [4/6] Running Spike and saving to ${LOG}..."
-  spike --log-commits --instructions=10000 --isa=rv32i ${ELF} 2>&1 | tee ${LOG}
+  spike --log-commits --instructions=10000 --isa=rv64i --big-endian ${ELF} 2>&1 | tee ${LOG}
   cp ${LOG} ../run_logs/
 else 
   echo "Skipping the first 4 steps of generating random instructions. Now at step 5."
