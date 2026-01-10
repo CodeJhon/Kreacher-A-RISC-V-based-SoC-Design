@@ -1,12 +1,4 @@
-module core_and_mem #(parameter XLEN = 64)(
-    `ifndef SYNTHESIS 
-        output           commit_valid,
-        output [XLEN-1:0]   commit_PC,
-        output [31:0]   commit_instruction,
-        output [4:0]     commit_rd_addr,
-        output [XLEN-1:0]   commit_rd_value,
-    `endif
-    
+module core_and_mem #(parameter XLEN = 64)(    
     //Global
     input clk,
     input reset_n
@@ -24,14 +16,6 @@ wire [XLEN-1:0] EMDB_out;        //External Memory Data Bus, output for the core
 wire [XLEN-1:0] EMDB_in;         //External Memory Data Bus, input for the core, output for the external memory
 
 core #(.XLEN(XLEN)) core_inst (
-
-`ifndef SYNTHESIS
-    .commit_valid(commit_valid),
-    .commit_PC(commit_PC),
-    .commit_instruction(commit_instruction),
-    .commit_rd_addr(commit_rd_addr),
-    .commit_rd_value(commit_rd_value),
-`endif
     .clk(clk), 
     .reset_n(reset_n),
     

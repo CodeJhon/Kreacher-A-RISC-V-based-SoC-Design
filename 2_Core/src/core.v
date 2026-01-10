@@ -1,13 +1,4 @@
 module core #(parameter XLEN = 64)(//RV64I
-    //Signals for verification purposes only
-    `ifndef SYNTHESIS
-        output              commit_valid,
-        output [XLEN-1:0]   commit_PC,
-        output [4:0]        commit_rd_addr,
-        output [XLEN-1:0]   commit_rd_value,
-        output [31:0]       commit_instruction,
-    `endif
-
     //Global
     input clk,
     input reset_n,
