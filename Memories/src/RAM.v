@@ -10,8 +10,8 @@ module RAM #(
     input  cs,
     input  we,
     input  [ADDR_LINES-1:0] addr,        // row index
-    input  [31:0] data_in,
-    output reg [31:0] data_out
+    input  [ROW_WIDTH-1:0] data_in,
+    output reg [ROW_WIDTH-1:0] data_out
 );
 
     reg [ROW_WIDTH-1:0] memory [0:WORDS-1];

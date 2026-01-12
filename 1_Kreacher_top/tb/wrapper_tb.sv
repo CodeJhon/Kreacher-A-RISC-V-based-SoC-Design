@@ -6,7 +6,7 @@ module tb_top_wrapper;
   localparam XLEN = 64;
   localparam CLK_PERIOD_NS = 10;           
   localparam RESET_CYCLES = 2;            
-  localparam MAX_CYCLES = 10000;       
+  localparam MAX_COMMITS = 10000;       
   localparam ECALL_INSTR = 32'h00000073;  
 
   localparam ADDR_BYTE_W = 17;
@@ -15,9 +15,9 @@ module tb_top_wrapper;
   localparam RAM_ADDR_W  = 14;
 
 
-  // Clock & reset
+  // Clock & reset_n
   reg clk;
-  reg reset;
+  reg reset_n;
   reg I_INTR_H;
   reg O_INTR_ACK;
 
@@ -38,17 +38,27 @@ module tb_top_wrapper;
   .RAM_ADDR_W(RAM_ADDR_W)
   ) dut(
 	.I_CLK(clk),
-    .I_A_RESET_L(reset),
+  .I_A_RESET_L(reset_n),
 	.I_INTR_H(I_INTR_H),
-	.O_INTR_ACK(O_INTR_ACK),
+	.O_INTR_ACK(O_INTR_ACK)
+  );
+
   
-  `ifndef SYNTHESIS
+  verification_commits #(.XLEN(XLEN)) verification_commits_inst (
+    .IF_PC(dut.u_kreacher_top.core_inst.IF_PC_ID),
+    .IF_canonical_instruction(dut.u_kreacher_top.core_inst.IF_canonical_instruction_ID),
+    
+    //Commit signals going to the regfile
+    .WB_regfile_we(dut.u_kreacher_top.core_inst.u_ID.u_regfile.regfile_we),
+    .WB_RD_addr(dut.u_kreacher_top.core_inst.u_ID.u_regfile.RD_addr),
+    .WB_RD(dut.u_kreacher_top.core_inst.u_ID.u_regfile.RD),
+
+    //Commit signals ready to print
     .commit_valid(commit_valid),
     .commit_PC(commit_PC),
     .commit_instruction(commit_instruction),
     .commit_rd_addr(commit_rd_addr),
     .commit_rd_value(commit_rd_value)
-`endif
   );
 
   // clock generation
@@ -57,8 +67,8 @@ module tb_top_wrapper;
     forever #(CLK_PERIOD_NS/2) clk = ~clk;
   end
 
-  // Simulation control: reset, waveform, trace file
-  integer cycle_count;
+  // Simulation control: reset_n, waveform, trace file
+  integer commit_count;
   integer trace_fd;
 
   initial begin
@@ -76,19 +86,19 @@ module tb_top_wrapper;
     // Write CSV header
     $fwrite(trace_fd, "time_ns,pc,inst,rd,rd_value\n");
 
-    // Apply reset
+    // Apply reset_n
     
-    reset = 0;
-    cycle_count = 0;
+    reset_n = 0;
+    commit_count = 0;
     repeat (RESET_CYCLES) @(posedge clk);
     # 1
-    reset = 1;
+    reset_n = 1;
 
     // Main simulation loop: monitor commits, write trace, stop on ECALL or timeout
-    // We'll run until ECALL commit is observed or MAX_CYCLES reached.
-    while (cycle_count < MAX_CYCLES) begin
+    // We'll run until ECALL commit is observed or MAX_COMMITS reached.
+    while (commit_count < MAX_COMMITS) begin
       @(posedge clk);
-      cycle_count = cycle_count + 1;
+      if (commit_valid) commit_count = commit_count + 1;
 
 `ifndef SYNTHESIS
       if (commit_valid) begin
@@ -103,7 +113,7 @@ module tb_top_wrapper;
       end
       else begin
         if (commit_instruction == ECALL_INSTR) begin
-          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, cycle_count);
+          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, commit_count);
             // Clean up
           $fclose(trace_fd);
         #100; // let final events settle
@@ -112,25 +122,16 @@ module tb_top_wrapper;
         end
       end
 
-//      if ($isunknown(commit_instruction)) begin
-//        $display("[%0t ns] Program finished. Terminating simulation.", $time);
-//        // disable SIMULATION_LOOP;
-//          // Clean up
-//        $fclose(trace_fd);
-//      #100; // let final events settle
-        //print_coverage_report();
-//        $finish;
-//      end
 `endif
     end // while
 
     // If reached here due to max cycles:
-    if (cycle_count >= MAX_CYCLES) begin
-      $display("Maximum cycle count (%0d) reached. Terminating simulation.", MAX_CYCLES);
-//      $fclose(trace_fd);
-//      #100; // let final events settle
+    if (commit_count >= MAX_COMMITS) begin
+      $display("Maximum commit count (%0d) reached. Terminating simulation.", MAX_COMMITS);
+      $fclose(trace_fd);
+      #100; // let final events settle
         //print_coverage_report();
-//      $finish;
+      $finish;
     end
 
   
@@ -138,8 +139,8 @@ module tb_top_wrapper;
 
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
-    $writememh("DMEM_result.mem", external_memory.memory);
-    $display("Simulation finished at time %0t ns, cycles = %0d", $time, cycle_count);
+    $writememh("DMEM_result.mem", dut.external_memory.memory);
+    $display("Simulation finished at time %0t ns, cycles = %0d", $time, commit_count);
   end
 
 endmodule
