@@ -7,14 +7,6 @@ module kreacher_top #(
     parameter [ADDR_BYTE_W-1:0] INCR      = 17'd8,
     parameter BURST_LEN                   = 16'd1024
 )(
-    `ifndef SYNTHESIS 
-        output             commit_valid,
-        output [XLEN-1:0]  commit_PC,
-        output [31:0]      commit_instruction,
-        output [4:0]       commit_rd_addr,
-        output [XLEN-1:0]  commit_rd_value,
-    `endif
-
     input  I_CLK,
     input  I_A_RESET_L,
 
@@ -75,13 +67,6 @@ module kreacher_top #(
     // Core
     // ---------------------------------------------------------------------
     core #(.XLEN(XLEN)) core_inst (
-    `ifndef SYNTHESIS
-        .commit_valid(commit_valid),
-        .commit_PC(commit_PC),
-        .commit_instruction(commit_instruction),
-        .commit_rd_addr(commit_rd_addr),
-        .commit_rd_value(commit_rd_value),
-    `endif
         .clk                (clk),
         .reset_n            (I_A_RESET_L),
         .EMAB               (EMAB),
@@ -104,7 +89,7 @@ module kreacher_top #(
         .XLEN        (XLEN),
         .IXLEN       (IXLEN),
         .BURST_LEN   (BURST_LEN)
-    ) M_Controller_top_inst (
+    ) init_memory_controller_inst (
         .clk                 (clk),
         .reset_n             (I_A_RESET_L),
 
@@ -172,11 +157,11 @@ module kreacher_top #(
     // ---------------------------------------------------------------------
     // PMEM interface
     // ---------------------------------------------------------------------
-    PMEM_memory_interface_top #(
+    PMEM_interface_top #(
         .ADDR_BYTE_W (ADDR_BYTE_W),
         .XLEN        (XLEN),
         .IXLEN       (IXLEN)
-    ) PMEM_memory_interface_top_inst (
+    ) PMEM_interface_top_inst (
         .inst_data_write     (inst_data_write),
         .data_read_write_adr (data_read_write_adr),
         .addr_data_valid     (addr_data_valid),

@@ -6,14 +6,6 @@ module top_wrapper#(
   parameter external_mem_WORDS   = 8192,
   parameter external_mem_ADDR_W  = 14
 )(
-    `ifndef SYNTHESIS 
-        output                commit_valid,
-        output [DATA_W-1:0]   commit_PC,
-        output [31:0]         commit_instruction,
-        output [4:0]          commit_rd_addr,
-        output [DATA_W-1:0]   commit_rd_value,
-    `endif
-    
     input I_CLK,
     input I_A_RESET_L,
     input I_INTR_H,
@@ -40,15 +32,7 @@ module top_wrapper#(
     wire intr_h;
     wire intr_ack;
 
-    kreacher_top dut (
-        `ifndef SYNTHESIS
-            .commit_valid(commit_valid),
-            .commit_PC(commit_PC),
-            .commit_instruction(commit_instruction),
-            .commit_rd_addr(commit_rd_addr),
-            .commit_rd_value(commit_rd_value),
-        `endif
-
+    kreacher_top u_kreacher_top (
         .I_CLK        (I_CLK),
         .I_A_RESET_L  (I_A_RESET_L),
 
@@ -82,18 +66,15 @@ module top_wrapper#(
     );
    
     RAM #(
-        .ADDR_LINES(14)
+        .ADDR_LINES(14),
         .WORDS  (8192),
         .FILE_LOAD(1),
         .ROW_WIDTH(64),
-        .MEM_FILE("MEM_INIT_content.mem")
+        .MEM_FILE("DMEM_content.mem")
     ) external_memory (
         .clk      (I_CLK),
-        .reset_n    (I_A_RESET_L),
-
         .cs       (external_mem_cs),
         .we       (external_mem_we),
-
         .addr     (external_mem_addr),
         .data_in  (external_mem_wdata),
         .data_out (external_mem_rdata)

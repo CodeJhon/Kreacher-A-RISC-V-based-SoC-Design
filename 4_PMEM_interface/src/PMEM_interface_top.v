@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 `include "MEMORY_CONSTANT.vh"
 
-module PMEM_memory_interface_top
+module PMEM_interface_top
 #(
     parameter XLEN  = 64, // Full data width
     parameter IXLEN = 32, // Instruction width
@@ -119,9 +119,13 @@ module PMEM_memory_interface_top
     // -------------------------
     // PRAM instances
     // -------------------------
-    RAM #(.WORDS(WORDS)) PRAM_even (
+    RAM #(
+        .ADDR_LINES(10),
+        .WORDS  (1024),
+        .FILE_LOAD(0),
+        .ROW_WIDTH(32)
+    ) PRAM_even (
         .clk(clk),
-        .reset_n(reset_n),
         .we(we_even_w),
         .cs(cs_even_w),
         .data_in(data_in_even_w),
@@ -129,9 +133,13 @@ module PMEM_memory_interface_top
         .data_out(data_out_even_w)
     );
 
-    RAM #(.WORDS(WORDS)) PRAM_odd (
+    RAM #(
+        .ADDR_LINES(10),
+        .WORDS  (1024),
+        .FILE_LOAD(0),
+        .ROW_WIDTH(32)
+    ) PRAM_odd (
         .clk(clk),
-        .reset_n(reset_n),
         .we(we_odd_w),
         .cs(cs_odd_w),
         .data_in(data_in_odd_w),
