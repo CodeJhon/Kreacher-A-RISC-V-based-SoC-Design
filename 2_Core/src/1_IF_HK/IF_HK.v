@@ -129,12 +129,12 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 // ------------------------------------- Connection to adjacent stage(s)
 //ID
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n || IF_flush || pause_to_concatenate) begin
+    if(!reset_n || IF_flush) begin
         ID_PC                      <= 0;
         ID_PC_4                    <= 0;
         ID_canonical_instruction   <= 0;
     end
-    else if(!pause & !IF_stall) begin
+    else if(!pause && !IF_stall && !pause_to_concatenate) begin
         ID_PC                      <= PC;
         ID_PC_4                    <= PC_step;
         ID_canonical_instruction   <= canonical_instruction;
