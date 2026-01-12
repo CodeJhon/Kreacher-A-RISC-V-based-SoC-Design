@@ -3,6 +3,15 @@
     `define CORE_CONSTANTS_VH
     // PC STARTING POINT
     `define PC_BASE_ADDRESS 64'h00000000_80000000
+
+    //---------- Instruction Fetch (IF) stage constants ---------
+    //sel_PC_step
+    `define PC_STEP_4 1'b0
+    `define PC_STEP_2 1'b1
+    //instr_type
+    `define RVI_INSTR 1'b0
+    `define C_INSTR   1'b1
+
     
     // ---- OPCODE CONSTANTS ----
         //Instructions with shared opcode

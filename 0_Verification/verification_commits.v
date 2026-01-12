@@ -2,6 +2,11 @@ module verification_commits  #(parameter XLEN = 32)(
     //Global
     input clk,
     input reset_n,
+
+    //pause signals
+    input pause_ID,
+    input pause_EX,
+    input pause_MEM,
     
     //Signals retrieved from the core
     input [XLEN-1:0]    IF_PC,
@@ -32,9 +37,9 @@ always @(posedge clk, negedge reset_n) begin
         MEM_PC_WB <= 0;
     end
     else begin
-        ID_PC_EX  <= IF_PC;
-        EX_PC_MEM <= ID_PC_EX;
-        MEM_PC_WB <= EX_PC_MEM;
+        if(!pause_ID) ID_PC_EX  <= IF_PC;
+        if(!pause_EX) EX_PC_MEM <= ID_PC_EX;
+        if(!pause_MEM) MEM_PC_WB <= EX_PC_MEM;
     end
 end
 
@@ -50,9 +55,9 @@ always @(posedge clk, negedge reset_n) begin
         MEM_canonical_instruction_WB <= 0;        
     end
     else begin
-        ID_canonical_instruction_EX  <= IF_canonical_instruction;
-        EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
-        MEM_canonical_instruction_WB <= EX_canonical_instruction_MEM;    
+        if(!pause_ID)  ID_canonical_instruction_EX  <= IF_canonical_instruction;
+        if(!pause_EX)  EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
+        if(!pause_MEM) MEM_canonical_instruction_WB <= EX_canonical_instruction_MEM;    
     end
 end
 

@@ -12,13 +12,16 @@ module IF_HK #(parameter XLEN = 64)(
     //Buses
     input  [31:0]     EIB,  //External Instruction Bus
     output [16:0]     EIAB, //External Instruction Address Bus 
+
+    //Control
+    output            IF_pause_request,
     
     //----------------------------ID Stage
     //Data from/to ID stage
     input  [XLEN-1:0]     ID_exec_result,
 
-    output reg [XLEN-1:0] ID_PC_4,
     output reg [XLEN-1:0] ID_PC,
+    output reg [XLEN-1:0] ID_PC_4,
     output reg [31:0]     ID_canonical_instruction,
 
     //Control from/to ID stage
@@ -31,45 +34,43 @@ module IF_HK #(parameter XLEN = 64)(
 
 );
 
-//--------------Outputs
+//--------------Internal to out
 wire [XLEN-1:0] PC;
-wire [XLEN-1:0] PC_4;
+wire [XLEN-1:0] PC_step;
 wire [31:0]     canonical_instruction;
 
-//------------Control signals
-    //Housekeeping
-wire sel_PC_step;
-    //Fetch
-wire sel_EIB_2;
-wire sel_comp_instr;
-wire sel_instr_tpye;
-wire sel_concatenation;
+// -> Internal core pause requested by IF_HK stage
+wire            pause_to_concatenate; 
 
-assign sel_comp_instr = PC[1];
+//------------Control 
+wire pointer =  PC[1];
+wire concatenate_in_next_cycle;
+wire concatenate_flag;
+wire instr_type;
+wire sel_PC_step;
 
 
 mini_controller u_mini_controller (
     // Global
-    .clk                (clk),
-    .reset_n              (reset_n),
-    .pause              (pause),
+    .clk                       (clk),
+    .reset_n                   (reset_n),
+    .pause                     (pause),
 
     // Quadrants of upper and lower halves of EIB
-    .EIB_1_quad         (EIB[1:0]),
-    .EIB_2_quad         (EIB[17:16]),
+    .EIB_1_quad                (EIB[1:0]),
+    .EIB_2_quad                (EIB[17:16]),
 
-    .sel_next_PC        (ID_sel_next_PC),
+    .pointer                   (pointer),
+    .sel_next_PC               (ID_sel_next_PC),
 
     // Control
-    .sel_concatenation  (sel_concatenation),
+    .concatenate_in_next_cycle (concatenate_in_next_cycle),
+    .concatenate_flag          (concatenate_flag),
+    .pause_to_concatenate      (pause_to_concatenate),
 
-        // To housekeeping
-    .sel_PC_step        (sel_PC_step),
-
-        // To fetch
-    .sel_EIB_2          (sel_EIB_2),
-    .sel_instr_tpye     (sel_instr_tpye),
-
+    .instr_type                (instr_type),
+    .sel_PC_step               (sel_PC_step),
+    
     //---------------------------- HCU (Hazard Control Unit)
     .stall(IF_stall),
     .flush(IF_flush)
@@ -77,21 +78,22 @@ mini_controller u_mini_controller (
 
 fetch u_fetch (
     // Global
-    .clk                   (clk),
-    .reset_n               (reset_n),
-    .pause                 (pause),
+    .clk                       (clk),
+    .reset_n                   (reset_n),
+    .pause                     (pause),
 
-    .EIB                   (EIB),
+    .EIB                       (EIB),
+
+    .pointer                   (pointer),
 
     // Control
-    .sel_EIB_2             (sel_EIB_2),
-    .sel_comp_instr        (sel_comp_instr),
-    .sel_instr_tpye        (sel_instr_tpye),
-    .sel_concatenation     (sel_concatenation),
-    .sel_next_PC            (ID_sel_next_PC),
+    .concatenate_in_next_cycle (concatenate_in_next_cycle),
+    .concatenate_flag          (concatenate_flag),
+    
+    .instr_type                (instr_type),
 
     // Output
-    .canonical_instruction(canonical_instruction),
+    .canonical_instruction     (canonical_instruction),
 
     //---------------------------- HCU (Hazard Control Unit)
     .stall(IF_stall),
@@ -105,18 +107,20 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
     .pause              (pause),
 
     // Control
-    .sel_next_PC        (ID_sel_next_PC),
-    .sel_concatenation  (sel_concatenation),
-    .sel_PC_step        (sel_PC_step),
+    .sel_next_PC               (ID_sel_next_PC),
+
+    .concatenate_in_next_cycle (concatenate_in_next_cycle),
+    .pause_to_concatenate      (pause_to_concatenate),
+
+    .sel_PC_step               (sel_PC_step),
 
     // Addr coming from EX stage -> to jump at
-    .exec_result        (ID_exec_result),
+    .exec_result               (ID_exec_result),
 
     // Outputs
-    .EIAB           (EIAB),                                     // ------> Connection to bus
-    .PC             (PC),
-    .PC_2           (),
-    .PC_4           (PC_4),
+    .EIAB                      (EIAB),                                     // ------> Connection to bus
+    .PC                        (PC),
+    .PC_step                   (PC_step),
 
     //---------------------------- HCU (Hazard Control Unit)
     .stall(IF_stall_PC)
@@ -125,22 +129,26 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 // ------------------------------------- Connection to adjacent stage(s)
 //ID
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n || IF_flush)begin
-        ID_PC_4                     <= 0;
-        ID_PC                       <= 0;
+    if(!reset_n || IF_flush || pause_to_concatenate) begin
+        ID_PC                      <= 0;
+        ID_PC_4                    <= 0;
         ID_canonical_instruction   <= 0;
     end
     else if(!pause & !IF_stall) begin
-        ID_PC_4                     <= PC_4;
-        ID_PC                       <= PC;
+        ID_PC                      <= PC;
+        ID_PC_4                    <= PC_step;
         ID_canonical_instruction   <= canonical_instruction;
     end
 end
 
 
 
-// -------------------------------------- Connection to buses (if any)
+// -------------------------------------- Other connections
 
+//Flags
 assign valid_instr_fetch = ~pause;
+
+//Control
+assign IF_pause_request = pause_to_concatenate;
 
 endmodule

@@ -2,7 +2,6 @@ module regfile #(parameter XLEN = 64)(
     //global
     input clk,
     input reset_n,
-    input pause,
 
     //Addresses
     input [4:0]           RS1_addr,
@@ -36,7 +35,7 @@ always@(posedge clk, negedge reset_n)begin
             regfile_bank[i] <= 0;
         end
     end
-    else if(regfile_we && RD_addr != 5'd0 && !pause) 
+    else if(regfile_we && RD_addr != 5'd0) 
         regfile_bank[RD_addr] <= RD;
 end
 

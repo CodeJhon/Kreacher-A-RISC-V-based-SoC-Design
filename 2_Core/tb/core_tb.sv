@@ -6,7 +6,7 @@ module tb_core;
   localparam XLEN = 64;
   localparam CLK_PERIOD_NS = 10;           
   localparam RESET_CYCLES = 2;            
-  localparam MAX_CYCLES = 10000;       
+  localparam MAX_COMMITS = 10000;       
   localparam ECALL_INSTR = 32'h00000073;   
 
 
@@ -30,11 +30,23 @@ module tb_core;
     );
 
   verification_commits #(.XLEN(XLEN)) verification_commits_inst (
+    .clk(clk),
+    .reset_n(reset_n),
+    
+    //pause signals
+    .pause_ID(dut.core_inst.u_pause_handler.pause_ID),
+    .pause_EX(dut.core_inst.u_pause_handler.pause_EX),
+    .pause_MEM(dut.core_inst.u_pause_handler.pause_MEM),
+    
     .IF_PC(dut.core_inst.IF_PC_ID),
     .IF_canonical_instruction(dut.core_inst.IF_canonical_instruction_ID),
-    .WB_regfile_we(dut.core_inst.WB_regfile_we_out_MEM),
-    .WB_RD_addr(dut.core_inst.WB_RD_addr_out_MEM),
-    .WB_RD(dut.core_inst.WB_RD_MEM),
+    
+    //Commit signals going to the regfile
+    .WB_regfile_we(dut.core_inst.u_ID.u_regfile.regfile_we),
+    .WB_RD_addr(dut.core_inst.u_ID.u_regfile.RD_addr),
+    .WB_RD(dut.core_inst.u_ID.u_regfile.RD),
+
+    //Commit signals ready to print
     .commit_valid(commit_valid),
     .commit_PC(commit_PC),
     .commit_instruction(commit_instruction),
@@ -49,7 +61,7 @@ module tb_core;
   end
 
   // Simulation control: reset_n, waveform, trace file
-  integer cycle_count;
+  integer commit_count;
   integer trace_fd;
 
   initial begin
@@ -70,16 +82,16 @@ module tb_core;
     // Apply reset_n
     
     reset_n = 0;
-    cycle_count = 0;
+    commit_count = 0;
     repeat (RESET_CYCLES) @(posedge clk);
     # 1
     reset_n = 1;
 
     // Main simulation loop: monitor commits, write trace, stop on ECALL or timeout
-    // We'll run until ECALL commit is observed or MAX_CYCLES reached.
-    while (cycle_count < MAX_CYCLES) begin
+    // We'll run until ECALL commit is observed or MAX_COMMITS reached.
+    while (commit_count < MAX_COMMITS) begin
       @(posedge clk);
-      cycle_count = cycle_count + 1;
+      if(commit_valid) commit_count = commit_count + 1;
 
 `ifndef SYNTHESIS
       if (commit_valid && commit_PC <= 32'h80001208) begin
@@ -94,7 +106,7 @@ module tb_core;
       end
       else begin
         if (commit_instruction == ECALL_INSTR) begin
-          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, cycle_count);
+          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, commit_count);
             // Clean up
           $fclose(trace_fd);
         #100; // let final events settle
@@ -102,22 +114,12 @@ module tb_core;
           $finish;
         end
       end
-
-      if ($isunknown(commit_instruction)) begin
-        $display("[%0t ns] Program finished. Terminating simulation.", $time);
-        // disable SIMULATION_LOOP;
-          // Clean up
-        $fclose(trace_fd);
-      #100; // let final events settle
-        //print_coverage_report();
-        $finish;
-      end
 `endif
     end // while
 
     // If reached here due to max cycles:
-    if (cycle_count >= MAX_CYCLES) begin
-      $display("Maximum cycle count (%0d) reached. Terminating simulation.", MAX_CYCLES);
+    if (commit_count >= MAX_COMMITS) begin
+      $display("Maximum commit count (%0d) reached. Terminating simulation.", MAX_COMMITS);
       $fclose(trace_fd);
       #100; // let final events settle
         //print_coverage_report();
@@ -130,7 +132,7 @@ module tb_core;
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
     $writememh("DMEM_result.mem", dut.external_memory.memory);
-    $display("Simulation finished at time %0t ns, cycles = %0d", $time, cycle_count);
+    $display("Simulation finished at time %0t ns, cycles = %0d", $time, commit_count);
   end
 
 endmodule
