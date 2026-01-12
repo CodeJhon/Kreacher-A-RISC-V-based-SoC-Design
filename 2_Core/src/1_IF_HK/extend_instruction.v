@@ -3,7 +3,6 @@
 
 module extend_instruction (
     input      [15:0] compressed_instruction,
-
     output reg [31:0] extended_instruction
 );
 
@@ -171,7 +170,7 @@ always @(quadrant, funct2, funct2_p, funct3, funct4, funct6,
         `QUADRANT_0: begin
             case (funct3)
                 3'd0://                                              C.ADDI4SPN -> addi rd', x2, nzuimm
-                    if(imm_c_addi4spn != 12'd0)                      extended_instruction = {imm_c_addi4spn, `X_2, `ADDI, rd_rs1_p, `INT_REG_IMM}; 
+                    if(imm_c_addi4spn != 12'd0)                      extended_instruction = {imm_c_addi4spn, `X_2, `ADDI, rd_rs2_p, `INT_REG_IMM}; 
                 3'd2://                                              C.LW       -> lw rd', uimm(rs1')
                                                                      extended_instruction = {imm_c_lw_sw, rd_rs1_p, `LW, rd_rs2_p, `LOAD}; 
                 3'd3://                                              C.LD       -> ld rd', uimm(rs1')

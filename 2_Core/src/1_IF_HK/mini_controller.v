@@ -7,51 +7,75 @@ module mini_controller (
     // Quadrants of upper and lower halfs of EIB
     input [1:0] EIB_1_quad,
     input [1:0] EIB_2_quad,
-
-    input sel_next_PC,
+    
+    input       pointer,          //-> points to the begginning or to the middle of the row
+    input       sel_next_PC,
 
     //Control
-    output sel_concatenation,
+    output wire concatenate_in_next_cycle,
+    output reg  concatenate_flag,
+    output wire pause_to_concatenate,
 
-        //To housekeeping
-    output sel_PC_step,
-
-        //To fetch
-    output sel_EIB_2,
-    output sel_instr_tpye
+    output reg  instr_type,
+    output reg  sel_PC_step
     
 
 );
 
-//----------------------------------------c_1, c_2 -> Determines if each part is a compressed instruction or not
-wire c_1;
-wire c_2;
+//----------------------------------------rvi_lower, rvi_higher -> Determines if each part is an rvi instruction or not
+wire rvi_lower;
+wire rvi_higher;
 
-assign c_1 = ~(EIB_1_quad == 2'b11);
-assign c_2 = ~(EIB_2_quad == 2'b11);
+assign rvi_lower = (EIB_1_quad == 2'b11);
+assign rvi_higher = (EIB_2_quad == 2'b11);
 
-//----------------------------------------sel_concatenate_rvi 
-//                                         -> Used for when wanting to concatenate 1_RV1 and 2_RVI in | 1_RVI |  RVC  | , |  RVC  | 2_RVI |   
-reg sel_concatenate_rvi;
+// old sel_next_PC -> retain the signal from previous instruction
+reg old_sel_next_PC;
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n)                   sel_concatenate_rvi <= 1'b0;
+    if(!reset_n)                old_sel_next_PC <= 1'b0;
+    else if(pause_to_concatenate)      old_sel_next_PC <= 1'b0; //Clean its value while making 1-cycle pause
+
     else if(!pause) begin
-        if(sel_next_PC)         sel_concatenate_rvi <= 1'b0;
-                                //Signal is activated if it recognizes it is in a row type -> | 1_RVI |  RVC  | 
-        else                    sel_concatenate_rvi <= ({c_2 , c_1} == 2'b01);     
+                                old_sel_next_PC <= sel_next_PC;
     end
-    
 end
 
-//-------------------------------- Output control assignation
-assign sel_concatenation = sel_concatenate_rvi;
+//------------------------------------------------- Outputs
 
-    //To housekeeping
-assign sel_PC_step       = !sel_concatenate_rvi & c_1;
+// -> concatenate in next cycle
+//                                           | 1RV | C  |                   | 1RV | C  | , | 1RV | 2RV |
+assign concatenate_in_next_cycle = ~sel_next_PC & ((rvi_higher & ~rvi_lower & ~pointer) |     (rvi_higher & pointer));
 
-    //To fetch
-assign sel_EIB_2         = c_1 | sel_concatenate_rvi;
-assign sel_instr_tpye    = c_1;
+// -> concatenate flag 
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)                concatenate_flag <= 1'b0;
+
+    else if(!pause)             concatenate_flag <= concatenate_in_next_cycle;
+end
+
+// -> internal pause core to wait 1 extra cycle to fetch 2RV
+assign pause_to_concatenate = rvi_higher & pointer & old_sel_next_PC;
+
+// -> instruction type & related PC step
+always @(*) begin
+    sel_PC_step  = 1'b0;//X
+    instr_type   = 1'b0;//X
+
+    if(concatenate_flag)
+            sel_PC_step  = `PC_STEP_4;
+    else begin
+        if((!rvi_lower && !pointer) || (!rvi_higher && pointer)) begin
+            instr_type   = `C_INSTR;
+            sel_PC_step  = `PC_STEP_2;
+        end
+            
+        else if(rvi_lower && !pointer)begin
+            instr_type   = `RVI_INSTR;
+            sel_PC_step  = `PC_STEP_4;
+        end
+    end
+end
+
 
 
 endmodule

@@ -22,14 +22,30 @@ module core #(parameter XLEN = 64)(//RV64I
     
 );
 
-// Reset synchronizer -> async assert / sync deassert
-reg reset_n_sync;
-always @(posedge clk or negedge reset_n) begin
-    if (!reset_n)  reset_n_sync <= 1'b0;
-    else           reset_n_sync <= 1'b1;
-end
+//------------------------------------------------------------ Pause logic
 
-wire internal_core_pause = ~reset_n_sync | pause_core;
+//Pause requests
+wire IF_pause_request;
+
+//Stage pauses
+wire pause_IF;
+wire pause_ID;
+
+pause_handler u_pause_handler (
+    //Global
+    .clk                (clk),
+    .reset_n            (reset_n),
+    
+    //Control
+    .external_pause     (pause_core),
+
+    //Pause requests
+    .IF_pause_request   (IF_pause_request),
+    //Output to stages
+    .pause_IF           (pause_IF),
+    .pause_ID           (pause_ID)
+);
+
 
 /*
     --- Wire terminology ---
@@ -156,7 +172,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Global
     .clk(clk),
     .reset_n(reset_n),
-    .pause(internal_core_pause),
+    .pause(pause_IF),
 
     //Flags
     .valid_instr_fetch(valid_instr_fetch),
@@ -164,6 +180,9 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Buses
     .EIB(EIB),      //External Instruction Bus
     .EIAB(EIAB),     //External Instruction Address Bus 
+
+    //Control
+    .IF_pause_request(IF_pause_request),
     
     //----------------------------ID Stage
     //Data from/to ID stage
@@ -182,7 +201,7 @@ ID #(.XLEN(XLEN)) u_ID (
     //Global
     .clk(clk),
     .reset_n(reset_n),
-    .pause(internal_core_pause),
+    .pause(pause_ID),
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage

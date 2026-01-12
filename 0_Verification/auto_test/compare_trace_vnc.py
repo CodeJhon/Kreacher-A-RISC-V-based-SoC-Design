@@ -1,11 +1,6 @@
 import re
 import csv
-# Lists to store results
-import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--create", action="store_true")
-args = parser.parse_args()
 
 def extend_inst(raw_instr):
     extend_instr_bin_str = "00000000000000000000000000010011"
@@ -38,7 +33,7 @@ def extend_inst(raw_instr):
 
     if quadrant == "00":
         if funct3 == "000":
-            extend_instr_bin_str = imm_c_addi4spn + "00010" + "000" + rd_rs2_p + "0010011"
+            extend_instr_bin_str = imm_c_addi4spn + "00010" + "000" + rd_rs1_p + "0010011"
         elif funct3 == "010":
             extend_instr_bin_str = imm_c_lw_sw + rd_rs1_p + "010" + rd_rs2_p + "0000011"
         elif funct3 == "011":
@@ -151,7 +146,7 @@ pattern_store = re.compile(
     r'\s+mem\s+0x([0-9a-fA-F]+)\s+0x([0-9a-fA-F]+)'  # mem address and data
 )
 
-spike_path = "run_logs/spike.log" if args.create else "simulation_reference.log"
+spike_path = "simulation_reference.log"
 
 # Read the input file
 with open(spike_path, "r", encoding="utf-8") as f:
@@ -163,7 +158,7 @@ with open(spike_path, "r", encoding="utf-8") as f:
         # Try to match store pattern first (most specific)
         match_store = pattern_store.search(line)
         if match_store:
-            # Store instruction: record Memories address and data
+            # Store instruction: record memory address and data
             mem_addr = int(match_store.group(3), 16)
             mem_data = int(match_store.group(4), 16)
             DMEM_addr.append(mem_addr)
@@ -216,7 +211,7 @@ wb_reg_sim = []
 wb_val_sim = []
 
 # Open the CSV file (replace 'sim_data.csv' with your filename)
-with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreacher_trace.csv", "r", encoding="utf-8") as f:
+with open("kreacher_trace.csv", "r", encoding="utf-8") as f:
     reader = csv.reader(f, delimiter=',')  # Assuming tab-separated, change delimiter if needed
     next(reader)  # Skip the header line
 
@@ -245,7 +240,7 @@ with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreach
 
 
 # Open the input file
-instruction_file_path = "temp/instructions.txt" if args.create else "PMEM_instructions.txt"
+instruction_file_path = "PMEM_instructions.txt"
 
 def find_instruction_by_hex(target_hex):
     with open(instruction_file_path, "r", encoding="utf-8") as f:
@@ -344,12 +339,9 @@ for i in range(len(pc)):
         wb_val_diff_indices.append(i)
 
 
-output_file = open("run_logs/compare_output.txt", "w", encoding="utf-8")
-
 def log(msg):
     """Print to console and write to file at the same time."""
     print(msg)
-    output_file.write(msg + "\n")
 
 
 if not pc_diff_indices:
@@ -412,7 +404,7 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
         DMEM_addr: List of DMEM addresses
         DMEM_data: List of DMEM data
     """
-    mem_file_path = "../../Memories/src/DMEM_content.mem"
+    mem_file_path = "../../Memory/src/DMEM_content.mem"
     with open(mem_file_path, "r") as f:
         for byte_data in f.read().split():
             if byte_data != "xx":
@@ -424,33 +416,35 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
         for byte_data in f.read().split():
             if byte_data != "xx":
                 DMEM_simulate_data.append(byte_data)
+
+
+    for i in range(len(DMEM_addr)):
+        addr = DMEM_addr[i]
+        expected_data = DMEM_data[i]
+        expected_data_hex = DMEM_data_hex[i]
+        # Convert to hex and extract lower 17 bits
+        addr_hex = addr & 0x1FFFF  # 0x1FFFF = 17-bit mask
+        k = addr_hex  # Convert to decimal (already in decimal)
+
+        # Check if line number is out of range
+        if k >= len(DMEM_old_data):
+            print(
+                f"Error: Address 0x{addr:08x} corresponds to line {k}, which exceeds file size ({len(DMEM_old_data)} lines)")
+            continue
+
+        replace_bytes = split_hex_to_bytes(expected_data_hex)
+        for index, new_bytes in enumerate(replace_bytes):
+            DMEM_old_data[k + index] = new_bytes
+        if len(DMEM_old_data) != len(DMEM_simulate_data):
+            raise ValueError(
+                f"Length mismatch: len(DMEM_ref_data)={len(DMEM_old_data)}, len(DMEM_simulate_data)={len(DMEM_simulate_data)}"
+            )
+
     diff = []
-    if DMEM_addr:
-        for i in range(len(DMEM_addr)):
-            addr = DMEM_addr[i]
-            expected_data = DMEM_data[i]
-            expected_data_hex = DMEM_data_hex[i]
-            # Convert to hex and extract lower 17 bits
-            addr_hex = addr & 0x1FFFF  # 0x1FFFF = 17-bit mask
-            k = addr_hex  # Convert to decimal (already in decimal)
 
-            # Check if line number is out of range
-            if k >= len(DMEM_old_data):
-                print(
-                    f"Error: Address 0x{addr:08x} corresponds to line {k}, which exceeds file size ({len(DMEM_old_data)} lines)")
-                continue
-
-            replace_bytes = split_hex_to_bytes(expected_data_hex)
-            for index, new_bytes in enumerate(replace_bytes):
-                DMEM_old_data[k + index] = new_bytes
-            if len(DMEM_old_data) != len(DMEM_simulate_data):
-                raise ValueError(
-                    f"Length mismatch: len(DMEM_ref_data)={len(DMEM_old_data)}, len(DMEM_simulate_data)={len(DMEM_simulate_data)}"
-                )
-
-        for i, (x, y) in enumerate(zip(DMEM_old_data, DMEM_simulate_data)):
-            if x != y:
-                diff.append(i)
+    for i, (x, y) in enumerate(zip(DMEM_old_data, DMEM_simulate_data)):
+        if x != y:
+            diff.append(i)
 
     if not diff:
         print("Store word instructions checked. DMEM result matched.")
@@ -478,7 +472,5 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
 
 # Usage example
 verify_dmem_content(DMEM_addr, DMEM_data)
-# Close the output file
-output_file.close()
 
     

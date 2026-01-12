@@ -115,10 +115,10 @@ control u_control (
 //Register File
 wire [XLEN-1:0] RS1;
 wire [XLEN-1:0] RS2;
+wire in_regfile_we = EX_regfile_we_in && !pause;
 regfile #(.XLEN(XLEN)) u_regfile (
     .clk        (clk),
     .reset_n    (reset_n),
-    .pause      (pause),
 
     // Addresses
     .RS1_addr   (IF_canonical_instruction[19:15]),
@@ -131,7 +131,7 @@ regfile #(.XLEN(XLEN)) u_regfile (
     .RS2        (RS2),
 
     // Control
-    .regfile_we (EX_regfile_we_in)
+    .regfile_we (in_regfile_we)
 );
 
 //Immediate Build (& Sign extension)
