@@ -60,11 +60,11 @@ wire [XLEN-1:0] EX_exec_result_ID;
 wire [XLEN-1:0] EX_exec_result_MEM;
 wire [XLEN-1:0] MEM_exec_result_WB;
 
-//PC_4
-wire [XLEN-1:0] IF_PC_4_ID;
-wire [XLEN-1:0] ID_PC_4_EX;
-wire [XLEN-1:0] EX_PC_4_MEM;
-wire [XLEN-1:0] MEM_PC_4_WB;
+//PC_step
+wire [XLEN-1:0] IF_PC_step_ID;
+wire [XLEN-1:0] ID_PC_step_EX;
+wire [XLEN-1:0] EX_PC_step_MEM;
+wire [XLEN-1:0] MEM_PC_step_WB;
 
 //PC
 wire [XLEN-1:0] IF_PC_ID;
@@ -188,7 +188,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Data from/to ID stage
     .ID_exec_result(ID_exec_result_IF),
 
-    .ID_PC_4(IF_PC_4_ID),
+    .ID_PC_step(IF_PC_step_ID),
     .ID_PC(IF_PC_ID),
     .ID_canonical_instruction(IF_canonical_instruction_ID),
 
@@ -205,7 +205,7 @@ ID #(.XLEN(XLEN)) u_ID (
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
-    .IF_PC_4(IF_PC_4_ID),
+    .IF_PC_step(IF_PC_step_ID),
     .IF_PC(IF_PC_ID),
     .IF_canonical_instruction(IF_canonical_instruction_ID),
 
@@ -220,7 +220,7 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_RD(EX_RD_ID),
     .EX_RD_addr_in(EX_RD_addr_out_ID),
 
-    .EX_PC_4(ID_PC_4_EX),
+    .EX_PC_step(ID_PC_step_EX),
     .EX_PC(ID_PC_EX),
     .EX_RS1(ID_RS1_EX),
     .EX_RS2(ID_RS2_EX),
@@ -259,7 +259,7 @@ EX #(.XLEN(XLEN)) u_EX (
 
     //----------------------------ID Stage
     //Data from/to ID stage
-    .ID_PC_4(ID_PC_4_EX),
+    .ID_PC_step(ID_PC_step_EX),
     .ID_PC(ID_PC_EX),
     .ID_RS1(ID_RS1_EX),
     .ID_RS2(ID_RS2_EX),
@@ -296,7 +296,7 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_RD(MEM_RD_EX),
     .MEM_RD_addr_in(MEM_RD_addr_out_EX),
 
-    .MEM_PC_4(EX_PC_4_MEM),
+    .MEM_PC_step(EX_PC_step_MEM),
     .MEM_exec_result(EX_exec_result_MEM),
     .MEM_RS2(EX_RS2_MEM),
     .MEM_RD_addr_out(EX_RD_addr_in_MEM),
@@ -332,7 +332,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
 
     //----------------------------EX Stage
     //Data from/to EX stage
-    .EX_PC_4(EX_PC_4_MEM),
+    .EX_PC_step(EX_PC_step_MEM),
     .EX_exec_result(EX_exec_result_MEM),
     .EX_RS2(EX_RS2_MEM),
     .EX_RD_addr_in(EX_RD_addr_in_MEM),
@@ -358,7 +358,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
     .WB_RD_addr_in(WB_RD_addr_out_MEM),
     .WB_regfile_we_in(WB_regfile_we_out_MEM),
 
-    .WB_PC_4(MEM_PC_4_WB),
+    .WB_PC_step(MEM_PC_step_WB),
     .WB_exec_result(MEM_exec_result_WB),
     .WB_EMDB(MEM_EMDB_WB),
     .WB_RD_addr_out(MEM_RD_addr_in_WB),
@@ -376,7 +376,7 @@ WB #(.XLEN(XLEN)) u_WB (
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    .MEM_PC_4(MEM_PC_4_WB),
+    .MEM_PC_step(MEM_PC_step_WB),
     .MEM_exec_result(MEM_exec_result_WB),
     .MEM_EMDB(MEM_EMDB_WB),
     .MEM_RD_addr_in(MEM_RD_addr_in_WB),

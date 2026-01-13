@@ -21,7 +21,7 @@ module IF_HK #(parameter XLEN = 64)(
     input  [XLEN-1:0] ID_exec_result,
 
     output [XLEN-1:0] ID_PC,
-    output [XLEN-1:0] ID_PC_4,
+    output [XLEN-1:0] ID_PC_step,
     output [31:0]     ID_canonical_instruction,
 
     //Control from/to ID stage
@@ -113,7 +113,7 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 // ------------------------------------- Connection to adjacent stage(s)
 //ID
 assign ID_PC                      = PC;
-assign ID_PC_4                    = PC_step;
+assign ID_PC_step                    = PC_step;
 assign ID_canonical_instruction   = canonical_instruction;
 
 
