@@ -7,7 +7,7 @@ module WB #(parameter XLEN = 64)(
 
     //----------------------------MEM Stage
     //Data from/to MEM stage
-    input [XLEN-1:0]      MEM_PC_4,
+    input [XLEN-1:0]      MEM_PC_step,
     input [XLEN-1:0]      MEM_exec_result,
     input [XLEN-1:0]      MEM_EMDB,
     input [4:0]           MEM_RD_addr_in,
@@ -23,10 +23,10 @@ module WB #(parameter XLEN = 64)(
     
 // ---------------------------------- Implementation of modules
 //Mux
-always @(WB_sel_writeback, MEM_PC_4, MEM_exec_result, MEM_EMDB) begin
+always @(WB_sel_writeback, MEM_PC_step, MEM_exec_result, MEM_EMDB) begin
     case (WB_sel_writeback)
         `WBACK_EXEC_RESULT:   MEM_RD = MEM_exec_result;
-        `WBACK_PC_4:          MEM_RD = MEM_PC_4;
+        `WBACK_PC_step:          MEM_RD = MEM_PC_step;
         `WBACK_EMDB:          MEM_RD = MEM_EMDB;
         `WBACK_NONE:          MEM_RD = 0;
         default:              MEM_RD = 0;

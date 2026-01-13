@@ -21,7 +21,7 @@ module IF_HK #(parameter XLEN = 64)(
     input  [XLEN-1:0]     ID_exec_result,
 
     output reg [XLEN-1:0] ID_PC,
-    output reg [XLEN-1:0] ID_PC_4,
+    output reg [XLEN-1:0] ID_PC_step,
     output reg [31:0]     ID_canonical_instruction,
 
     //Control from/to ID stage
@@ -131,12 +131,12 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n || IF_flush) begin
         ID_PC                      <= 0;
-        ID_PC_4                    <= 0;
+        ID_PC_step                    <= 0;
         ID_canonical_instruction   <= 0;
     end
     else if(!pause && !IF_stall && !pause_to_concatenate) begin
         ID_PC                      <= PC;
-        ID_PC_4                    <= PC_step;
+        ID_PC_step                    <= PC_step;
         ID_canonical_instruction   <= canonical_instruction;
     end
 end

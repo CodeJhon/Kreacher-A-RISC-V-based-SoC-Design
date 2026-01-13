@@ -8,7 +8,7 @@ module EX #(parameter XLEN = 64)(
 
     //----------------------------ID Stage
     //Data from/to ID stage
-    input [XLEN-1:0]      ID_PC_4,
+    input [XLEN-1:0]      ID_PC_step,
     input [XLEN-1:0]      ID_PC,
     input [XLEN-1:0]      ID_RS1,
     input [XLEN-1:0]      ID_RS2,
@@ -46,7 +46,7 @@ module EX #(parameter XLEN = 64)(
     input [4:0]           MEM_RD_addr_in,
     input [XLEN-1:0]      MEM_FW_exec_result,
 
-    output reg [XLEN-1:0] MEM_PC_4,
+    output reg [XLEN-1:0] MEM_PC_step,
     output reg [XLEN-1:0] MEM_exec_result,
     output reg [XLEN-1:0] MEM_RS2,
     output reg [4:0]      MEM_RD_addr_out,
@@ -151,7 +151,7 @@ assign ID_sel_next_PC       = sel_next_PC;
 //MEM
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)begin
-        MEM_PC_4             <= 0;
+        MEM_PC_step             <= 0;
         MEM_exec_result      <= 0;
         MEM_RS2              <= 0;
         MEM_RD_addr_out      <= 0;
@@ -170,7 +170,7 @@ always @(posedge clk, negedge reset_n) begin
         MEM_valid_data_write  <= 0;
     end
     else if(!pause) begin
-        MEM_PC_4             <= ID_PC_4;
+        MEM_PC_step             <= ID_PC_step;
         MEM_exec_result      <= exec_result;
         MEM_RS2              <= RS2;
         MEM_RD_addr_out      <= ID_RD_addr_in;

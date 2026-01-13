@@ -268,7 +268,7 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_PC_4;
+            sel_writeback = `WBACK_PC_step;
             result_type = `RESULT_64;
         end
 
@@ -283,7 +283,7 @@ always@(opcode, imm_I_10, funct3, funct7)begin //combinational circuit
             mem_wr_en = `DISABLE;
             val_wr_type = `MEM_NOT_USED;
             val_rd_type = `MEM_NOT_USED;
-            sel_writeback = `WBACK_PC_4;
+            sel_writeback = `WBACK_PC_step;
             result_type = `RESULT_64;
         end
     endcase

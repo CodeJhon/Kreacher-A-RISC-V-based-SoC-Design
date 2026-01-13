@@ -8,7 +8,7 @@ module ID #(parameter XLEN = 64)(
 
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
-    input [XLEN-1:0]      IF_PC_4,
+    input [XLEN-1:0]      IF_PC_step,
     input [XLEN-1:0]      IF_PC,
     input [31:0]          IF_canonical_instruction, 
 
@@ -23,7 +23,7 @@ module ID #(parameter XLEN = 64)(
     input [XLEN-1:0]      EX_RD,
     input [4:0]           EX_RD_addr_in,
 
-    output reg [XLEN-1:0] EX_PC_4,
+    output reg [XLEN-1:0] EX_PC_step,
     output reg [XLEN-1:0] EX_PC,
     output reg [XLEN-1:0] EX_RS1,
     output reg [XLEN-1:0] EX_RS2,
@@ -180,7 +180,7 @@ assign IF_sel_next_PC       = EX_sel_next_PC;
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n || ID_flush)begin
             //Data
-        EX_PC_4              <= 0;
+        EX_PC_step              <= 0;
         EX_PC                <= 0;
         EX_RS1               <= 0;
         EX_RS2               <= 0;
@@ -207,7 +207,7 @@ always @(posedge clk, negedge reset_n) begin
     end
     else if(!pause) begin
             //Data
-        EX_PC_4              <= IF_PC_4;
+        EX_PC_step              <= IF_PC_step;
         EX_PC                <= IF_PC;
         EX_RS1               <= RS1;
         EX_RS2               <= RS2;

@@ -119,7 +119,7 @@
 
     //sel_writeback
     `define WBACK_EXEC_RESULT    3'b000
-    `define WBACK_PC_4           3'b001
+    `define WBACK_PC_step        3'b001
     `define WBACK_EMDB           3'b010
     `define WBACK_NONE           3'b100
 
