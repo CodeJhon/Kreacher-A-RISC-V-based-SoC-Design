@@ -1,7 +1,14 @@
 module core_and_mem #(parameter XLEN = 64)(    
     //Global
     input clk,
-    input reset_n
+    input reset_n,
+
+    // Interrupt pins
+    input irq0,       
+    input irq1,
+
+    output acknowledge_irq0,
+    output acknowledge_irq1
 
 );
 
@@ -15,6 +22,30 @@ wire            EMCB;            //External Memory Control Bus
 wire [XLEN-1:0] EMDB_out;        //External Memory Data Bus, output for the core, input for the external memory
 wire [XLEN-1:0] EMDB_in;         //External Memory Data Bus, input for the core, output for the external memory
 
+// Synchronization of interrupt pins
+
+reg irq0_ff1, irq0_ff2;
+reg irq1_ff1, irq1_ff2;
+
+always @(posedge clk or negedge reset_n) begin
+    if (!reset_n) begin
+        irq0_ff1 <= 1'b0;
+        irq0_ff2 <= 1'b0;
+        irq1_ff1 <= 1'b0;
+        irq1_ff2 <= 1'b0;
+    end else begin
+        irq0_ff1 <= irq0;
+        irq0_ff2 <= irq0_ff1;
+        irq1_ff1 <= irq1;
+        irq1_ff2 <= irq1_ff1;
+    end
+end
+
+assign irq0_sync = irq0_ff2;
+assign irq1_sync = irq1_ff2;
+
+wire valid_instr_fetch;
+
 core #(.XLEN(XLEN)) core_inst (
     .clk(clk), 
     .reset_n(reset_n),
@@ -22,9 +53,17 @@ core #(.XLEN(XLEN)) core_inst (
     //Control
     .pause_core(1'b0),
 
+    // Interrupt pins (synchronous)
+    .irq0_sync(irq0_sync),
+    .irq1_sync(irq1_sync),
+
+    .acknowledge_irq0(acknowledge_irq0),
+    .acknowledge_irq1(acknowledge_irq1),
+
     //PMEM signals
     .EIB(EIB),
     .EIAB(EIAB),
+    .valid_instr_fetch(valid_instr_fetch),
 
     //DMEM signals
     .EMAB(EMAB),
@@ -43,7 +82,7 @@ RAM #( .ADDR_LINES(17),
     
     .clk(clk),
     .we(1'b0),
-    .cs(1'b1),
+    .cs(valid_instr_fetch),
     .data_in(),
     .addr({2'b00, EIAB[16:2]}),
     .data_out(EIB)

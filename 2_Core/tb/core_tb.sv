@@ -9,6 +9,7 @@ module tb_core;
   localparam MAX_COMMITS = 10000;       
   localparam ECALL_INSTR = 32'h00000073;   
 
+  localparam INTERRUPT_TIME = 705;
 
   // Clock & reset_n
   reg clk;
@@ -24,9 +25,21 @@ module tb_core;
 `endif
 
   // Instantiate DUT (core_and_mem)
+  reg irq0;
+  reg irq1;
+  
+  wire acknowledge_irq0;
+  wire acknowledge_irq1;
+  
   core_and_mem #(.XLEN(XLEN)) dut (
     .clk(clk),
-    .reset_n(reset_n)
+    .reset_n(reset_n),
+
+    .irq0(irq0),
+    .irq1(irq1),
+
+    .acknowledge_irq0(acknowledge_irq0),
+    .acknowledge_irq1(acknowledge_irq1)
     );
 
   verification_commits #(.XLEN(XLEN)) verification_commits_inst (
@@ -86,7 +99,7 @@ module tb_core;
       if(commit_valid) commit_count = commit_count + 1;
 
 `ifndef SYNTHESIS
-      if (commit_valid && commit_PC <= 32'h80001208) begin
+      if (commit_valid && commit_PC != 32'h80000000 && commit_PC != 32'h80000004) begin
         // Print to console for interactive debugging
         $display("[%0t ns] COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h",
                  $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
@@ -120,6 +133,29 @@ module tb_core;
 
   
   end
+
+  // ------------------------------------------------------------
+  // Interrupt stimulus
+  // ------------------------------------------------------------
+  initial begin
+    //Initialize interruot
+    irq0 <= 1'b0;
+    irq1 <= 1'b0;
+
+    #(INTERRUPT_TIME - 30);
+    // Assert interrupt
+    $display("[%0t ns] TB: Asserting irq1", $time);
+    irq1 <= 1'b1;
+
+    // Hold interrupt until core acknowledges it
+    wait (acknowledge_irq1 == 1'b1);
+    @(posedge clk);
+
+    // Deassert interrupt
+    $display("[%0t ns] TB: Deasserting irq1", $time);
+    irq1 <= 1'b0;
+  end
+
 
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
