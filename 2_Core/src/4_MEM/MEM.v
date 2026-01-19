@@ -18,36 +18,49 @@ module MEM #(parameter XLEN = 64)(
     input [XLEN-1:0]      EX_exec_result,
     input [XLEN-1:0]      EX_RS2,
     input [4:0]           EX_RD_addr_in,
+    input [XLEN-1:0]      EX_csr_data_rd,
+    input [11:0]          EX_csr_addr_wr_in,
     
     output [XLEN-1:0]     EX_RD,
     output [4:0]          EX_RD_addr_out,
     output [XLEN-1:0]     EX_FW_exec_result,
+    output [XLEN-1:0]     EX_csr_data_wr,
+    output [11:0]         EX_csr_addr_wr_out,
 
     //Control from/to EX stage
     input                 EX_mem_wr_en,
     input [2:0]           EX_val_rd_type,
     input [2:0]           EX_val_wr_type,
     input                 EX_result_type,
+    input                 EX_csr_we_in,
     
     input                 EX_regfile_we_in,
     
     input [2:0]           EX_sel_writeback,
 
     output                EX_regfile_we_out,
+    output                EX_csr_we_out,
 
     //----------------------------WB Stage
     //Data from/to WB stage
     input [XLEN-1:0]      WB_RD,
     input [4:0]           WB_RD_addr_in,
-    input                 WB_regfile_we_in,
+    input [XLEN-1:0]      WB_csr_data_wr,
+    input [11:0]          WB_csr_addr_wr_in,
 
     output reg [XLEN-1:0] WB_PC_step,
     output reg [XLEN-1:0] WB_exec_result,
     output reg [XLEN-1:0] WB_EMDB,
     output reg [4:0]      WB_RD_addr_out,
+    output reg [XLEN-1:0] WB_csr_data_rd,
+    output reg [11:0]     WB_csr_addr_wr_out,
 
     //Control from/to WB stage
+    input                 WB_regfile_we_in,
+    input                 WB_csr_we_in,
+
     output reg            WB_regfile_we_out,
+    output reg            WB_csr_we_out,
     output reg [2:0]      WB_sel_writeback    
 
 );
@@ -82,6 +95,9 @@ assign EX_RD                = WB_RD;
 assign EX_RD_addr_out       = WB_RD_addr_in;
 assign EX_FW_exec_result        = EX_exec_result;
 assign EX_regfile_we_out    = WB_regfile_we_in;
+assign EX_csr_we_out        = WB_csr_we_in;
+assign EX_csr_data_wr       = WB_csr_data_wr;
+assign EX_csr_addr_wr_out   = WB_csr_addr_wr_in;
 
 //WB
 always @(posedge clk, negedge reset_n) begin
@@ -93,6 +109,9 @@ always @(posedge clk, negedge reset_n) begin
 
         WB_regfile_we_out    <= 0;
         WB_sel_writeback     <= 0;
+        WB_csr_we_out        <= 0;
+        WB_csr_data_rd       <= 0;
+        WB_csr_addr_wr_out   <= 0;
     end
     else if(!pause) begin
         WB_PC_step              <= EX_PC_step;
@@ -102,6 +121,9 @@ always @(posedge clk, negedge reset_n) begin
 
         WB_regfile_we_out    <= EX_regfile_we_in;
         WB_sel_writeback     <= EX_sel_writeback;
+        WB_csr_we_out        <= EX_csr_we_in;
+        WB_csr_data_rd       <= EX_csr_data_rd;
+        WB_csr_addr_wr_out   <= EX_csr_addr_wr_in;
     end
 end
 

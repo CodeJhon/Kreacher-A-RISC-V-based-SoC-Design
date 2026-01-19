@@ -21,7 +21,13 @@ module verification_commits  #(parameter XLEN = 32)(
     output [XLEN-1:0]   commit_PC,
     output [4:0]        commit_rd_addr,
     output [XLEN-1:0]   commit_rd_value,
-    output [31:0]       commit_instruction
+    output [31:0]       commit_instruction,
+
+    //HCU flush signals (for better visualization when flushing happen)
+    // IF_flush is already implicit within IF_PC
+    input               ID_flush,
+    input               EX_flush
+
 );
 
 //--------------------------Creation of new signals for non-WB stages
@@ -36,9 +42,19 @@ always @(posedge clk, negedge reset_n) begin
         EX_PC_MEM <= 0;
         MEM_PC_WB <= 0;
     end
+    
     else begin
-        if(!pause_ID) ID_PC_EX  <= IF_PC;
-        if(!pause_EX) EX_PC_MEM <= ID_PC_EX;
+        
+        if(ID_flush)
+            ID_PC_EX  <= 0;
+        else if(!pause_ID) 
+            ID_PC_EX  <= IF_PC;
+        
+        if(EX_flush)
+            EX_PC_MEM <= 0;
+        else if(!pause_EX) 
+            EX_PC_MEM <= ID_PC_EX;
+        
         if(!pause_MEM) MEM_PC_WB <= EX_PC_MEM;
     end
 end
@@ -55,8 +71,16 @@ always @(posedge clk, negedge reset_n) begin
         MEM_canonical_instruction_WB <= 0;        
     end
     else begin
-        if(!pause_ID)  ID_canonical_instruction_EX  <= IF_canonical_instruction;
-        if(!pause_EX)  EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
+        if(ID_flush)
+            ID_canonical_instruction_EX  <= 0;
+        else if(!pause_ID)
+            ID_canonical_instruction_EX  <= IF_canonical_instruction;
+        
+        if(EX_flush)
+            EX_canonical_instruction_MEM  <= 0;
+        else if(!pause_EX)
+            EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
+        
         if(!pause_MEM) MEM_canonical_instruction_WB <= EX_canonical_instruction_MEM;    
     end
 end

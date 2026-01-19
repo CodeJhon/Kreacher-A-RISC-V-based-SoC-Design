@@ -1,3 +1,5 @@
+`include "../../include/CORE_CONSTANTS.vh"
+
 module fetch (
     //Global
     input clk,

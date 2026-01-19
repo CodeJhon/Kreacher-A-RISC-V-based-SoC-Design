@@ -5,9 +5,13 @@ module housekeeping #(parameter XLEN = 64)(
     input clk,
     input reset_n,
     input pause,
+
+    //Interrupt Handler
+    input acknowledge_irq0,
+    input acknowledge_irq1,
     
     //Control
-    input                 sel_next_PC,
+    input                 control_transfer_en,
 
     input                 concatenate_in_next_cycle,
     input                 pause_to_concatenate,
@@ -22,14 +26,11 @@ module housekeeping #(parameter XLEN = 64)(
 
     output reg [XLEN-1:0] PC,
     output reg [XLEN-1:0] PC_step,
+    output wire [XLEN-1:0] next_program_PC,
 
     //---------------------------- HCU (Hazard Control Unit)
     input stall
-
 );
-
-
-reg  [XLEN-1:0] next_PC;
 
 //PC_step
 always @(*) begin
@@ -39,19 +40,27 @@ always @(*) begin
     endcase
 end
 
-//next_PC
+//next PC (if only focused on the program, no external intervention)
+assign next_program_PC = control_transfer_en ? exec_result : PC_step;
+
+//next PC (considering external intervention)
+reg [XLEN-1:0] next_PC;
 always @(*) begin
     if(pause || pause_to_concatenate || stall)
-                                next_PC = PC;
+            next_PC = PC;
     else begin
-        if      (sel_next_PC)   next_PC = exec_result;  // Jump / Branch
-        else                    next_PC = PC_step;
+        if(acknowledge_irq0)
+            next_PC = `PC_IRQ0;
+        else if(acknowledge_irq1)
+            next_PC = `PC_IRQ1;
+        else
+            next_PC = next_program_PC;
     end
 end
 
 //PC
 always@(posedge clk, negedge reset_n)begin
-    if(!reset_n)                PC <= `PC_BASE_ADDRESS;
+    if(!reset_n)                 PC <= `PC_RESET;
     else if(!pause && !stall)    PC <= next_PC;
 end
 

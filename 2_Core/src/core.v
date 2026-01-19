@@ -3,6 +3,13 @@ module core #(parameter XLEN = 64)(//RV64I
     input clk,
     input reset_n,
 
+    // Interrupt pins (assumed to be synchronous)
+    input irq0_sync,       
+    input irq1_sync,
+
+    output wire acknowledge_irq0,
+    output wire acknowledge_irq1,
+
     //Flags
     output            valid_instr_fetch,
     output            valid_data_read,
@@ -22,7 +29,10 @@ module core #(parameter XLEN = 64)(//RV64I
     
 );
 
-//------------------------------------------------------------ Pause logic
+//------------------------------------------------------------ Pause signals
+
+//Synchronized reset
+wire reset_n_sync;
 
 //Pause requests
 wire IF_pause_request;
@@ -33,26 +43,25 @@ wire pause_ID;
 wire pause_EX;
 wire pause_MEM;
 
-pause_handler u_pause_handler (
-    //Global
-    .clk                (clk),
-    .reset_n            (reset_n),
-    
-    //Control
-    .external_pause     (pause_core),
+//Indicator of next stage
+wire next_stage_en;
 
-    //Pause requests
-    .IF_pause_request   (IF_pause_request),
-    //Output to stages
-    .pause_IF           (pause_IF),
-    .pause_ID           (pause_ID),
-    .pause_EX           (pause_EX),
-    .pause_MEM          (pause_MEM)
-);
+//------------------------------------- Interrupt Handler signals
+//Inputs needed 
+wire [XLEN-1:0] IF_next_program_PC;
+wire [XLEN-1:0] IF_PC_step;
+wire            mie;
+
+//Outpus generated
+wire             mepc_we;
+wire [XLEN-1:0]  PC_to_mepc;
+
+// Outputs to HCU
+wire             interrupt_taken_natural;
 
 
 /*
-    --- Wire terminology ---
+    --- Wire terminology for Stage signals ---
     wire [LENGHT:0] (Fom Stage X)_Signal_Name_(To stage Y)
 */
 
@@ -64,19 +73,24 @@ wire [4:0] EX_RS2_addr_HCU;
 
 wire [1:0] HCU_sel_RS1_EX;
 wire [1:0] HCU_sel_RS2_EX;
+wire [1:0] HCU_sel_csr_data_rd_EX;
 
 wire [1:0] HCU_sel_RS1_ID;
 wire [1:0] HCU_sel_RS2_ID;
+wire [1:0] HCU_sel_csr_data_rd_ID;
+
+wire [4:0]  ID_RS1_addr_HCU;
+wire [4:0]  ID_RS2_addr_HCU;
+wire [11:0] ID_csr_addr_rd_HCU;
 
 //Stalling/Flushing signals
 wire       HCU_stall_PC_IF;
 wire       HCU_stall_IF;
-wire [4:0] ID_RS1_addr_HCU;
-wire [4:0] ID_RS2_addr_HCU;
 wire       HCU_flush_ID;
 wire       HCU_flush_IF;
+wire       HCU_flush_EX;
 
-//------------------------------------- Data signals (Not for buses)
+//------------------------------------- Stage Data signals (Not for buses)
 
 //exec_result
 wire [XLEN-1:0] ID_exec_result_IF;
@@ -93,6 +107,7 @@ wire [XLEN-1:0] MEM_PC_step_WB;
 //PC
 wire [XLEN-1:0] IF_PC_ID;
 wire [XLEN-1:0] ID_PC_EX;
+
 
 //canonical_instruction
 wire [31:0]     IF_canonical_instruction_ID;
@@ -128,12 +143,31 @@ wire [XLEN-1:0] MEM_FW_exec_result_EX;
 //EMDB
 wire [XLEN-1:0] MEM_EMDB_WB;
 
+//csr_data_wr
+wire [XLEN-1:0] WB_csr_data_wr_MEM;
+wire [XLEN-1:0] MEM_csr_data_wr_EX;
+wire [XLEN-1:0] EX_csr_data_wr_ID;
 
-//------------------------------------- Control (Not for buses)
+//csr_data_rd
+wire [XLEN-1:0] ID_csr_data_rd_EX;
+wire [XLEN-1:0] EX_csr_data_rd_MEM;
+wire [XLEN-1:0] MEM_csr_data_rd_WB;
 
-//sel_next_PC
-wire  EX_sel_next_PC_ID;
-wire  ID_sel_next_PC_IF;
+//csr_addr_wr_in
+wire [11:0] ID_csr_addr_wr_in_EX;
+wire [11:0] EX_csr_addr_wr_in_MEM;
+wire [11:0] MEM_csr_addr_wr_in_WB;
+
+//csr_addr_wr_out
+wire [11:0] WB_csr_addr_wr_out_MEM;
+wire [11:0] MEM_csr_addr_wr_out_EX;
+wire [11:0] EX_csr_addr_wr_out_ID;
+
+//------------------------------------- Stage Control (Not for buses)
+
+//control_transfer_en
+wire  EX_control_transfer_en_ID;
+wire  ID_control_transfer_en_IF;
 
 //jump
 wire  ID_jump_EX;
@@ -153,6 +187,9 @@ wire EX_regfile_we_out_ID;
 
 //sel_exec_result
 wire       ID_sel_exec_result_EX;
+
+//sel_opa
+wire [1:0] ID_sel_opa_EX;
 
 //sel_opb
 wire [1:0] ID_sel_opb_EX;
@@ -193,17 +230,73 @@ wire       EX_valid_data_write_MEM;
 
 assign     valid_data_write = EX_valid_data_write_MEM;
 
+//csr_we_in
+wire ID_csr_we_in_EX;
+wire EX_csr_we_in_MEM;
+wire MEM_csr_we_in_WB;
+
+//csr_we_out
+wire WB_csr_we_out_MEM;
+wire MEM_csr_we_out_EX;
+wire EX_csr_we_out_ID;
+
+//restore_mstatus_in
+wire ID_restore_mstatus_in_EX;
+
+//restore_mstatus_out
+wire EX_restore_mstatus_out_ID;
+
+//sleep
+wire ID_sleep_EX;
+wire EX_sleep_MEM;
 
 // ---------------------------------- Implementation of modules
 
+pause_handler u_pause_handler (
+    //Global
+    .clk                (clk),
+    .reset_n            (reset_n),
+
+    //Flags
+    .reset_n_sync       (reset_n_sync),
+
+    // Interrupt pins (assumed to be synchronous)
+    .irq0_sync          (irq0_sync),
+    .irq1_sync          (irq1_sync),
+    
+    //Control
+    .external_pause     (pause_core),
+    .sleep              (EX_sleep_MEM),
+
+    //Pause requests
+    .IF_pause_request   (IF_pause_request),
+    //Output to stages
+    .pause_IF           (pause_IF),
+    .pause_ID           (pause_ID),
+    .pause_EX           (pause_EX),
+    .pause_MEM          (pause_MEM),
+
+    //Indicator of next stage
+    .next_stage_en       (next_stage_en)
+);
+
+
+wire IF_valid_instr_fetch;
 IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Global
     .clk(clk),
     .reset_n(reset_n),
     .pause(pause_IF),
+    
+    //Interrupt Handler
+    .acknowledge_irq0(acknowledge_irq0),
+    .acknowledge_irq1(acknowledge_irq1),
+
+    .next_program_PC(IF_next_program_PC),
+    .PC_step(IF_PC_step),
 
     //Flags
-    .valid_instr_fetch(valid_instr_fetch),
+    .IF_valid_instr_fetch(IF_valid_instr_fetch),
     
     //Buses
     .EIB(EIB),      //External Instruction Bus
@@ -218,10 +311,11 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 
     .ID_PC_step(IF_PC_step_ID),
     .ID_PC(IF_PC_ID),
+    
     .ID_canonical_instruction(IF_canonical_instruction_ID),
 
     //Control from/to ID stage
-    .ID_sel_next_PC(ID_sel_next_PC_IF),
+    .ID_control_transfer_en(ID_control_transfer_en_IF),
 
     //---------------------------- HCU (Hazard Control Unit)
     .IF_stall(HCU_stall_IF),
@@ -236,6 +330,14 @@ ID #(.XLEN(XLEN)) u_ID (
     .reset_n(reset_n),
     .pause(pause_ID),
 
+    //Interrupt Handler
+    .acknowledge_irq0(acknowledge_irq0),
+    .acknowledge_irq1(acknowledge_irq1),
+
+    .mepc_we(mepc_we),
+    .PC_to_mepc(PC_to_mepc),
+    .mie(mie),
+
     //----------------------------IF_HK Stage
     //Data from/to IF_HK stage
     .IF_PC_step(IF_PC_step_ID),
@@ -245,13 +347,15 @@ ID #(.XLEN(XLEN)) u_ID (
     .IF_exec_result(ID_exec_result_IF),
 
     //Control from/to IF_HK stage
-    .IF_sel_next_PC(ID_sel_next_PC_IF),
+    .IF_control_transfer_en(ID_control_transfer_en_IF),
 
     //----------------------------EX Stage
     //Data from/to EX stage
     .EX_exec_result(EX_exec_result_ID),
     .EX_RD(EX_RD_ID),
     .EX_RD_addr_in(EX_RD_addr_out_ID),
+    .EX_csr_data_wr(EX_csr_data_wr_ID),
+    .EX_csr_addr_wr_in(EX_csr_addr_wr_out_ID),
 
     .EX_PC_step(ID_PC_step_EX),
     .EX_PC(ID_PC_EX),
@@ -259,22 +363,30 @@ ID #(.XLEN(XLEN)) u_ID (
     .EX_RS2(ID_RS2_EX),
     .EX_RD_addr_out(ID_RD_addr_in_EX),
     .EX_imm(ID_imm_EX),
+    .EX_csr_data_rd(ID_csr_data_rd_EX),
+    .EX_csr_addr_wr_out(ID_csr_addr_wr_in_EX),
 
     //Control from/to EX stage
     .EX_regfile_we_in(EX_regfile_we_out_ID),
-    .EX_sel_next_PC(EX_sel_next_PC_ID),
+    .EX_control_transfer_en(EX_control_transfer_en_ID),
+    .EX_csr_we_in(EX_csr_we_out_ID),
+    .EX_restore_mstatus_in(EX_restore_mstatus_out_ID),
 
     .EX_sel_exec_result(ID_sel_exec_result_EX),
+    .EX_sel_opa(ID_sel_opa_EX),
     .EX_sel_opb(ID_sel_opb_EX),
     .EX_sel_op(ID_sel_op_EX),
     .EX_regfile_we_out(ID_regfile_we_in_EX),
     .EX_jump(ID_jump_EX),
     .EX_branch(ID_branch_EX),
+    .EX_csr_we_out(ID_csr_we_in_EX),
+    .EX_restore_mstatus_out(ID_restore_mstatus_in_EX),
 
     .EX_mem_wr_en(ID_mem_wr_en_EX),
     .EX_val_rd_type(ID_val_rd_type_EX),
     .EX_val_wr_type(ID_val_wr_type_EX),
     .EX_result_type(ID_result_type_EX),
+    .EX_sleep(ID_sleep_EX),
     
     .EX_sel_writeback(ID_sel_writeback_EX),
     
@@ -286,9 +398,11 @@ ID #(.XLEN(XLEN)) u_ID (
     .ID_flush(HCU_flush_ID),
     .ID_sel_RS1(HCU_sel_RS1_ID),
     .ID_sel_RS2(HCU_sel_RS2_ID),
+    .ID_sel_csr_data_rd(HCU_sel_csr_data_rd_ID),
 
     .ID_RS1_addr(ID_RS1_addr_HCU),
     .ID_RS2_addr(ID_RS2_addr_HCU),
+    .ID_csr_addr_rd(ID_csr_addr_rd_HCU),
 
     .EX_RS1_addr(EX_RS1_addr_HCU),
     .EX_RS2_addr(EX_RS2_addr_HCU)
@@ -310,27 +424,37 @@ EX #(.XLEN(XLEN)) u_EX (
     .ID_RS2(ID_RS2_EX),
     .ID_RD_addr_in(ID_RD_addr_in_EX),
     .ID_imm(ID_imm_EX),
+    .ID_csr_data_rd(ID_csr_data_rd_EX),
+    .ID_csr_addr_wr_in(ID_csr_addr_wr_in_EX),
 
     .ID_exec_result(EX_exec_result_ID),
     .ID_RD(EX_RD_ID),
     .ID_RD_addr_out(EX_RD_addr_out_ID),
+    .ID_csr_data_wr(EX_csr_data_wr_ID),
+    .ID_csr_addr_wr_out(EX_csr_addr_wr_out_ID),
 
     //Control from/to ID stage
+    .ID_sel_opa(ID_sel_opa_EX),
     .ID_sel_opb(ID_sel_opb_EX),
     .ID_sel_op(ID_sel_op_EX),
     .ID_regfile_we_in(ID_regfile_we_in_EX),
     .ID_jump(ID_jump_EX),
     .ID_branch(ID_branch_EX),
     .ID_sel_exec_result(ID_sel_exec_result_EX),
+    .ID_csr_we_in(ID_csr_we_in_EX),
+    .ID_restore_mstatus_in(ID_restore_mstatus_in_EX),
 
     .ID_mem_wr_en(ID_mem_wr_en_EX),
     .ID_val_rd_type(ID_val_rd_type_EX),
     .ID_val_wr_type(ID_val_wr_type_EX),
     .ID_result_type(ID_result_type_EX),
+    .ID_sleep(ID_sleep_EX),
     
     .ID_sel_writeback(ID_sel_writeback_EX),
     .ID_regfile_we_out(EX_regfile_we_out_ID),
-    .ID_sel_next_PC(EX_sel_next_PC_ID),
+    .ID_control_transfer_en(EX_control_transfer_en_ID),
+    .ID_csr_we_out(EX_csr_we_out_ID),
+    .ID_restore_mstatus_out(EX_restore_mstatus_out_ID),
 
     //Flags
     .ID_valid_data_read(ID_valid_data_read_EX),
@@ -341,19 +465,26 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_RD(MEM_RD_EX),
     .MEM_RD_addr_in(MEM_RD_addr_out_EX),
     .MEM_FW_exec_result(MEM_FW_exec_result_EX),
+    .MEM_csr_data_wr(MEM_csr_data_wr_EX),
+    .MEM_csr_addr_wr_in(MEM_csr_addr_wr_out_EX),
 
     .MEM_PC_step(EX_PC_step_MEM),
     .MEM_exec_result(EX_exec_result_MEM),
     .MEM_RS2(EX_RS2_MEM),
     .MEM_RD_addr_out(EX_RD_addr_in_MEM),
+    .MEM_csr_data_rd(EX_csr_data_rd_MEM),
+    .MEM_csr_addr_wr_out(EX_csr_addr_wr_in_MEM),
 
     //Control from/to MEM stage
     .MEM_regfile_we_in(MEM_regfile_we_out_EX),
+    .MEM_csr_we_in(MEM_csr_we_out_EX),
 
     .MEM_mem_wr_en(EX_mem_wr_en_MEM),
     .MEM_val_rd_type(EX_val_rd_type_MEM),
     .MEM_val_wr_type(EX_val_wr_type_MEM),
     .MEM_result_type(EX_result_type_MEM),
+    .MEM_csr_we_out(EX_csr_we_in_MEM),
+    .MEM_sleep(EX_sleep_MEM),
 
     .MEM_regfile_we_out(EX_regfile_we_in_MEM),
     
@@ -364,8 +495,10 @@ EX #(.XLEN(XLEN)) u_EX (
     .MEM_valid_data_write(EX_valid_data_write_MEM),
 
     //---------------------------- HCU (Hazard Control Unit)
+    .EX_flush(HCU_flush_EX),
     .HCU_sel_RS1(HCU_sel_RS1_EX),
-    .HCU_sel_RS2(HCU_sel_RS2_EX)
+    .HCU_sel_RS2(HCU_sel_RS2_EX),
+    .HCU_sel_csr_data_rd(HCU_sel_csr_data_rd_EX)
 );
 
 
@@ -387,36 +520,50 @@ MEM #(.XLEN(XLEN)) u_MEM (
     .EX_exec_result(EX_exec_result_MEM),
     .EX_RS2(EX_RS2_MEM),
     .EX_RD_addr_in(EX_RD_addr_in_MEM),
+    .EX_csr_data_rd(EX_csr_data_rd_MEM),
+    .EX_csr_addr_wr_in(EX_csr_addr_wr_in_MEM),
 
     .EX_RD(MEM_RD_EX),
     .EX_RD_addr_out(MEM_RD_addr_out_EX),
     .EX_FW_exec_result(MEM_FW_exec_result_EX),
+    .EX_csr_data_wr(MEM_csr_data_wr_EX),
+    .EX_csr_addr_wr_out(MEM_csr_addr_wr_out_EX),
 
     //Control from/to EX stage
     .EX_mem_wr_en(EX_mem_wr_en_MEM),
     .EX_val_rd_type(EX_val_rd_type_MEM),
     .EX_val_wr_type(EX_val_wr_type_MEM),
     .EX_result_type(EX_result_type_MEM),
+    .EX_csr_we_in(EX_csr_we_in_MEM),
     
     .EX_regfile_we_in(EX_regfile_we_in_MEM),
 
     .EX_sel_writeback(EX_sel_writeback_MEM),
 
     .EX_regfile_we_out(MEM_regfile_we_out_EX),
+    .EX_csr_we_out(MEM_csr_we_out_EX),
 
     //----------------------------WB Stage
     //Data from/to WB stage
     .WB_RD(WB_RD_MEM),
     .WB_RD_addr_in(WB_RD_addr_out_MEM),
-    .WB_regfile_we_in(WB_regfile_we_out_MEM),
+    .WB_csr_data_wr(WB_csr_data_wr_MEM),
+    .WB_csr_addr_wr_in(WB_csr_addr_wr_out_MEM),
 
     .WB_PC_step(MEM_PC_step_WB),
     .WB_exec_result(MEM_exec_result_WB),
     .WB_EMDB(MEM_EMDB_WB),
     .WB_RD_addr_out(MEM_RD_addr_in_WB),
-    .WB_regfile_we_out(MEM_regfile_we_in_WB),
+    .WB_csr_data_rd(MEM_csr_data_rd_WB),
+    .WB_csr_addr_wr_out(MEM_csr_addr_wr_in_WB),
+    
 
     //Control from/to WB stage
+    .WB_regfile_we_in(WB_regfile_we_out_MEM),
+    .WB_csr_we_in(WB_csr_we_out_MEM),
+
+    .WB_regfile_we_out(MEM_regfile_we_in_WB),
+    .WB_csr_we_out(MEM_csr_we_in_WB),
     .WB_sel_writeback(MEM_sel_writeback_WB)
 );
 
@@ -432,17 +579,58 @@ WB #(.XLEN(XLEN)) u_WB (
     .MEM_exec_result(MEM_exec_result_WB),
     .MEM_EMDB(MEM_EMDB_WB),
     .MEM_RD_addr_in(MEM_RD_addr_in_WB),
-    .MEM_regfile_we_in(MEM_regfile_we_in_WB),
+    .MEM_csr_data_rd(MEM_csr_data_rd_WB),
+    .MEM_csr_addr_wr_in(MEM_csr_addr_wr_in_WB),
 
     .MEM_RD(WB_RD_MEM),
     .MEM_RD_addr_out(WB_RD_addr_out_MEM),
-    .MEM_regfile_we_out(WB_regfile_we_out_MEM),
+    .MEM_csr_data_wr(WB_csr_data_wr_MEM),
+    .MEM_csr_addr_wr_out(WB_csr_addr_wr_out_MEM),
+    
 
     //Control from/to WB stage
-    .WB_sel_writeback(MEM_sel_writeback_WB)
+    .MEM_regfile_we_in(MEM_regfile_we_in_WB),
+    .MEM_sel_writeback(MEM_sel_writeback_WB),
+    .MEM_csr_we_in(MEM_csr_we_in_WB),
+
+    .MEM_regfile_we_out(WB_regfile_we_out_MEM),
+    .MEM_csr_we_out(WB_csr_we_out_MEM)
 );
 
+interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
+    //Global
+    .clk(clk),
+    .reset_n(reset_n),
+
+    // Interrupt pins (assumed to be synchronous)
+    .irq0_sync(irq0_sync),
+    .irq1_sync(irq1_sync),
+
+    .acknowledge_irq0(acknowledge_irq0),
+    .acknowledge_irq1(acknowledge_irq1),
+    
+    //PC signals (from IF stage)
+    .PC_step(IF_PC_step),
+    .next_program_PC(IF_next_program_PC),
+
+    //Control
+    .control_transfer_en(EX_control_transfer_en_ID),
+    .next_stage_en(next_stage_en),
+    .mie(mie),
+
+    //Outputs to core
+    .mepc_we(mepc_we),
+    .PC_to_mepc(PC_to_mepc),
+
+    //---------------------------------- Outputs to HCU
+    .interrupt_taken_natural(interrupt_taken_natural)
+);
+
+
 HCU #(.XLEN(XLEN)) u_HCU (
+    // Interrupt Handler
+    .interrupt_taken_natural(interrupt_taken_natural),
+
     // IF Stage
     .IF_stall_PC       (HCU_stall_PC_IF),
     .IF_stall          (HCU_stall_IF),
@@ -451,54 +639,41 @@ HCU #(.XLEN(XLEN)) u_HCU (
     // ID Stage
     .ID_RS1_addr       (ID_RS1_addr_HCU),
     .ID_RS2_addr       (ID_RS2_addr_HCU),
+    .ID_csr_addr_rd    (ID_csr_addr_rd_HCU),
     .ID_flush          (HCU_flush_ID),
     .ID_sel_RS1        (HCU_sel_RS1_ID),
     .ID_sel_RS2        (HCU_sel_RS2_ID),
+    .ID_sel_csr_data_rd(HCU_sel_csr_data_rd_ID),
 
     // EX Stage
     .EX_RS1_addr       (EX_RS1_addr_HCU),
     .EX_RS2_addr       (EX_RS2_addr_HCU),
+    .EX_csr_addr_rd    (ID_csr_addr_wr_in_EX),
+    .EX_flush          (HCU_flush_EX),
     .EX_sel_RS1        (HCU_sel_RS1_EX),
     .EX_sel_RS2        (HCU_sel_RS2_EX),
+    .EX_sel_csr_data_rd(HCU_sel_csr_data_rd_EX),
 
     .EX_sel_writeback  (ID_sel_writeback_EX),
     .EX_RD_addr_in     (ID_RD_addr_in_EX),
 
-    .EX_sel_next_PC    (EX_sel_next_PC_ID),
+    .EX_control_transfer_en    (EX_control_transfer_en_ID),
 
     // MEM Stage
     .MEM_RD_addr_in    (EX_RD_addr_in_MEM),
     .MEM_regfile_we_in (EX_regfile_we_in_MEM),
+    .MEM_csr_addr_wr_in(EX_csr_addr_wr_in_MEM),
+    .MEM_csr_we_in     (EX_csr_we_in_MEM),
 
     // WB Stage
     .WB_RD_addr_in     (MEM_RD_addr_in_WB),
-    .WB_regfile_we_in  (MEM_regfile_we_in_WB)
+    .WB_regfile_we_in  (MEM_regfile_we_in_WB),
+    .WB_csr_addr_wr_in (MEM_csr_addr_wr_in_WB),
+    .WB_csr_we_in      (MEM_csr_we_in_WB)
 );
 
-//-------------------------------------- Extra -> Module for used for verification commits
-
-`ifndef SYNTHESIS
-    verification_commits #(.XLEN(XLEN)) u_verification_commits(
-        //Global
-        .clk(clk),
-        .reset_n(reset_n),
-
-        //Signals retrieved from the core
-        .IF_PC(IF_PC_ID),
-        .IF_canonical_instruction(IF_canonical_instruction_ID),
-        
-        .WB_regfile_we(WB_regfile_we_out_MEM),
-        .WB_RD_addr(WB_RD_addr_out_MEM),
-        .WB_RD(WB_RD_MEM),
-
-        //Output used for the framework
-        .commit_valid(commit_valid),
-        .commit_PC(commit_PC),
-        .commit_rd_addr(commit_rd_addr),
-        .commit_rd_value(commit_rd_value),
-        .commit_instruction(commit_instruction)
-    );
-`endif
+//-------------------------- Output assignations
+assign valid_instr_fetch = IF_valid_instr_fetch | ~reset_n_sync;
 
 
 endmodule

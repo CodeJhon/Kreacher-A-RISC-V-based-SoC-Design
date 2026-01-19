@@ -6,8 +6,15 @@ module IF_HK #(parameter XLEN = 64)(
     input reset_n,
     input pause,
 
+    //Interrupt Handler
+    input acknowledge_irq0,
+    input acknowledge_irq1,
+    
+    output [XLEN-1:0]      next_program_PC,
+    output wire [XLEN-1:0] PC_step,
+
     //Flags
-    output            valid_instr_fetch,
+    output            IF_valid_instr_fetch,
     
     //Buses
     input  [31:0]     EIB,  //External Instruction Bus
@@ -22,10 +29,11 @@ module IF_HK #(parameter XLEN = 64)(
 
     output reg [XLEN-1:0] ID_PC,
     output reg [XLEN-1:0] ID_PC_step,
+    
     output reg [31:0]     ID_canonical_instruction,
 
     //Control from/to ID stage
-    input                 ID_sel_next_PC,
+    input                 ID_control_transfer_en,
 
     //---------------------------- HCU (Hazard Control Unit)
     input                 IF_stall,
@@ -36,7 +44,7 @@ module IF_HK #(parameter XLEN = 64)(
 
 //--------------Internal to out
 wire [XLEN-1:0] PC;
-wire [XLEN-1:0] PC_step;
+
 wire [31:0]     canonical_instruction;
 
 // -> Internal core pause requested by IF_HK stage
@@ -49,6 +57,7 @@ wire concatenate_flag;
 wire instr_type;
 wire sel_PC_step;
 
+wire core_jump = ID_control_transfer_en | acknowledge_irq0 | acknowledge_irq1;
 
 mini_controller u_mini_controller (
     // Global
@@ -61,7 +70,7 @@ mini_controller u_mini_controller (
     .EIB_2_quad                (EIB[17:16]),
 
     .pointer                   (pointer),
-    .sel_next_PC               (ID_sel_next_PC),
+    .core_jump                 (core_jump),
 
     // Control
     .concatenate_in_next_cycle (concatenate_in_next_cycle),
@@ -106,8 +115,12 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
     .reset_n            (reset_n),
     .pause              (pause),
 
+    //Interrupt Handler
+    .acknowledge_irq0(acknowledge_irq0),
+    .acknowledge_irq1(acknowledge_irq1),
+
     // Control
-    .sel_next_PC               (ID_sel_next_PC),
+    .control_transfer_en       (ID_control_transfer_en),
 
     .concatenate_in_next_cycle (concatenate_in_next_cycle),
     .pause_to_concatenate      (pause_to_concatenate),
@@ -119,11 +132,14 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 
     // Outputs
     .EIAB                      (EIAB),                                     // ------> Connection to bus
+
     .PC                        (PC),
     .PC_step                   (PC_step),
+    .next_program_PC           (next_program_PC),
 
     //---------------------------- HCU (Hazard Control Unit)
     .stall(IF_stall_PC)
+    
 );
 
 // ------------------------------------- Connection to adjacent stage(s)
@@ -146,7 +162,7 @@ end
 // -------------------------------------- Other connections
 
 //Flags
-assign valid_instr_fetch = ~pause;
+assign IF_valid_instr_fetch = ~pause;
 
 //Control
 assign IF_pause_request = pause_to_concatenate;
