@@ -15,13 +15,13 @@ module interrupt_handler #(parameter XLEN = 64, parameter WB = 3'd4)(// In pipel
     input [XLEN-1:0]        next_program_PC,
 
     //Control
-    input                   control_transfer_en,
+    input                   core_program_jump,
     input                   next_stage_en,
     input                   mie,
 
     // Outputs to core
-    output reg              mepc_we,    
-    output reg [XLEN-1:0]   PC_to_mepc
+    output reg              interrupt_mepc_we,    
+    output reg [XLEN-1:0]   interrupt_PC_to_mepc
 );
 
 // ------------------------------------------------------------
@@ -74,7 +74,7 @@ wire take_natural;
 assign take_forced  = // Force the finish of lifetime
     (state == S_TRACK) && 
     (
-        control_transfer_en &&
+        core_program_jump &&
         (stage_tracker <= EX)
     );
 
@@ -127,19 +127,19 @@ end
 // ------------------------------------------------------------
 always @(*) begin
     //Defaults
-    mepc_we = 1'b0;
-    PC_to_mepc = {XLEN{1'b0}};
+    interrupt_mepc_we = 1'b0;
+    interrupt_PC_to_mepc = {XLEN{1'b0}};
 
     // Initial probe at IF
-    if (state == S_TRACK && stage_tracker == IF && !control_transfer_en)begin
-            PC_to_mepc = PC_step;
-            mepc_we = 1'b1;           
+    if (state == S_TRACK && stage_tracker == IF && !core_program_jump)begin
+            interrupt_PC_to_mepc = PC_step;
+            interrupt_mepc_we = 1'b1;           
         end
 
     // Forced finish: override with next_program_PC
     else if (take_forced)begin
-        PC_to_mepc = next_program_PC;
-        mepc_we = 1'b1;
+        interrupt_PC_to_mepc = next_program_PC;
+        interrupt_mepc_we = 1'b1;
     end
     // Natural finish: PC_saved will be the same as the one from the probe
 end

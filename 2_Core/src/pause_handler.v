@@ -16,9 +16,12 @@ module pause_handler (
 
     //Pause requests
     input IF_pause_request,
+    input EX_pause_request,
+    
     //Output to stages
     output pause_IF,
     output pause_ID,
+    output pause_EX,
     
     //Indicator of next stage
     output next_stage_en
@@ -48,13 +51,16 @@ end
 wire pause_core_general = ~reset_n_sync | external_pause | sleep_mode;
 
 //Pause output to stages
-assign pause_IF = pause_core_general;
-assign pause_ID = pause_core_general | IF_pause_request;
+wire EX_pause_request_real = (~IF_pause_request) & EX_pause_request; //Give priority to the IF pause request
+assign pause_IF = pause_core_general                    | EX_pause_request_real;
+assign pause_ID = pause_core_general | IF_pause_request | EX_pause_request_real;
+assign pause_EX = pause_core_general | IF_pause_request;
 
 //Indicator of next stage
 assign next_stage_en = ~(
     pause_core_general |
-    IF_pause_request
+    IF_pause_request   |
+    EX_pause_request_real
 );
 
 

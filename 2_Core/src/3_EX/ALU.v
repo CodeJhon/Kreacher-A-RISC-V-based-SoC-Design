@@ -1,122 +1,111 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
 module ALU #(parameter XLEN = 64)(
+    //Global
+    input clk,
+    input reset_n,
+    input pause,
+
+    //Operands & Operation Type
     input signed [XLEN-1:0]  opa,
     input signed [XLEN-1:0]  opb,
-    input [4:0]              sel_operation, 
+    input [5:0]              sel_operation, 
 
+    //Control
+    output                   pause_to_calculate,
+
+    //Results
     output reg               branch_condition,
     output signed [XLEN-1:0] ALU_result
 );
 
-localparam ZERO_PAD = XLEN-1;
-localparam PAD_32   = 32;
+//************Modules implementation********
 
-wire                  opa_less_than_opb;
-wire                  opa_less_than_opb_unsigned;
-wire                  opa_equal_opb;
-reg signed [XLEN-1:0] internal_alu_result;
+//--------------------------------------------------------------------Multiplication and Division modules
+localparam P_XLEN = XLEN*2; //Multiplication result -> Twice in size as operands
+wire signed [P_XLEN-1:0] mul_result;
+wire                     pause_to_muliply;
+multiplier_top #(.XLEN(XLEN)) multiplier_top_inst (
+    //Global
+    .clk(clk),
+    .reset_n(reset_n),
+    .pause(pause),
+
+    //Operands & Operation Type
+    .opa(opa),
+    .opb(opb),
+    .sel_operation(sel_operation),
+
+    //Output Flags
+    .pause_to_muliply(pause_to_muliply),
+
+    //Result
+    .mul_result(mul_result)
+);
+
+wire signed [XLEN-1:0] remainder_result;
+wire signed [XLEN-1:0] quotient_result;
+wire                   pause_to_divide;
+divider_top #(.XLEN(64)) divider_top_inst (
+    //Global
+    .clk(clk),
+    .reset_n(reset_n),
+    .pause(pause),
+
+    //Operands & Operation Type
+    .opa(opa),
+    .opb(opb),
+    .sel_operation(sel_operation),
+
+    //Output Flags
+    .pause_to_divide(pause_to_divide),
+
+    //Result
+    .remainder_result(remainder_result),
+    .quotient_result(quotient_result)
+);
 
 
-//Module implementation
-
-assign opa_less_than_opb_unsigned = $unsigned(opa) < $unsigned(opb);
-assign opa_less_than_opb          = (opa[XLEN-1] == opb[XLEN-1]) ? opa_less_than_opb_unsigned : opa[XLEN-1];
-assign opa_equal_opb              = opa == opb;
-
-//--------------------------------------------------------------------Shift signals
+//--------------------------------------------------------------------Shifting opa by opb times
 wire [5:0] shamt64 = opb[5:0];
+//SLL(W)
+wire [XLEN-1:0]        sll_result;
+wire [XLEN-1:0]        sllw_result;
+//SRL(W)
+wire [XLEN-1:0]        srl_result;
+wire [31:0]            srlw_result;
+//SRA(W)
+wire signed [XLEN-1:0] sra_result;
+wire signed [31:0]     sraw_result;
 
-// --- SLL(W) barrel shifter (logical left) ---
+opa_shift #(.XLEN(XLEN)) opa_shift_inst (
+    //Inputs
+    .opa(opa),
+    .shamt64(shamt64),
 
-wire [XLEN-1:0] sll_by_1;
-wire [XLEN-1:0] sll_by_2;
-wire [XLEN-1:0] sll_by_4;
-wire [XLEN-1:0] sll_by_8;
-wire [XLEN-1:0] sll_by_16;
-wire [XLEN-1:0] sll_by_32;
-
-assign sll_by_1  = shamt64[0] ? (opa      << 1)  : opa;
-assign sll_by_2  = shamt64[1] ? (sll_by_1   << 2)  : sll_by_1;
-assign sll_by_4  = shamt64[2] ? (sll_by_2   << 4)  : sll_by_2;
-assign sll_by_8  = shamt64[3] ? (sll_by_4   << 8)  : sll_by_4;
-assign sll_by_16 = shamt64[4] ? (sll_by_8   << 16) : sll_by_8;
-assign sll_by_32 = shamt64[5] ? (sll_by_16  << 32) : sll_by_16;
-
-wire [XLEN-1:0] sll_result = sll_by_32;
-wire [XLEN-1:0] sllw_result = sll_by_16;
-
-// --- SRL barrel shifter (logical right) ---
-wire [XLEN-1:0] srl_by_1;
-wire [XLEN-1:0] srl_by_2;
-wire [XLEN-1:0] srl_by_4;
-wire [XLEN-1:0] srl_by_8;
-wire [XLEN-1:0] srl_by_16;
-wire [XLEN-1:0] srl_by_32;
-
-assign srl_by_1  = shamt64[0] ? (opa      >> 1)   : opa;
-assign srl_by_2  = shamt64[1] ? (srl_by_1   >> 2)  : srl_by_1;
-assign srl_by_4  = shamt64[2] ? (srl_by_2   >> 4)  : srl_by_2;
-assign srl_by_8  = shamt64[3] ? (srl_by_4   >> 8)  : srl_by_4;
-assign srl_by_16 = shamt64[4] ? (srl_by_8   >> 16) : srl_by_8;
-assign srl_by_32 = shamt64[5] ? (srl_by_16  >> 32) : srl_by_16;
-
-wire [XLEN-1:0] srl_result = srl_by_32;
-
-// --- SRLW barrel shifter (32-bit logical right) ---
-wire [31:0] opa_lo32 = opa[31:0];
-
-wire [31:0] srlw_by_1;
-wire [31:0] srlw_by_2;
-wire [31:0] srlw_by_4;
-wire [31:0] srlw_by_8;
-wire [31:0] srlw_by_16;
-
-assign srlw_by_1  = shamt64[0] ? (opa_lo32     >> 1)  : opa_lo32;
-assign srlw_by_2  = shamt64[1] ? (srlw_by_1    >> 2)  : srlw_by_1;
-assign srlw_by_4  = shamt64[2] ? (srlw_by_2    >> 4)  : srlw_by_2;
-assign srlw_by_8  = shamt64[3] ? (srlw_by_4    >> 8)  : srlw_by_4;
-assign srlw_by_16 = shamt64[4] ? (srlw_by_8    >> 16) : srlw_by_8;
-
-wire [31:0] srlw_result = srlw_by_16;
-
-// --- SRA barrel shifter (arithmetic right) ---
-wire signed [XLEN-1:0] sra_by_1;
-wire signed [XLEN-1:0] sra_by_2;
-wire signed [XLEN-1:0] sra_by_4;
-wire signed [XLEN-1:0] sra_by_8;
-wire signed [XLEN-1:0] sra_by_16;
-wire signed [XLEN-1:0] sra_by_32;
-
-assign sra_by_1  = shamt64[0] ? (opa        >>> 1)  : opa;
-assign sra_by_2  = shamt64[1] ? (sra_by_1   >>> 2)  : sra_by_1;
-assign sra_by_4  = shamt64[2] ? (sra_by_2   >>> 4)  : sra_by_2;
-assign sra_by_8  = shamt64[3] ? (sra_by_4   >>> 8)  : sra_by_4;
-assign sra_by_16 = shamt64[4] ? (sra_by_8   >>> 16) : sra_by_8;
-assign sra_by_32 = shamt64[5] ? (sra_by_16  >>> 32) : sra_by_16;
-
-wire signed [XLEN-1:0] sra_result = sra_by_32;
-
-// --- SRAW barrel shifter (32-bit arithmetic right) ---
-wire signed [31:0] opa_lo32_s = opa[31:0];
-
-wire signed [31:0] sraw_by_1;
-wire signed [31:0] sraw_by_2;
-wire signed [31:0] sraw_by_4;
-wire signed [31:0] sraw_by_8;
-wire signed [31:0] sraw_by_16;
-
-assign sraw_by_1  = shamt64[0] ? (opa_lo32_s    >>> 1)  : opa_lo32_s;
-assign sraw_by_2  = shamt64[1] ? (sraw_by_1     >>> 2)  : sraw_by_1;
-assign sraw_by_4  = shamt64[2] ? (sraw_by_2     >>> 4)  : sraw_by_2;
-assign sraw_by_8  = shamt64[3] ? (sraw_by_4     >>> 8)  : sraw_by_4;
-assign sraw_by_16 = shamt64[4] ? (sraw_by_8     >>> 16) : sraw_by_8;
-
-wire signed [31:0] sraw_result = sraw_by_16;
+    //Outputs
+    //SLL(W)
+    .sll_result(sll_result),
+    .sllw_result(sllw_result),
+    //SRL(W)
+    .srl_result(srl_result),
+    .srlw_result(srlw_result),
+    //SRA(W)
+    .sra_result(sra_result),
+    .sraw_result(sraw_result)
+);
 
 
-always@(opa, opb , sel_operation, opa_equal_opb, opa_less_than_opb, opa_less_than_opb_unsigned,
-        sll_result, sllw_result, srl_result, srlw_result, sra_result, sraw_result) begin
+//------------------------------------------------------------------Internal ALU result assignation
+//Internal signals needed for ALU operations
+wire opa_less_than_opb_unsigned = $unsigned(opa) < $unsigned(opb);
+wire opa_less_than_opb          = (opa[XLEN-1] == opb[XLEN-1]) ? opa_less_than_opb_unsigned : opa[XLEN-1];
+wire opa_equal_opb              = opa == opb;
+
+//Internal ALU result assignation
+reg signed [XLEN-1:0] internal_alu_result;
+always@(*) begin
+    
     //Default values
     internal_alu_result = 0;
     branch_condition    = 0;
@@ -129,8 +118,8 @@ always@(opa, opb , sel_operation, opa_equal_opb, opa_less_than_opb, opa_less_tha
         //Operations
         `ALU_ADD:                internal_alu_result = opa + opb;
         `ALU_SUB:                internal_alu_result = opa - opb;
-        `ALU_SLT:                internal_alu_result = {{ZERO_PAD{1'b0}},opa_less_than_opb}; 
-        `ALU_SLTU:               internal_alu_result = {{ZERO_PAD{1'b0}},opa_less_than_opb_unsigned};
+        `ALU_SLT:                internal_alu_result = $unsigned(opa_less_than_opb); 
+        `ALU_SLTU:               internal_alu_result = $unsigned(opa_less_than_opb_unsigned);
         `ALU_AND:                internal_alu_result = opa & opb;
         `ALU_OR:                 internal_alu_result = opa | opb;
         `ALU_XOR:                internal_alu_result = opa ^ opb;
@@ -139,13 +128,30 @@ always@(opa, opb , sel_operation, opa_equal_opb, opa_less_than_opb, opa_less_tha
         `ALU_SLLW:               internal_alu_result = sllw_result;
 
         `ALU_SRL:                internal_alu_result = srl_result;
-        `ALU_SRLW:               internal_alu_result = {32'd0, srlw_result};
+        `ALU_SRLW:               internal_alu_result = $unsigned(srlw_result);
 
         `ALU_SRA:                internal_alu_result = sra_result;
-        `ALU_SRAW:               internal_alu_result = {32'd0, sraw_result};
+        `ALU_SRAW:               internal_alu_result = $unsigned(sraw_result);
 
         //CSR Special
         `ALU_CSRRC:              internal_alu_result = opa & (~opb);
+
+        //--- M-extension
+        //Multiplication Instructions
+        `ALU_MUL:                internal_alu_result = mul_result[XLEN-1:0];//Lower part retrieved
+        
+        `ALU_MULH, 
+        `ALU_MULHU,
+        `ALU_MULHSU:             internal_alu_result = mul_result[P_XLEN-1:XLEN];//Upper part retrieved
+        
+        `ALU_MULW:               internal_alu_result = $signed(mul_result[31:0]);//Sign-extension of lower 32 bits
+        
+        //Division Instructions
+        `ALU_DIV, `ALU_DIVU:     internal_alu_result = quotient_result;
+        `ALU_REM, `ALU_REMU:     internal_alu_result = remainder_result;
+
+        `ALU_DIVW, `ALU_DIVUW:   internal_alu_result = $signed(quotient_result[31:0]);
+        `ALU_REMW, `ALU_REMUW:   internal_alu_result = $signed(remainder_result[31:0]);
         
         //------------------------------------------------------------------BRANCH CONDITION
         `ALU_EQ:                 branch_condition = opa_equal_opb;
@@ -162,9 +168,10 @@ always@(opa, opb , sel_operation, opa_equal_opb, opa_less_than_opb, opa_less_tha
     endcase
 end
 
-
 //Output assignment
 assign ALU_result = internal_alu_result;
 
+//Control
+assign pause_to_calculate = pause_to_muliply | pause_to_divide;
 
 endmodule

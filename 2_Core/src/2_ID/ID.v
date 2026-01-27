@@ -10,8 +10,8 @@ module ID #(parameter XLEN = 64)(
     input             acknowledge_irq0,
     input             acknowledge_irq1,
 
-    input             mepc_we,
-    input [XLEN-1:0]  PC_to_mepc,
+    input             interrupt_mepc_we,
+    input [XLEN-1:0]  interrupt_PC_to_mepc,
     output            mie,
 
     //----------------------------IF_HK Stage
@@ -24,6 +24,7 @@ module ID #(parameter XLEN = 64)(
 
     //Control from/to IF_HK stage
     output            IF_control_transfer_en,
+    output            IF_illegal_trap,
 
     //----------------------------EX Stage
     //Data from/to EX stage
@@ -51,7 +52,7 @@ module ID #(parameter XLEN = 64)(
 
     output [1:0]      EX_sel_opa,
     output [1:0]      EX_sel_opb,
-    output [4:0]      EX_sel_op,
+    output [5:0]      EX_sel_op,
     output            EX_regfile_we_out,
     output            EX_jump,
     output            EX_branch,
@@ -74,6 +75,8 @@ module ID #(parameter XLEN = 64)(
 );
 
 // ---------------------------------- Implementation of modules
+wire            illegal_instr;
+wire            illegal_trap = illegal_instr && ~EX_control_transfer_en;
 
 wire [2:0]      imm_type;
 wire            csr_re;
@@ -85,7 +88,7 @@ wire            restore_mstatus;
 
 wire [1:0]      sel_opa;
 wire [1:0]      sel_opb;
-wire [4:0]      sel_op;
+wire [5:0]      sel_op;
 wire            regfile_we;
 
 wire            csr_we;
@@ -104,6 +107,9 @@ wire            valid_data_read;
 wire            valid_data_write;
 
 control u_control (
+    //Global
+    .pause(pause),
+
     //---------------------- Inputs
     .canonical_instruction(IF_canonical_instruction),
 
@@ -111,6 +117,9 @@ control u_control (
     //Flags
     .valid_data_read(valid_data_read),
     .valid_data_write(valid_data_write),
+
+    //Illegal Instruction
+    .illegal_instr(illegal_instr),
 
     // ID
     .imm_type(imm_type),
@@ -177,6 +186,10 @@ build_imm #(.XLEN(XLEN)) u_build_imm (
 //CSR Bank
 wire [XLEN-1:0] csr_data_rd;
 wire in_csr_we = EX_csr_we_in && !pause;
+//Logic to save in mepc the PC of the illegal instruction in the case that both cases happen at the same time 
+// -> Which means we will re-execute the illegal instruction after doing MRET in the interrupt handler
+wire [XLEN-1:0] interrupt_PC_to_mepc_f = illegal_trap ? IF_PC : interrupt_PC_to_mepc;
+
 csr_bank #(.XLEN(XLEN)) u_csr_bank (
     //Global
     .clk(clk),
@@ -185,10 +198,14 @@ csr_bank #(.XLEN(XLEN)) u_csr_bank (
     //Interrupt Handler
     .acknowledge_irq0(acknowledge_irq0),
     .acknowledge_irq1(acknowledge_irq1),
+    .interrupt_mepc_we(interrupt_mepc_we),
+    .interrupt_PC_to_mepc(interrupt_PC_to_mepc_f),
 
-    .mepc_we(mepc_we),
-    .PC_to_mepc(PC_to_mepc),
     .mie(mie),
+
+    //Illegal Instruction
+    .illegal_trap(illegal_trap),
+    .PC_illegal(IF_PC),
 
     //MRET signals
     .read_mepc(read_mepc),
@@ -210,6 +227,7 @@ csr_bank #(.XLEN(XLEN)) u_csr_bank (
 //IF_HK
 assign IF_exec_result       = EX_exec_result;
 assign IF_control_transfer_en       = EX_control_transfer_en;
+assign IF_illegal_trap     = illegal_trap;
 
 //EX
     //Data
