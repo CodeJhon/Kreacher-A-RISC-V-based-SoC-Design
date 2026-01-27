@@ -1,6 +1,9 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
 module control #(parameter XLEN = 64)(
+    //Global
+    input pause,
+
     //-------------------------- Inputs
     input [31:0]     canonical_instruction,
     
@@ -8,6 +11,9 @@ module control #(parameter XLEN = 64)(
     //Flags
     output reg       valid_data_read,
     output reg       valid_data_write,
+
+    //Illegal Instruction
+    output            illegal_instr,
 
     //ID
     output reg [2:0]  imm_type,
@@ -21,7 +27,7 @@ module control #(parameter XLEN = 64)(
 
     output reg [1:0]  sel_opa,
     output reg [1:0]  sel_opb,
-    output reg [4:0]  sel_op,
+    output reg [5:0]  sel_op,
     output       reg  regfile_we,
 
     output reg        sel_exec_result,
@@ -47,13 +53,43 @@ wire [6:0] funct7        = canonical_instruction[31:25];
 wire [4:0] RD_addr       = canonical_instruction[11:7];
 wire [4:0] uimm_RS1_addr = canonical_instruction[19:15];
 
+wire [11:0] csr_addr     = canonical_instruction[31:20];
+
 //Internal control
 reg is_privileged;
 
-always@(*)begin
-    is_privileged = 1'b0;
+//Internal reasons of an Illegal instr
+reg invalid_opcode;
+reg invalid_alu_op;
+reg invalid_mem_op;
+reg invalid_branch_op;
+reg invalid_csr_op;
+reg invalid_csr_read;
+reg invalid_csr_write;
 
-    //Default values - disable everything
+assign illegal_instr =  ~pause & (
+                        invalid_opcode    | 
+                        invalid_alu_op    |
+                        invalid_mem_op    |
+                        invalid_branch_op |
+                        invalid_csr_op    |
+                        invalid_csr_read  | 
+                        invalid_csr_write);
+
+
+always@(*)begin
+    is_privileged      = 1'b0;
+
+    // Default internal reasons of Illegal instr
+    invalid_opcode     = 1'b0;
+    invalid_alu_op     = 1'b0;
+    invalid_mem_op     = 1'b0;
+    invalid_branch_op  = 1'b0;
+    invalid_csr_op     = 1'b0;
+    invalid_csr_read   = 1'b0;
+    invalid_csr_write  = 1'b0;
+
+    //Default control - disable everything
     jump = `DISABLE;
     branch  = `DISABLE;
     regfile_we = `DISABLE;
@@ -116,26 +152,48 @@ always@(*)begin
                 val_rd_type = `MEM_NOT_USED;
                 sel_writeback = `WBACK_EXEC_RESULT;
                 result_type = `RESULT_64;
-                case(funct3)
-                    `AND:         sel_op = `ALU_AND;
-                    `OR:          sel_op = `ALU_OR;
-                    `XOR:         sel_op = `ALU_XOR;
-                    `SLTU:        sel_op = `ALU_SLTU;
-                    `SLT:         sel_op = `ALU_SLT;
-                    `SLL:         sel_op = `ALU_SLL;
-                    `SHIFT_RIGHT:begin
-                        case(funct7)
-                            `SRA: sel_op = `ALU_SRA;
-                            `SRL: sel_op = `ALU_SRL;
-                        endcase
-                    end
-                    `ADD_SUB:begin
-                        case(funct7)
-                            `ADD: sel_op = `ALU_ADD;
-                            `SUB: sel_op = `ALU_SUB;
-                        endcase
-                    end
-                endcase
+                
+                //Multiply/Div Instructions
+                if(funct7[0])begin
+                    case (funct3)
+                        `AND_REMU:           sel_op = `ALU_REMU;
+                        `OR_REM:             sel_op = `ALU_REM;
+                        `XOR_DIV:            sel_op = `ALU_DIV;
+                        `SLTU_MULHU:         sel_op = `ALU_MULHU;
+                        `SLT_MULHSU:         sel_op = `ALU_MULHSU;
+                        `SLL_MULH:           sel_op = `ALU_MULH;
+                        `SHIFT_RIGHT_DIVU:   sel_op = `ALU_DIVU;
+                        `ADD_SUB_MUL:        sel_op = `ALU_MUL;
+                        default:
+                            invalid_alu_op = 1'b1;
+                    endcase
+                end
+                
+                //Arithmetic Instructions
+                else begin
+                    case (funct3)
+                        `AND_REMU:            sel_op = `ALU_AND;
+                        `OR_REM:              sel_op = `ALU_OR;
+                        `XOR_DIV:             sel_op = `ALU_XOR;
+                        `SLTU_MULHU:          sel_op = `ALU_SLTU;
+                        `SLT_MULHSU:          sel_op = `ALU_SLT;
+                        `SLL_MULH:            sel_op = `ALU_SLL;
+                        `SHIFT_RIGHT_DIVU:begin
+                            if(funct7[5])
+                                              sel_op = `ALU_SRA;
+                            else
+                                              sel_op = `ALU_SRL;
+                        end
+                        `ADD_SUB_MUL:begin
+                            if(funct7[5])
+                                              sel_op = `ALU_SUB;
+                            else
+                                              sel_op = `ALU_ADD;
+                        end
+                        default:
+                            invalid_alu_op = 1'b1;
+                    endcase
+                end
             end
 
             `INT_REG_REG_W:begin
@@ -151,21 +209,41 @@ always@(*)begin
                 val_rd_type = `MEM_NOT_USED;
                 sel_writeback = `WBACK_EXEC_RESULT;
                 result_type = `RESULT_32;
-                case(funct3)
-                    `SLL:         sel_op = `ALU_SLLW;
-                    `SHIFT_RIGHT:begin
-                        case(funct7)
-                            `SRA: sel_op = `ALU_SRAW;
-                            `SRL: sel_op = `ALU_SRLW;
-                        endcase
-                    end
-                    `ADD_SUB:begin
-                        case(funct7)
-                            `ADD: sel_op = `ALU_ADD;
-                            `SUB: sel_op = `ALU_SUB;
-                        endcase
-                    end
-                endcase
+
+                //Multiply/Div Instructions
+                if(funct7[0])begin
+                    case (funct3)
+                        `SHIFT_RIGHT_DIVU:      sel_op = `ALU_DIVUW;
+                        `ADD_SUB_MUL:           sel_op = `ALU_MULW;
+                        `XOR_DIV:               sel_op = `ALU_DIVW;
+                        `OR_REM:                sel_op = `ALU_REMW;
+                        `AND_REMU:              sel_op = `ALU_REMUW;
+                        default:
+                            invalid_alu_op = 1'b1;
+                    endcase
+                end
+
+                //Arithmetic Instructions
+                else begin
+                    case (funct3)
+                        `SLL_MULH:          sel_op = `ALU_SLLW;
+                        `SHIFT_RIGHT_DIVU:begin
+                            if(funct7[5])
+                                            sel_op = `ALU_SRAW;
+                            else
+                                            sel_op = `ALU_SRLW;
+                        end
+                        `ADD_SUB_MUL:begin
+                            if(funct7[5])
+                                            sel_op = `ALU_SUB;
+                            else
+                                            sel_op = `ALU_ADD;
+                        end
+                        default:
+                            invalid_alu_op = 1'b1;
+                    endcase
+                end
+                
             end
 
             `INT_REG_IMM:begin
@@ -190,6 +268,8 @@ always@(*)begin
                     `ORI:       sel_op = `ALU_OR;
                     `SLLI:      sel_op = `ALU_SLL;
                     `SRLI_SRAI: sel_op = imm_I_10 ? `ALU_SRA : `ALU_SRL;
+                    default:
+                        invalid_alu_op = 1'b1;
                 endcase
             end
 
@@ -210,6 +290,8 @@ always@(*)begin
                     `ADDI:      sel_op = `ALU_ADD;
                     `SLLI:      sel_op = `ALU_SLLW;
                     `SRLI_SRAI: sel_op = imm_I_10 ? `ALU_SRAW : `ALU_SRLW;
+                    default:
+                        invalid_alu_op = 1'b1;
                 endcase
             end
 
@@ -235,6 +317,8 @@ always@(*)begin
                     `LHU: val_rd_type = `ZERO_EXTEND_16;
                     `LB:  val_rd_type = `SIGN_EXTEND_8;
                     `LBU: val_rd_type = `ZERO_EXTEND_8;
+                    default:
+                        invalid_mem_op = 1'b1;
                 endcase
             end
             
@@ -257,6 +341,8 @@ always@(*)begin
                     `SW: val_wr_type = `ZERO_EXTEND_32;
                     `SH: val_wr_type = `ZERO_EXTEND_16;
                     `SB: val_wr_type = `ZERO_EXTEND_8;
+                    default:
+                        invalid_mem_op = 1'b1;
                 endcase
             end
             
@@ -280,6 +366,8 @@ always@(*)begin
                     `BGE:  sel_op = `ALU_GE;
                     `BLTU: sel_op = `ALU_LTU;
                     `BGEU: sel_op = `ALU_GEU;
+                    default:
+                        invalid_mem_op = 1'b1;
                 endcase
             end
 
@@ -294,6 +382,8 @@ always@(*)begin
                 val_rd_type = `MEM_NOT_USED;
                 sel_writeback = `WBACK_CSR;
                 result_type = `RESULT_64;
+
+                //CSR Read-enable / Write-Enable logic
                 case (funct3)
                     `CSRRW: begin
                         sel_opb = `OPB_RS1;
@@ -368,7 +458,27 @@ always@(*)begin
                         //CSR read -> Regfile write
                         {csr_re, regfile_we} = {2{`ENABLE}};
                     end
+                    default:
+                        invalid_csr_op = 1'b1;
                 endcase
+
+                //Checking for legal reads (Only supported CSRs)
+                if(csr_re)begin
+                    case (csr_addr)
+                        `MSTATUS_ADDR, `MISA_ADDR, `MTVEC_ADDR, `MEPC_ADDR, `MCAUSE_ADDR:;
+                        default: 
+                            invalid_csr_read = 1'b1;
+                    endcase
+                end
+
+                //Checking for legal writes (Only Read/Write CSRs, not Read-Only)
+                if(csr_we)begin
+                    case (csr_addr)
+                        `MSTATUS_ADDR, `MEPC_ADDR, `MCAUSE_ADDR:;
+                        default: 
+                            invalid_csr_write = 1'b1;
+                    endcase
+                end
             end
 
             //Instructions without shared opcode
@@ -422,20 +532,29 @@ always@(*)begin
             end
 
             `JALR:begin
-                jump = `ENABLE;
-                branch  = `DISABLE;
-                regfile_we = `ENABLE;
-                imm_type = `I_IMMEDIATE;
-                sel_exec_result = `exec_result_ALU;
-                sel_opa = `OPA_RS1;
-                sel_opb = `OPB_IMM;
-                sel_op = `ALU_ADD;
-                mem_wr_en = `DISABLE;
-                val_wr_type = `MEM_NOT_USED;
-                val_rd_type = `MEM_NOT_USED;
-                sel_writeback = `WBACK_PC_step;
-                result_type = `RESULT_64;
+                if(funct3 == 3'b000)begin
+                    jump = `ENABLE;
+                    branch  = `DISABLE;
+                    regfile_we = `ENABLE;
+                    imm_type = `I_IMMEDIATE;
+                    sel_exec_result = `exec_result_ALU;
+                    sel_opa = `OPA_RS1;
+                    sel_opb = `OPB_IMM;
+                    sel_op = `ALU_ADD;
+                    mem_wr_en = `DISABLE;
+                    val_wr_type = `MEM_NOT_USED;
+                    val_rd_type = `MEM_NOT_USED;
+                    sel_writeback = `WBACK_PC_step;
+                    result_type = `RESULT_64;
+                end
+                else
+                    invalid_branch_op = 1'b1;
             end
+        
+            //Invalid Opcode
+            default:
+                invalid_opcode = 1'b1;
+
         endcase
     end
 end

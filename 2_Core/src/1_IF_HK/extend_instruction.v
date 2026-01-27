@@ -156,13 +156,11 @@ wire [11:0] imm_c_swsp_sdsp = {
                             compressed_instruction[12:9],    //imm[5:2]
                             2'd0 };                          //imm[1:0]
 
-
-always @(quadrant, funct2, funct2_p, funct3, funct4, funct6, 
-        rd_rs1, rd_rs1_p, rd_rs2_p, rs2, 
-        imm_c_addi16sp, imm_c_alu, imm_c_lui, imm_c_jal, imm_c_addi4spn, 
-        imm_c_lw_sw, imm_c_ld_sd, imm_c_branch, imm_c_swsp_sdsp, imm_c_lwsp, imm_c_ldsp) begin
-    //Default reconstruction -> NOP (addi x0, x0, 0)
-    extended_instruction = 32'h00000013;
+//NOTE -> Any ILLEGAL C-instructions will be sent to the ID stage as 32'h11111111 (To invalid opcode case)
+localparam ILLEGAL = 32'h11111111; 
+always @(*) begin
+    //Pesimistic default assumption: Illegal
+    extended_instruction = ILLEGAL;
     
     //Reconstruction RVC -> RVI:
     case (quadrant)
@@ -184,24 +182,26 @@ always @(quadrant, funct2, funct2_p, funct3, funct4, funct6,
 
         `QUADRANT_1: begin
             case (funct3)
-                3'd0://                                              C.ADDI     -> addi  rd, rd, nzimm
-                    if((rd_rs1 != 5'd0) && (imm_c_alu != 12'd0))     extended_instruction = {imm_c_alu, rd_rs1, `ADDI, rd_rs1, `INT_REG_IMM};
+                3'd0://                                              C.ADDI & C.NOP  -> addi  rd, rd, nzimm
+                                                                     extended_instruction = {imm_c_alu, rd_rs1, `ADDI, rd_rs1, `INT_REG_IMM};
                 3'd1://                                              C.ADDIW    -> addiw rd, rd, nzimm
                     if(rd_rs1 != 5'd0)                               extended_instruction = {imm_c_alu, rd_rs1, `ADDI, rd_rs1, `INT_REG_IMM_W};
                 3'd2://                                              C.LI       -> addi rd, x0, imm
-                    if(rd_rs1 != 5'd0)                               extended_instruction = {imm_c_alu,  `X_0 , `ADDI, rd_rs1, `INT_REG_IMM};
+                                                                     extended_instruction = {imm_c_alu,  `X_0 , `ADDI, rd_rs1, `INT_REG_IMM};
                 3'd3:begin
                     //                                               C.ADDI16SP -> addi x2, rd, nzimm
-                    if      (rd_rs1 == 5'd2)                         extended_instruction = {imm_c_addi16sp,  `X_2 , `ADDI, rd_rs1, `INT_REG_IMM};
+                    if (rd_rs1 == 5'd2) begin
+                        if(imm_c_addi16sp != 12'd0)                  extended_instruction = {imm_c_addi16sp,  `X_2 , `ADDI, rd_rs1, `INT_REG_IMM};
+                    end   
                     //                                               C.LUI      -> lui rd, nzimm
-                    else if (rd_rs1 != 5'd0)                         extended_instruction = {imm_c_lui,  rd_rs1, `LUI};
+                    else if  (imm_c_lui != 20'd0)                    extended_instruction = {imm_c_lui,  rd_rs1, `LUI};
                 end
                 3'd4:begin
                     case (funct2_p)
                         2'd0://                                      C.SRLI      -> srli rd', rd', nzuimm[5:0]
-                            if(imm_c_alu != 12'd0)                   extended_instruction = {`FUNCT6_SHIFT_LOGICAL, imm_c_alu[5:0], rd_rs1_p, `SRLI_SRAI, rd_rs1_p, `INT_REG_IMM};
+                                                                     extended_instruction = {`FUNCT6_SHIFT_LOGICAL, imm_c_alu[5:0], rd_rs1_p, `SRLI_SRAI, rd_rs1_p, `INT_REG_IMM};
                         2'd1://                                      C.SRAI      -> srai rd', rd', nzuimm[5:0]
-                            if(imm_c_alu != 12'd0)                   extended_instruction = {`FUNCT6_SHIFT_ARITHMETIC, imm_c_alu[5:0], rd_rs1_p, `SRLI_SRAI, rd_rs1_p, `INT_REG_IMM};
+                                                                     extended_instruction = {`FUNCT6_SHIFT_ARITHMETIC, imm_c_alu[5:0], rd_rs1_p, `SRLI_SRAI, rd_rs1_p, `INT_REG_IMM};
                         2'd2://                                      C.ANDI      -> andi rd', rd', imm
                                                                      extended_instruction = {imm_c_alu, rd_rs1_p, `ANDI, rd_rs1_p, `INT_REG_IMM};
                     endcase
@@ -218,21 +218,21 @@ always @(quadrant, funct2, funct2_p, funct3, funct4, funct6,
                 `FUNCT_6_OP:begin
                     case (funct2)
                         2'd0://                                      C.SUB      -> sub rd', rd', rs2'
-                                                                     extended_instruction = {`FUNCT7_ALU_SUB, rd_rs2_p, rd_rs1_p, `ADD_SUB, rd_rs1_p, `INT_REG_REG};
+                                                                     extended_instruction = {`FUNCT7_ALU_SUB, rd_rs2_p, rd_rs1_p, `ADD_SUB_MUL, rd_rs1_p, `INT_REG_REG};
                         2'd1://                                      C.XOR      -> xor rd', rd', rs2'
-                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `XOR, rd_rs1_p, `INT_REG_REG};
+                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `XOR_DIV, rd_rs1_p, `INT_REG_REG};
                         2'd2://                                      C.OR       -> or rd', rd', rs2'
-                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `OR, rd_rs1_p, `INT_REG_REG};
+                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `OR_REM, rd_rs1_p, `INT_REG_REG};
                         2'd3://                                      C.AND      -> and rd', rd', rs2'
-                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `AND, rd_rs1_p, `INT_REG_REG};
+                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `AND_REMU, rd_rs1_p, `INT_REG_REG};
                     endcase
                 end
                 `FUNCT_6_OPW:begin
                     case (funct2)
                         2'd0://                                      C.SUBW      -> subw rd', rd', rs2'
-                                                                     extended_instruction = {`FUNCT7_ALU_SUB, rd_rs2_p, rd_rs1_p, `ADD_SUB, rd_rs1_p, `INT_REG_REG_W};
+                                                                     extended_instruction = {`FUNCT7_ALU_SUB, rd_rs2_p, rd_rs1_p, `ADD_SUB_MUL, rd_rs1_p, `INT_REG_REG_W};
                         2'd1://                                      C.ADDW      -> addw rd', rd', rs2'
-                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `ADD_SUB, rd_rs1_p, `INT_REG_REG_W};
+                                                                     extended_instruction = {`FUNCT7_ALU_ADD, rd_rs2_p, rd_rs1_p, `ADD_SUB_MUL, rd_rs1_p, `INT_REG_REG_W};
                     endcase
                 end
             endcase 
@@ -241,7 +241,7 @@ always @(quadrant, funct2, funct2_p, funct3, funct4, funct6,
         `QUADRANT_2: begin
             case (funct3)
                 3'd0://                                              C.SLLI      -> slli rd, rd, nzuimm[5:0]
-                    if((imm_c_alu != 12'd0) && (rd_rs1 != 5'd0))     extended_instruction = {`FUNCT6_SHIFT_LOGICAL, imm_c_alu[5:0], rd_rs1, `SLLI, rd_rs1, `INT_REG_IMM};
+                                                                     extended_instruction = {`FUNCT6_SHIFT_LOGICAL, imm_c_alu[5:0], rd_rs1, `SLLI, rd_rs1, `INT_REG_IMM};
                 3'd2://                                              C.LWSP     -> lw rd, uimm(x2)
                     if(rd_rs1 != 5'd0)                               extended_instruction = {imm_c_lwsp, `X_2, `LW, rd_rs1, `LOAD};
                 3'd3://                                              C.LDSP     -> ld rd, uimm(x2)
@@ -254,20 +254,20 @@ always @(quadrant, funct2, funct2_p, funct3, funct4, funct6,
 
             case (funct4)
                 `C_FUNCT4_JR_MV: begin
-                    if(rd_rs1 != 5'd0) begin
-                        //                                           C.JR       -> jalr x0, 0(rs1)
-                        if(rs2 == 5'd0)                              extended_instruction = {12'd0, rd_rs1, 3'd0, `X_0, `JALR};
-                        //                                           C.MV       -> add  rd, x0, rs2
-                        else                                         extended_instruction = {`FUNCT7_ALU_ADD, rs2, `X_0, `ADD_SUB, rd_rs1, `INT_REG_REG};
+                    //                                               C.JR       -> jalr x0, 0(rs1)
+                    if(rs2 == 5'd0)begin
+                        if(rd_rs1 != 5'd0)                           extended_instruction = {12'd0, rd_rs1, 3'd0, `X_0, `JALR};
                     end
+                    //                                               C.MV       -> add  rd, x0, rs2
+                    else                                             extended_instruction = {`FUNCT7_ALU_ADD, rs2, `X_0, `ADD_SUB_MUL, rd_rs1, `INT_REG_REG};
                 end
                 `C_FUNCT4_JALR_ADD :begin
-                    if(rd_rs1 != 5'd0) begin
-                        //                                           C.JALR     -> jalr x1, 0(rs1)
-                        if(rs2 == 5'd0)                              extended_instruction = {12'd0, rd_rs1, 3'd0, `X_1, `JALR};
-                        //                                           C.ADD      -> add  rd, rd, rs2
-                        else                                         extended_instruction = {`FUNCT7_ALU_ADD, rs2, rd_rs1, `ADD_SUB, rd_rs1, `INT_REG_REG};
+                    //                                               C.JALR     -> jalr x1, 0(rs1)
+                    if(rs2 == 5'd0)begin
+                        if(rd_rs1 != 5'd0)                           extended_instruction = {12'd0, rd_rs1, 3'd0, `X_1, `JALR};
                     end
+                    //                                               C.ADD      -> add  rd, rd, rs2
+                    else                                             extended_instruction = {`FUNCT7_ALU_ADD, rs2, rd_rs1, `ADD_SUB_MUL, rd_rs1, `INT_REG_REG};
                 end
             endcase
         end

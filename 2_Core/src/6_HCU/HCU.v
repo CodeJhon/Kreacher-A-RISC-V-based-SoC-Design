@@ -4,6 +4,9 @@ module HCU #(parameter XLEN = 64)(
     //Interrupt Handler
     input                interrupt_taken_natural,
 
+    //Illegal Instruction
+    input                illegal_trap,
+
     //----------------------------IF Stage
     output reg           IF_stall_PC,
     output reg           IF_stall,
@@ -122,6 +125,12 @@ always @(*) begin
         ID_flush = 1;
         IF_flush = 1;
         EX_flush = 1;
+    end
+
+    //2nd priority: Illegal instructions
+    else if(illegal_trap)begin
+        ID_flush = 1;
+        IF_flush = 1;
     end
 
     //Handling Control hazards by Flushing (Flush if jump recognized in EX stage)

@@ -34,6 +34,7 @@ module IF_HK #(parameter XLEN = 64)(
 
     //Control from/to ID stage
     input                 ID_control_transfer_en,
+    input                 ID_illegal_trap,
 
     //---------------------------- HCU (Hazard Control Unit)
     input                 IF_stall,
@@ -121,6 +122,7 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 
     // Control
     .control_transfer_en       (ID_control_transfer_en),
+    .illegal_trap             (ID_illegal_trap),
 
     .concatenate_in_next_cycle (concatenate_in_next_cycle),
     .pause_to_concatenate      (pause_to_concatenate),

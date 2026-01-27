@@ -36,6 +36,7 @@ wire reset_n_sync;
 
 //Pause requests
 wire IF_pause_request;
+wire EX_pause_request;
 
 //Stage pauses
 wire pause_IF;
@@ -53,8 +54,8 @@ wire [XLEN-1:0] IF_PC_step;
 wire            mie;
 
 //Outpus generated
-wire             mepc_we;
-wire [XLEN-1:0]  PC_to_mepc;
+wire             interrupt_mepc_we;
+wire [XLEN-1:0]  interrupt_PC_to_mepc;
 
 // Outputs to HCU
 wire             interrupt_taken_natural;
@@ -195,7 +196,7 @@ wire [1:0] ID_sel_opa_EX;
 wire [1:0] ID_sel_opb_EX;
 
 //sel_op
-wire [4:0] ID_sel_op_EX;
+wire [5:0] ID_sel_op_EX;
 
 //mem_wr_en
 wire ID_mem_wr_en_EX;
@@ -250,6 +251,9 @@ wire EX_restore_mstatus_out_ID;
 wire ID_sleep_EX;
 wire EX_sleep_MEM;
 
+//illegal_trap
+wire ID_illegal_trap_IF;
+
 // ---------------------------------- Implementation of modules
 
 pause_handler u_pause_handler (
@@ -270,6 +274,7 @@ pause_handler u_pause_handler (
 
     //Pause requests
     .IF_pause_request   (IF_pause_request),
+    .EX_pause_request   (EX_pause_request),
     //Output to stages
     .pause_IF           (pause_IF),
     .pause_ID           (pause_ID),
@@ -316,6 +321,7 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
 
     //Control from/to ID stage
     .ID_control_transfer_en(ID_control_transfer_en_IF),
+    .ID_illegal_trap(ID_illegal_trap_IF),
 
     //---------------------------- HCU (Hazard Control Unit)
     .IF_stall(HCU_stall_IF),
@@ -334,8 +340,8 @@ ID #(.XLEN(XLEN)) u_ID (
     .acknowledge_irq0(acknowledge_irq0),
     .acknowledge_irq1(acknowledge_irq1),
 
-    .mepc_we(mepc_we),
-    .PC_to_mepc(PC_to_mepc),
+    .interrupt_mepc_we(interrupt_mepc_we),
+    .interrupt_PC_to_mepc(interrupt_PC_to_mepc),
     .mie(mie),
 
     //----------------------------IF_HK Stage
@@ -348,6 +354,7 @@ ID #(.XLEN(XLEN)) u_ID (
 
     //Control from/to IF_HK stage
     .IF_control_transfer_en(ID_control_transfer_en_IF),
+    .IF_illegal_trap(ID_illegal_trap_IF),
 
     //----------------------------EX Stage
     //Data from/to EX stage
@@ -415,6 +422,9 @@ EX #(.XLEN(XLEN)) u_EX (
     .clk(clk),
     .reset_n(reset_n),
     .pause(pause_EX),
+
+    //Control
+    .EX_pause_request(EX_pause_request),
 
     //----------------------------ID Stage
     //Data from/to ID stage
@@ -597,6 +607,7 @@ WB #(.XLEN(XLEN)) u_WB (
     .MEM_csr_we_out(WB_csr_we_out_MEM)
 );
 
+wire core_program_jump = ID_control_transfer_en_IF | ID_illegal_trap_IF;
 interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
     //Global
     .clk(clk),
@@ -614,13 +625,13 @@ interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
     .next_program_PC(IF_next_program_PC),
 
     //Control
-    .control_transfer_en(EX_control_transfer_en_ID),
+    .core_program_jump(core_program_jump),
     .next_stage_en(next_stage_en),
     .mie(mie),
 
     //Outputs to core
-    .mepc_we(mepc_we),
-    .PC_to_mepc(PC_to_mepc),
+    .interrupt_mepc_we(interrupt_mepc_we),
+    .interrupt_PC_to_mepc(interrupt_PC_to_mepc),
 
     //---------------------------------- Outputs to HCU
     .interrupt_taken_natural(interrupt_taken_natural)
@@ -630,6 +641,9 @@ interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
 HCU #(.XLEN(XLEN)) u_HCU (
     // Interrupt Handler
     .interrupt_taken_natural(interrupt_taken_natural),
+
+    //Illegal Instruction
+    .illegal_trap      (ID_illegal_trap_IF),
 
     // IF Stage
     .IF_stall_PC       (HCU_stall_PC_IF),

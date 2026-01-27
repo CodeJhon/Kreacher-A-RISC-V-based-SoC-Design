@@ -6,6 +6,9 @@ module EX #(parameter XLEN = 64)(
     input reset_n,
     input pause,
 
+    //Control
+    output                EX_pause_request,
+
     //----------------------------ID Stage
     //Data from/to ID stage
     input [XLEN-1:0]      ID_PC_step,
@@ -26,7 +29,7 @@ module EX #(parameter XLEN = 64)(
     //Control from/to ID stage
     input [1:0]           ID_sel_opa,
     input [1:0]           ID_sel_opb,
-    input [4:0]           ID_sel_op,
+    input [5:0]           ID_sel_op,
     input                 ID_regfile_we_in,
     input                 ID_jump,
     input                 ID_branch,
@@ -160,11 +163,22 @@ end
 //ALU
 wire [XLEN-1:0]  ALU_out;
 wire             branch_condition;
+wire             pause_to_calculate;
 ALU #(.XLEN(XLEN)) u_ALU (
+    //Global
+    .clk(clk),
+    .reset_n(reset_n),
+    .pause(pause),
+
+    //Operands & Operation Type
     .opa(ALU_opa),
     .opb(ALU_opb),
     .sel_operation(ID_sel_op),
+
+    //Control
+    .pause_to_calculate(pause_to_calculate),
     
+    //Results
     .branch_condition(branch_condition),
     .ALU_result(ALU_out)
 );
@@ -227,7 +241,7 @@ always @(posedge clk, negedge reset_n) begin
         MEM_valid_data_read   <= 0;
         MEM_valid_data_write  <= 0;
     end
-    else if(!pause) begin
+    else if(!pause && !pause_to_calculate) begin
         MEM_PC_step             <= ID_PC_step;
         MEM_exec_result      <= exec_result;
         MEM_RS2              <= RS2;
@@ -251,5 +265,8 @@ always @(posedge clk, negedge reset_n) begin
         MEM_valid_data_write  <= ID_valid_data_write;
     end
 end
+
+//Control
+assign EX_pause_request = pause_to_calculate;
 
 endmodule

@@ -8,10 +8,14 @@ module csr_bank  #(parameter XLEN = 64)(
     //Interrupt Handler
     input                 acknowledge_irq0,
     input                 acknowledge_irq1,
-
-    input                 mepc_we,
-    input [XLEN-1:0]      PC_to_mepc,
+    
+    input                 interrupt_mepc_we,
+    input      [XLEN-1:0] interrupt_PC_to_mepc,
     output                mie,
+
+    //Illegal Instruction 
+    input                 illegal_trap,
+    input      [XLEN-1:0] PC_illegal,
 
     //MRET signals
     input                 read_mepc,
@@ -84,9 +88,24 @@ localparam MTVEC = {//CSR construction
 
 //------------------------------------------------------------ Module implementation (Writable CSRs)
 
+//Writing mepc -> by interrupt or illegal instruction
+wire mepc_we = interrupt_mepc_we | illegal_trap;
+
+//Value of PC to be stored in mepc
+reg [XLEN-1:0] PC_to_mepc;
+always @(*) begin
+    PC_to_mepc = {XLEN{1'b0}};
+    //Interrupts have higher priority than illegal instructions
+    if(interrupt_mepc_we)
+        PC_to_mepc = interrupt_PC_to_mepc;
+    else if(illegal_trap)
+        PC_to_mepc = PC_illegal;
+end
+
 //CSR Writing
 wire trap_taken = acknowledge_irq0 | 
-                  acknowledge_irq1;
+                  acknowledge_irq1 | 
+                  illegal_trap;
 
 always @(posedge clk, negedge reset_n) begin
 
@@ -112,7 +131,9 @@ always @(posedge clk, negedge reset_n) begin
             if(acknowledge_irq0)
                 mcause <= `MCAUSE_IRQ0;
             else if(acknowledge_irq1)
-                mcause <= `MCAUSE_IRQ1;    
+                mcause <= `MCAUSE_IRQ1;
+            else if(illegal_trap)    
+                mcause <= `MCAUSE_ILLEGAL;
         end
 
         //-----------Writing done by the MRET instruction

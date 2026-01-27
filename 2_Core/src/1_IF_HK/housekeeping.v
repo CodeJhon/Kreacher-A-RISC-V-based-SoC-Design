@@ -12,6 +12,7 @@ module housekeeping #(parameter XLEN = 64)(
     
     //Control
     input                 control_transfer_en,
+    input                 illegal_trap,
 
     input                 concatenate_in_next_cycle,
     input                 pause_to_concatenate,
@@ -26,7 +27,7 @@ module housekeeping #(parameter XLEN = 64)(
 
     output reg [XLEN-1:0] PC,
     output reg [XLEN-1:0] PC_step,
-    output wire [XLEN-1:0] next_program_PC,
+    output reg [XLEN-1:0] next_program_PC,
 
     //---------------------------- HCU (Hazard Control Unit)
     input stall
@@ -41,7 +42,14 @@ always @(*) begin
 end
 
 //next PC (if only focused on the program, no external intervention)
-assign next_program_PC = control_transfer_en ? exec_result : PC_step;
+always @(*) begin
+    if(illegal_trap)
+        next_program_PC = `PC_ILLEGAL;
+    else if(control_transfer_en)
+        next_program_PC = exec_result;
+    else
+        next_program_PC = PC_step;
+end
 
 //next PC (considering external intervention)
 reg [XLEN-1:0] next_PC;
