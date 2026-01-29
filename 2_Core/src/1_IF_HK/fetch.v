@@ -52,7 +52,7 @@ extend_instruction u_extend_instr(
 );
 
 //--------------------------------------- Instruction to execute
-always @(*) begin
+always @( * ) begin
     if(concatenate_flag)
         canonical_instruction = {EIB_1, EIB_2_temp};
     else begin

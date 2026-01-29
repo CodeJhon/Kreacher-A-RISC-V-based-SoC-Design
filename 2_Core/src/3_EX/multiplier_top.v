@@ -23,7 +23,7 @@ module multiplier_top #(
 
 //Start signal
 reg start;
-always @(*) begin
+always @( * ) begin
     case (sel_operation)
         `ALU_MUL, `ALU_MULH, `ALU_MULW,
         `ALU_MULHU, `ALU_MULHSU:
@@ -36,7 +36,7 @@ end
 //Determining if operands are signed / unsigned -> Depending on the instructions
 reg rs1_is_signed;
 reg rs2_is_signed;
-always @(*) begin
+always @( * ) begin
     //Default values
     rs1_is_signed = 1'b0;
     rs2_is_signed = 1'b0;
@@ -59,7 +59,7 @@ end
 //Build of the multiplicand & multiplier
 reg signed [XLEN-1:0] multiplicand;
 reg signed [XLEN-1:0] multiplier;
-always @(*) begin
+always @( * ) begin
     if(sel_operation == `ALU_MULW)begin
         //Sign-extension of the lower 32 bits
         multiplicand = $signed(opa[31:0]);
@@ -96,7 +96,7 @@ radix_4_booth_multiplier #(.XLEN(XLEN)) radix_4_booth_multiplier_inst (
 );
 
 //Pause signal
-always @(*) begin
+always @( * ) begin
     pause_to_muliply = 1'b0;
     if(done)
         pause_to_muliply = 1'b0;

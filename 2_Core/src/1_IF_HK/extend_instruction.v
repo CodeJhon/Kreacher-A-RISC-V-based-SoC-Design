@@ -158,7 +158,7 @@ wire [11:0] imm_c_swsp_sdsp = {
 
 //NOTE -> Any ILLEGAL C-instructions will be sent to the ID stage as 32'h11111111 (To invalid opcode case)
 localparam ILLEGAL = 32'h11111111; 
-always @(*) begin
+always @( * ) begin
     //Pesimistic default assumption: Illegal
     extended_instruction = ILLEGAL;
     

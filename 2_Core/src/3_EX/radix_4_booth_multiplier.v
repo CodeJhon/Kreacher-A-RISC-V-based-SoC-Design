@@ -14,8 +14,8 @@ module radix_4_booth_multiplier #(
     input  wire rs2_is_signed,
 
     //Operands & Result
-    input  wire [XLEN-1:0] in_multiplicand,
-    input  wire [XLEN-1:0] in_multiplier, 
+    input  wire signed [XLEN-1:0] in_multiplicand,
+    input  wire signed [XLEN-1:0] in_multiplier, 
     output reg [P_XLEN-1:0] prod_result,
 
     //Output flags
@@ -54,7 +54,7 @@ end
 
 // Next state logic
 
-always @(*) begin
+always @( * ) begin
     busy               = 1'b0;
     done               = 1'b0;
     load_operands      = 1'b0;
@@ -107,7 +107,7 @@ reg [INTERNAL_LEN:0] B_shifting;
 
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
-        B_shifting <= {INTERNAL_LEN{1'b0}};
+        B_shifting <= {(INTERNAL_LEN+1){1'b0}};
     else if(!pause)begin
         if(load_operands)
             //Add an extra 0 at the LSB
@@ -128,16 +128,16 @@ localparam EXT_AMOUNT_PROD = P_XLEN - INTERNAL_LEN;
 wire [P_XLEN-1:0] pp_extended = 
     {{EXT_AMOUNT_PROD{partial_product[INTERNAL_LEN-1]}} , partial_product};
 
-always @(*) begin
+always @( * ) begin
     case (bit_group)
         3'b001, 3'b010: 
             partial_product = A_ext; // A 
         3'b011:
             partial_product = A_ext << 1; // 2A
         3'b101, 3'b110:
-            partial_product = ((~A_ext) + 1); // -A
+            partial_product = ((~A_ext) + {{(INTERNAL_LEN-2){1'b0}}, 2'd1}); // -A
         3'b100:
-            partial_product = (~(A_ext<<1) + 1); // -2A
+            partial_product = (~(A_ext<<1) + {{(INTERNAL_LEN-2){1'b0}}, 2'd1}); // -2A
         default: 
             partial_product = {INTERNAL_LEN{1'b0}}; //0
     endcase
@@ -148,12 +148,12 @@ reg [6:0] shift_amount;
 
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
-        shift_amount <= 6'd0;
+        shift_amount <= 7'd0;
     else if(!pause)begin
         if(clean_result)//Clean the result when finished
-            shift_amount <= 6'd0;
+            shift_amount <= 7'd0;
         else if(move_to_next_group)
-            shift_amount <= shift_amount + 6'd2;    
+            shift_amount <= shift_amount + 7'd2;    
     end
     
 end

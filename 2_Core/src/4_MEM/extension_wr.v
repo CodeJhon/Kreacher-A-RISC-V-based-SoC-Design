@@ -21,8 +21,8 @@ always @(extension_type, extend_in) begin
         `ZERO_EXTEND_16: extend_out = {{EXT_16{1'b0}},extend_in[15:0]};
         `ZERO_EXTEND_8:  extend_out = {{EXT_8{1'b0}},extend_in[7:0]};
 
-        `MEM_NOT_USED:   extend_out = 0;
-        default:         extend_out = 0; 
+        `MEM_NOT_USED:   extend_out = {XLEN{1'b0}};
+        default:         extend_out = {XLEN{1'b0}}; 
     endcase
 
 end

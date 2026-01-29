@@ -23,8 +23,8 @@ always @(imm_type, build_in) begin
         `U_IMMEDIATE:       build_out = {{EXTENSION_U{build_in[31]}},build_in[30:20],build_in[19:12],12'd0};
         `J_IMMEDIATE:       build_out = {{EXTENSION_J{build_in[31]}},build_in[19:12],build_in[20],build_in[30:25],build_in[24:21],1'b0};
         `ZICSR_IMMEDIATE:   build_out = {{EXTENSION_ZICSR{1'b0}}, build_in[19:15]};
-        `IMM_NOT_USED:      build_out = 0;
-        default:            build_out = 0;
+        `IMM_NOT_USED:      build_out = {XLEN{1'b0}};
+        default:            build_out = {XLEN{1'b0}};
     endcase
 end
 

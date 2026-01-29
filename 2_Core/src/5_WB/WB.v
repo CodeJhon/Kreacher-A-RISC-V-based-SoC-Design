@@ -30,14 +30,14 @@ module WB #(parameter XLEN = 64)(
     
 // ---------------------------------- Implementation of modules
 //Mux
-always @(*) begin
+always @( * ) begin
     case (MEM_sel_writeback)
         `WBACK_EXEC_RESULT:   MEM_RD = MEM_exec_result;
         `WBACK_PC_step:       MEM_RD = MEM_PC_step;
         `WBACK_EMDB:          MEM_RD = MEM_EMDB;
         `WBACK_CSR:           MEM_RD = MEM_csr_data_rd;
-        `WBACK_NONE:          MEM_RD = 0;
-        default:              MEM_RD = 0;
+        `WBACK_NONE:          MEM_RD = {XLEN{1'b0}};
+        default:              MEM_RD = {XLEN{1'b0}};
     endcase
 end
 
