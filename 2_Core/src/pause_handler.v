@@ -33,7 +33,7 @@ reg wake_up; //Delays the wake up for 1 cycle after the interrupt was pressed
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)  
         wake_up <= 1'b0;
-    else if(irq0_sync | irq1_sync)
+    else if(irq0_sync || irq1_sync)
         wake_up <= 1'b1;
     else
         wake_up <= 1'b0;

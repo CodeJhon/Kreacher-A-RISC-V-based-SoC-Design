@@ -30,8 +30,8 @@ module interrupt_handler #(parameter XLEN = 64, parameter WB = 3'd4)(// In pipel
 // ------------------------------------------------------------
 // Pipeline stages
 // ------------------------------------------------------------
-localparam IF  = 3'd0;
-localparam EX  = 3'd2;
+localparam S_IF  = 3'd0;
+localparam S_EX  = 3'd2;
 
 // ------------------------------------------------------------
 // FSM states
@@ -51,18 +51,18 @@ assign interrupt_active = irq0_sync | irq1_sync;
 reg [2:0] stage_tracker;
 reg [2:0] next_stage;
 //Next stage
-always @(*) begin
+always @( * ) begin
     next_stage = stage_tracker;
 
     if (state != S_TRACK)
-        next_stage = IF;
+        next_stage = S_IF;
     else if (next_stage_en)
         next_stage = stage_tracker + 3'd1;
 end
 //Stage tracker
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)
-        stage_tracker <= IF;
+        stage_tracker <= S_IF;
     else
         stage_tracker <= next_stage;
 end
@@ -78,7 +78,7 @@ assign take_forced  = // Force the finish of lifetime
     (state == S_TRACK) && 
     (
         core_program_jump &&
-        (stage_tracker <= EX)
+        (stage_tracker <= S_EX)
     );
 
 assign take_natural = (state == S_TRACK) && (next_stage >= WB); // Lifetime finished naturally
@@ -98,7 +98,7 @@ end
 // ------------------------------------------------------------
 // FSM next-state logic
 // ------------------------------------------------------------
-always @(*) begin
+always @( * ) begin
     next_state = state;
 
     case (state)
@@ -128,13 +128,13 @@ end
 // ------------------------------------------------------------
 // mepc saving logic
 // ------------------------------------------------------------
-always @(*) begin
+always @( * ) begin
     //Defaults
     interrupt_mepc_we = 1'b0;
     interrupt_PC_to_mepc = {XLEN{1'b0}};
 
-    // Initial probe at IF
-    if (state == S_TRACK && stage_tracker == IF && !core_program_jump)begin
+    // Initial probe at S_IF
+    if (state == S_TRACK && stage_tracker == S_IF && !core_program_jump)begin
             interrupt_PC_to_mepc = PC_step;
             interrupt_mepc_we = 1'b1;           
         end

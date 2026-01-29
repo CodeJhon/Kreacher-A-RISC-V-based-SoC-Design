@@ -144,7 +144,7 @@ always @(ID_sel_opa, RS1, ID_csr_data_rd) begin
     case (ID_sel_opa)
         `OPA_RS1: ALU_opa = RS1;
         `OPA_CSR: ALU_opa = csr_data_rd_masked;
-        default:  ALU_opa = 0;
+        default:  ALU_opa = {XLEN{1'b0}};
     endcase
 end
 
@@ -155,7 +155,7 @@ always @(ID_sel_opb, ID_imm, RS2, RS1) begin
         `OPB_IMM: ALU_opb = ID_imm;
         `OPB_RS2: ALU_opb = RS2;
         `OPB_RS1: ALU_opb = RS1;
-        default:  ALU_opb = 0;
+        default:  ALU_opb = {XLEN{1'b0}};
     endcase
 end
 

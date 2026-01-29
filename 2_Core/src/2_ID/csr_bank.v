@@ -93,7 +93,7 @@ wire mepc_we = interrupt_mepc_we | illegal_trap;
 
 //Value of PC to be stored in mepc
 reg [XLEN-1:0] PC_to_mepc;
-always @(*) begin
+always @( * ) begin
     PC_to_mepc = {XLEN{1'b0}};
     //Interrupts have higher priority than illegal instructions
     if(interrupt_mepc_we)
@@ -110,10 +110,10 @@ wire trap_taken = acknowledge_irq0 |
 always @(posedge clk, negedge reset_n) begin
 
     if(!reset_n)begin
-        mstatus_mie  <= 0;
-        mstatus_mpie <= 0;
-        mepc_reg     <= 0;
-        mcause       <= 0;
+        mstatus_mie  <= 1'b0;
+        mstatus_mpie <= 1'b0;
+        mepc_reg     <= {(XLEN-1){1'b0}};
+        mcause       <= {XLEN{1'b0}};
     end
     
     else begin
@@ -159,7 +159,7 @@ always @(posedge clk, negedge reset_n) begin
 end
 
 //CSR Reading
-always @(*)begin
+always @( * )begin
     //Default case
     csr_data_rd      = {XLEN{1'b0}};
 

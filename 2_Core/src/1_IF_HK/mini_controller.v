@@ -62,7 +62,7 @@ end
 assign pause_to_concatenate = rvi_higher & pointer & old_core_jump;
 
 // -> instruction type & related PC step
-always @(*) begin
+always @( * ) begin
     sel_PC_step  = 1'b0;//X
     instr_type   = 1'b0;//X
 

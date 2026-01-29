@@ -104,11 +104,11 @@ wire opa_equal_opb              = opa == opb;
 
 //Internal ALU result assignation
 reg signed [XLEN-1:0] internal_alu_result;
-always@(*) begin
+always@( * ) begin
     
     //Default values
-    internal_alu_result = 0;
-    branch_condition    = 0;
+    internal_alu_result = {XLEN{1'b0}};
+    branch_condition    = 1'b0;
 
     case(sel_operation)
         //----------------------------------------------------------------INTERNAL ALU RESULT
@@ -162,8 +162,8 @@ always@(*) begin
         `ALU_GEU:                branch_condition = ~opa_less_than_opb_unsigned;
         default: begin
             //Default values
-            internal_alu_result = 0;
-            branch_condition    = 0;
+            internal_alu_result = {XLEN{1'b0}};
+            branch_condition    = 1'b0;
         end                 
     endcase
 end

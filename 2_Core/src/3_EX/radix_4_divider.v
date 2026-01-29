@@ -29,14 +29,14 @@ module radix_4_divider#(
 wire a_neg = rs1_is_signed & dividend[XLEN-1];
 wire b_neg = rs2_is_signed & divisor[XLEN-1];
 
-wire [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 1'b1) : dividend;
-wire [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 1'b1) : divisor;
+wire [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 64'd1) : dividend;
+wire [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 64'd1) : divisor;
 
 wire q_neg = a_neg ^ b_neg;
 
 // ----------- FSM ----------------
-reg [2:0] state;
-reg [2:0] next_state;
+reg [1:0] state;
+reg [1:0] next_state;
 
 always@(posedge clk or negedge reset_n)begin //update state block
     if(!reset_n)begin
@@ -53,7 +53,7 @@ reg load_operands;
 reg iteration_en;
 
 //Count register
-reg [$clog2(XLEN+1)-1:0] count_reg;
+reg [5:0] count_reg;
 
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
@@ -62,15 +62,15 @@ always @(posedge clk, negedge reset_n) begin
         if(clear_result)
             count_reg <= XLEN;
         else if(iteration_en)
-            count_reg <= count_reg - 2;
+            count_reg <= count_reg - 6'd2;
     end
 end
 
 //Next-State Logic
-always@(*)begin 
+always@( * )begin 
     //Default
-    busy = 0;
-    done = 0;
+    busy = 1'b0;
+    done = 1'b0;
     clear_result = 1'b0;
     load_operands = 1'b0;
     iteration_en = 1'b0;
@@ -83,19 +83,19 @@ always@(*)begin
                 next_state = `S_LOAD;
          end
         `S_LOAD:begin
-            busy = 1;
+            busy = 1'b1;
             load_operands = 1'b1;
             next_state = `S_ITERATE;
          end
         `S_ITERATE:begin
-            busy = 1;
+            busy = 1'b1;
             iteration_en = 1'b1;
             if(count_reg <= 2)begin
                 next_state = `S_DONE;
             end
          end
         `S_DONE:begin
-            done = 1;
+            done = 1'b1;
             clear_result = 1'b1;
             next_state = `S_IDLE;
          end
@@ -129,10 +129,10 @@ wire [XLEN+1:0] divisor3 = divisor1 + divisor2;
 
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
-            remainder_reg <= {(XLEN+1){1'b0}};
+            remainder_reg <= {(XLEN+2){1'b0}};
     else if(!pause)begin
         if(clear_result)
-            remainder_reg <= {(XLEN+1){1'b0}};
+            remainder_reg <= {(XLEN+2){1'b0}};
         else if (iteration_en) begin
             if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor3}))
                 remainder_reg <= rem_shifted - divisor3;
@@ -156,13 +156,13 @@ always @(posedge clk, negedge reset_n) begin
             quotient_reg  <= {(XLEN){1'b0}};
         else if (iteration_en) begin
             if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor3}))
-                quotient_reg <= (quotient_reg << 2) | 2'd3;//11
+                quotient_reg <= (quotient_reg << 2) | 64'd3;//11
             else if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor2}))
-                quotient_reg <= (quotient_reg << 2) | 2'd2;//10
+                quotient_reg <= (quotient_reg << 2) | 64'd2;//10
             else if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor1}))
-                quotient_reg <= (quotient_reg << 2) | 2'd1;//01
+                quotient_reg <= (quotient_reg << 2) | 64'd1;//01
             else
-                quotient_reg <= (quotient_reg << 2) | 2'd0; //00
+                quotient_reg <= (quotient_reg << 2) | 64'd0; //00
         end
     end
 end
@@ -173,10 +173,10 @@ wire [XLEN:0]   remainder_mag = remainder_reg;
 
 // sign-fix (2's complement)
 wire [XLEN-1:0] quotient_fix =
-    q_neg ? (~quotient_mag + 1'b1) : quotient_mag;
+    q_neg ? (~quotient_mag + 64'd1) : quotient_mag;
 
 wire [XLEN:0] remainder_fix =
-    a_neg ? (~remainder_mag + 1'b1) : remainder_mag;
+    a_neg ? (~remainder_mag + 65'd1) : remainder_mag;
 
 //------------------------------- Output assignation
 assign remainder = remainder_fix[XLEN-1:0];

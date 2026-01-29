@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 
-module tb_core;
+module tb_core_and_mem;
 
   // Parameters
   localparam XLEN = 64;
-  localparam CLK_PERIOD_NS = 10;           
+  localparam CLK_PERIOD_NS = 20;           
   localparam RESET_CYCLES = 2;            
   localparam MAX_COMMITS = 10000;       
   localparam ECALL_INSTR = 32'h7ff0801b;   

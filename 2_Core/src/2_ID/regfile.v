@@ -32,7 +32,7 @@ reg [XLEN-1:0] regfile_bank [31:0];
 always@(posedge clk, negedge reset_n)begin
     if(!reset_n)begin
         for(i=0;i<=31;i=i+1)begin
-            regfile_bank[i] <= 0;
+            regfile_bank[i] <= {XLEN{1'b0}};
         end
     end
     else if(regfile_we && RD_addr != 5'd0) 

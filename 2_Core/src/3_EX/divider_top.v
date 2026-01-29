@@ -25,7 +25,7 @@ wire signed [XLEN-1:0] divisor = opb;
 //Determining if operands are signed / unsigned -> Depending on the instruction
 reg rs1_is_signed;
 reg rs2_is_signed;
-always @(*) begin
+always @( * ) begin
     //Default values
     rs1_is_signed = 1'b0;
     rs2_is_signed = 1'b0;
@@ -51,7 +51,7 @@ wire flag_quick_result =    flag_result_one         |
                             flag_division_by_zero   |
                             flag_result_zero;
 
-always @(*) begin
+always @( * ) begin
     flag_division_by_zero  = 1'b0;
     flag_result_zero       = 1'b0;
     flag_result_one        = 1'b0;
@@ -66,7 +66,7 @@ end
 
 //Start signal
 reg start;
-always @(*) begin
+always @( * ) begin
     start = 1'b0;
     if(!flag_quick_result)begin
         case (sel_operation)
@@ -111,7 +111,7 @@ radix_4_divider #(.XLEN(64)) radix_4_divider_inst (
 
 //Remainder result
 wire instr_is_rem_signed = (sel_operation == `ALU_REM || sel_operation == `ALU_REMW);
-always @(*) begin
+always @( * ) begin
     //Default value
     remainder_result = remainder;
 
@@ -127,7 +127,7 @@ end
 
 //Quotient result
 wire instr_is_div_signed = (sel_operation == `ALU_DIV || sel_operation == `ALU_DIVW);
-always @(*) begin
+always @( * ) begin
     //Default value
     quotient_result = quotient;
     
@@ -143,7 +143,7 @@ always @(*) begin
 end
 
 //Pause signal
-always @(*) begin
+always @( * ) begin
     pause_to_divide = 1'b0;
     if(done)
         pause_to_divide = 1'b0;

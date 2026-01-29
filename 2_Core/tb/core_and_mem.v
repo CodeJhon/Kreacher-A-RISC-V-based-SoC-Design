@@ -46,7 +46,7 @@ assign irq1_sync = irq1_ff2;
 
 wire valid_instr_fetch;
 
-core #(.XLEN(XLEN)) core_inst (
+core core_inst (
     .clk(clk), 
     .reset_n(reset_n),
     

@@ -34,7 +34,7 @@ module housekeeping #(parameter XLEN = 64)(
 );
 
 //PC_step
-always @(*) begin
+always @( * ) begin
     case (sel_PC_step)
         `PC_STEP_4: PC_step = PC + 64'd4;
         `PC_STEP_2: PC_step = PC + 64'd2;
@@ -42,7 +42,7 @@ always @(*) begin
 end
 
 //next PC (if only focused on the program, no external intervention)
-always @(*) begin
+always @( * ) begin
     if(illegal_trap)
         next_program_PC = `PC_ILLEGAL;
     else if(control_transfer_en)
@@ -53,7 +53,7 @@ end
 
 //next PC (considering external intervention)
 reg [XLEN-1:0] next_PC;
-always @(*) begin
+always @( * ) begin
     if(pause || pause_to_concatenate || stall)
             next_PC = PC;
     else begin
@@ -73,7 +73,7 @@ always@(posedge clk, negedge reset_n)begin
 end
 
 //Output to EIAB
-wire [XLEN-1:0] to_EIAB = concatenate_in_next_cycle ? (next_PC + 2) : next_PC; // <- extra +2 needed to go to next row and concatenate
+wire [XLEN-1:0] to_EIAB = concatenate_in_next_cycle ? (next_PC + {{(XLEN-2){1'b0}}, 2'd2}) : next_PC; // <- extra +2 needed to go to next row and concatenate
 
 assign EIAB = to_EIAB[16:0];
 

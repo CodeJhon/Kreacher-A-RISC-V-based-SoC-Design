@@ -77,7 +77,7 @@ assign illegal_instr =  ~pause & (
                         invalid_csr_write);
 
 
-always@(*)begin
+always@( * )begin
     is_privileged      = 1'b0;
 
     // Default internal reasons of Illegal instr
@@ -164,8 +164,6 @@ always@(*)begin
                         `SLL_MULH:           sel_op = `ALU_MULH;
                         `SHIFT_RIGHT_DIVU:   sel_op = `ALU_DIVU;
                         `ADD_SUB_MUL:        sel_op = `ALU_MUL;
-                        default:
-                            invalid_alu_op = 1'b1;
                     endcase
                 end
                 
@@ -190,8 +188,6 @@ always@(*)begin
                             else
                                               sel_op = `ALU_ADD;
                         end
-                        default:
-                            invalid_alu_op = 1'b1;
                     endcase
                 end
             end
@@ -268,8 +264,6 @@ always@(*)begin
                     `ORI:       sel_op = `ALU_OR;
                     `SLLI:      sel_op = `ALU_SLL;
                     `SRLI_SRAI: sel_op = imm_I_10 ? `ALU_SRA : `ALU_SRL;
-                    default:
-                        invalid_alu_op = 1'b1;
                 endcase
             end
 
@@ -394,8 +388,14 @@ always@(*)begin
                         csr_we = `ENABLE;
 
                         //CSR read -> Regfile write
-                        if(RD_addr != 0) {csr_re, regfile_we} = {2{`ENABLE}};
-                        else             {csr_re, regfile_we} = {2{`DISABLE}};
+                        if(RD_addr != 5'd0)begin
+                            csr_re     = `ENABLE;
+                            regfile_we = `ENABLE;
+                        end 
+                        else begin
+                            csr_re     = `DISABLE;
+                            regfile_we = `DISABLE;
+                        end
                     end
                     `CSRRS: begin
                         sel_opb = `OPB_RS1;
@@ -403,11 +403,12 @@ always@(*)begin
                         
                         //-----------------Writing/Reading
                         //CSR write
-                        if(uimm_RS1_addr != 0) csr_we = `ENABLE;
+                        if(uimm_RS1_addr != 5'd0) csr_we = `ENABLE;
                         else              csr_we = `DISABLE;
                         
                         //CSR read -> Regfile write
-                        {csr_re, regfile_we} = {2{`ENABLE}};
+                        csr_re     = `ENABLE;
+                        regfile_we = `ENABLE;
                     end
                     `CSRRC: begin
                         sel_opb = `OPB_RS1;
@@ -415,11 +416,12 @@ always@(*)begin
                         
                         //-----------------Writing/Reading
                         //CSR write
-                        if(uimm_RS1_addr != 0) csr_we = `ENABLE;
+                        if(uimm_RS1_addr != 5'd0) csr_we = `ENABLE;
                         else              csr_we = `DISABLE;
                         
                         //CSR read -> Regfile write
-                        {csr_re, regfile_we} = {2{`ENABLE}};
+                        csr_re     = `ENABLE;
+                        regfile_we = `ENABLE;
                     end
 
                     `CSRRWI: begin
@@ -431,8 +433,14 @@ always@(*)begin
                         csr_we = `ENABLE;
 
                         //CSR read -> Regfile write
-                        if(RD_addr != 0) {csr_re, regfile_we} = {2{`ENABLE}};
-                        else             {csr_re, regfile_we} = {2{`DISABLE}};
+                        if(RD_addr != 5'd0)begin
+                            csr_re     = `ENABLE;
+                            regfile_we = `ENABLE;
+                        end 
+                        else begin
+                            csr_re     = `DISABLE;
+                            regfile_we = `DISABLE;
+                        end
                     end
                     `CSRRSI: begin
                         sel_opb = `OPB_IMM;
@@ -440,11 +448,12 @@ always@(*)begin
                         
                         //-----------------Writing/Reading
                         //CSR write
-                        if(uimm_RS1_addr != 0) csr_we = `ENABLE;
+                        if(uimm_RS1_addr != 5'd0) csr_we = `ENABLE;
                         else              csr_we = `DISABLE;
                         
                         //CSR read -> Regfile write
-                        {csr_re, regfile_we} = {2{`ENABLE}};
+                        csr_re     = `ENABLE;
+                        regfile_we = `ENABLE;
                     end
                     `CSRRCI: begin
                         sel_opb = `OPB_IMM;
@@ -452,11 +461,12 @@ always@(*)begin
                         
                         //-----------------Writing/Reading
                         //CSR write
-                        if(uimm_RS1_addr != 0) csr_we = `ENABLE;
+                        if(uimm_RS1_addr != 5'd0) csr_we = `ENABLE;
                         else              csr_we = `DISABLE;
                         
                         //CSR read -> Regfile write
-                        {csr_re, regfile_we} = {2{`ENABLE}};
+                        csr_re     = `ENABLE;
+                        regfile_we = `ENABLE;
                     end
                     default:
                         invalid_csr_op = 1'b1;
@@ -465,7 +475,10 @@ always@(*)begin
                 //Checking for legal reads (Only supported CSRs)
                 if(csr_re)begin
                     case (csr_addr)
-                        `MSTATUS_ADDR, `MISA_ADDR, `MTVEC_ADDR, `MEPC_ADDR, `MCAUSE_ADDR:;
+                        //Legal
+                        `MSTATUS_ADDR, `MISA_ADDR, `MTVEC_ADDR, `MEPC_ADDR, `MCAUSE_ADDR:
+                            invalid_csr_read = 1'b0;
+                        //Illegal
                         default: 
                             invalid_csr_read = 1'b1;
                     endcase
@@ -474,7 +487,10 @@ always@(*)begin
                 //Checking for legal writes (Only Read/Write CSRs, not Read-Only)
                 if(csr_we)begin
                     case (csr_addr)
-                        `MSTATUS_ADDR, `MEPC_ADDR, `MCAUSE_ADDR:;
+                        //Legal
+                        `MSTATUS_ADDR, `MEPC_ADDR, `MCAUSE_ADDR:
+                            invalid_csr_read = 1'b0;
+                        //Illegal
                         default: 
                             invalid_csr_write = 1'b1;
                     endcase
