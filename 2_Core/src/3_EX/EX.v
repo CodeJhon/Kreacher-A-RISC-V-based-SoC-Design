@@ -101,29 +101,29 @@ module EX #(parameter XLEN = 64)(
 //Bypass Muxes for RS1 & RS2 (left  muxes)
 reg  [XLEN-1:0]  RS1;
 reg  [XLEN-1:0]  RS2;
-always @(HCU_sel_RS1, HCU_sel_RS2, ID_RS1, ID_RS2, MEM_FW_exec_result, MEM_RD) begin
+always @( * ) begin
     case (HCU_sel_RS1)
         `HCU_NO_BYPASS:  RS1 = ID_RS1;
         `HCU_BYPASS_MEM: RS1 = MEM_FW_exec_result;
         `HCU_BYPASS_WB:  RS1 = MEM_RD;
-        default:         RS1 = 0;
+        default:         RS1 = {XLEN{1'b0}};
     endcase
     case (HCU_sel_RS2)
         `HCU_NO_BYPASS:  RS2 = ID_RS2;
         `HCU_BYPASS_MEM: RS2 = MEM_FW_exec_result;
         `HCU_BYPASS_WB:  RS2 = MEM_RD;
-        default:         RS2 = 0;
+        default:         RS2 = {XLEN{1'b0}};
     endcase
 end
 
 //Bypass Mux for csr_data_rd
 reg [XLEN-1:0] csr_data_rd;
-always @(HCU_sel_csr_data_rd, ID_csr_data_rd, MEM_FW_exec_result, MEM_csr_data_wr) begin
+always @( * ) begin
     case (HCU_sel_csr_data_rd)
         `HCU_NO_BYPASS:  csr_data_rd = ID_csr_data_rd;
         `HCU_BYPASS_MEM: csr_data_rd = MEM_FW_exec_result;
         `HCU_BYPASS_WB:  csr_data_rd = MEM_csr_data_wr;
-        default:         csr_data_rd = 0;
+        default:         csr_data_rd = {XLEN{1'b0}};
     endcase
 end
 
@@ -140,7 +140,7 @@ csr_mask #(.XLEN(64)) u_csr_mask (
 
 //Mux opa
 reg [XLEN-1:0]  ALU_opa;
-always @(ID_sel_opa, RS1, ID_csr_data_rd) begin
+always @( * ) begin
     case (ID_sel_opa)
         `OPA_RS1: ALU_opa = RS1;
         `OPA_CSR: ALU_opa = csr_data_rd_masked;
@@ -150,7 +150,7 @@ end
 
 reg  [XLEN-1:0]  ALU_opb;
 //Mux opb
-always @(ID_sel_opb, ID_imm, RS2, RS1) begin
+always @( * ) begin
     case (ID_sel_opb)
         `OPB_IMM: ALU_opb = ID_imm;
         `OPB_RS2: ALU_opb = RS2;
@@ -190,7 +190,7 @@ assign PC_plus_imm = ID_imm + ID_PC;
 //Mux exec_result
 reg [XLEN-1:0] exec_result;
 
-always @(ID_sel_exec_result, ALU_out, PC_plus_imm) begin
+always @( * ) begin
     exec_result = ALU_out;
     case (ID_sel_exec_result)
         `exec_result_ALU:          exec_result = ALU_out;
@@ -216,54 +216,66 @@ assign ID_restore_mstatus_out = ID_restore_mstatus_in;
 assign ID_csr_data_wr       = MEM_csr_data_wr;
 assign ID_csr_addr_wr_out   = MEM_csr_addr_wr_in;
 
+task clear_ex_stage;
+begin
+    MEM_PC_step          <= {XLEN{1'd0}};
+    MEM_exec_result      <= {XLEN{1'd0}};
+    MEM_RS2              <= {XLEN{1'd0}};
+    MEM_RD_addr_out      <= 5'd0;
+    MEM_csr_data_rd      <= {XLEN{1'd0}};
+    MEM_csr_we_out       <= 1'd0;
+    MEM_sleep            <= 1'd0;
+    MEM_csr_addr_wr_out  <= 12'd0;
+
+    MEM_mem_wr_en        <= 1'd0;
+    MEM_val_rd_type      <= 3'd0;
+    MEM_val_wr_type      <= 3'd0;
+    MEM_result_type      <= 1'd0;
+
+    MEM_regfile_we_out   <= 1'd0;
+
+    MEM_sel_writeback    <= 3'd0;
+
+    //Flags
+    MEM_valid_data_read   <= 1'd0;
+    MEM_valid_data_write  <= 1'd0;
+end
+endtask
+
+task write_ex_stage;
+begin
+    MEM_PC_step             <= ID_PC_step;
+    MEM_exec_result      <= exec_result;
+    MEM_RS2              <= RS2;
+    MEM_RD_addr_out      <= ID_RD_addr_in;
+    MEM_csr_data_rd      <= csr_data_rd_masked;
+    MEM_csr_we_out       <= ID_csr_we_in;
+    MEM_sleep            <= ID_sleep;
+    MEM_csr_addr_wr_out  <= ID_csr_addr_wr_in;
+
+    MEM_mem_wr_en        <= ID_mem_wr_en;
+    MEM_val_rd_type      <= ID_val_rd_type;
+    MEM_val_wr_type      <= ID_val_wr_type;
+    MEM_result_type      <= ID_result_type;
+
+    MEM_regfile_we_out   <= ID_regfile_we_in;
+
+    MEM_sel_writeback    <= ID_sel_writeback;
+
+    //Flags
+    MEM_valid_data_read   <= ID_valid_data_read;
+    MEM_valid_data_write  <= ID_valid_data_write;
+end
+endtask
+
 //MEM
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n || EX_flush)begin
-        MEM_PC_step             <= 0;
-        MEM_exec_result      <= 0;
-        MEM_RS2              <= 0;
-        MEM_RD_addr_out      <= 0;
-        MEM_csr_data_rd      <= 0;
-        MEM_csr_we_out       <= 0;
-        MEM_sleep            <= 0;
-        MEM_csr_addr_wr_out  <= 0;
-
-        MEM_mem_wr_en        <= 0;
-        MEM_val_rd_type      <= 0;
-        MEM_val_wr_type      <= 0;
-        MEM_result_type      <= 0;
-
-        MEM_regfile_we_out   <= 0;
-
-        MEM_sel_writeback    <= 0;
-
-        //Flags
-        MEM_valid_data_read   <= 0;
-        MEM_valid_data_write  <= 0;
-    end
-    else if(!pause && !pause_to_calculate) begin
-        MEM_PC_step             <= ID_PC_step;
-        MEM_exec_result      <= exec_result;
-        MEM_RS2              <= RS2;
-        MEM_RD_addr_out      <= ID_RD_addr_in;
-        MEM_csr_data_rd      <= csr_data_rd_masked;
-        MEM_csr_we_out       <= ID_csr_we_in;
-        MEM_sleep            <= ID_sleep;
-        MEM_csr_addr_wr_out  <= ID_csr_addr_wr_in;
-
-        MEM_mem_wr_en        <= ID_mem_wr_en;
-        MEM_val_rd_type      <= ID_val_rd_type;
-        MEM_val_wr_type      <= ID_val_wr_type;
-        MEM_result_type      <= ID_result_type;
-
-        MEM_regfile_we_out   <= ID_regfile_we_in;
-
-        MEM_sel_writeback    <= ID_sel_writeback;
-
-        //Flags
-        MEM_valid_data_read   <= ID_valid_data_read;
-        MEM_valid_data_write  <= ID_valid_data_write;
-    end
+    if(!reset_n)
+        clear_ex_stage;
+    else if(EX_flush)
+        clear_ex_stage;
+    else if(!pause && !pause_to_calculate)
+        write_ex_stage;
 end
 
 //Control

@@ -99,32 +99,42 @@ assign EX_csr_we_out        = WB_csr_we_in;
 assign EX_csr_data_wr       = WB_csr_data_wr;
 assign EX_csr_addr_wr_out   = WB_csr_addr_wr_in;
 
+task clear_mem_stage;
+begin
+    WB_PC_step           <= {XLEN{1'd0}};
+    WB_exec_result       <= {XLEN{1'd0}};
+    WB_EMDB              <= {XLEN{1'd0}};
+    WB_RD_addr_out       <= 5'd0;
+
+    WB_regfile_we_out    <= 1'd0;
+    WB_sel_writeback     <= 3'd0;
+    WB_csr_we_out        <= 1'd0;
+    WB_csr_data_rd       <= {XLEN{1'd0}};
+    WB_csr_addr_wr_out   <= 12'd0;
+end
+endtask
+
+task write_mem_stage;
+begin
+    WB_PC_step              <= EX_PC_step;
+    WB_exec_result       <= exec_result;
+    WB_EMDB              <= EMDB_in_extended;
+    WB_RD_addr_out       <= EX_RD_addr_in;
+
+    WB_regfile_we_out    <= EX_regfile_we_in;
+    WB_sel_writeback     <= EX_sel_writeback;
+    WB_csr_we_out        <= EX_csr_we_in;
+    WB_csr_data_rd       <= EX_csr_data_rd;
+    WB_csr_addr_wr_out   <= EX_csr_addr_wr_in;
+end
+endtask
+
 //WB
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n)begin
-        WB_PC_step              <= 0;
-        WB_exec_result       <= 0;
-        WB_EMDB              <= 0;
-        WB_RD_addr_out       <= 0;
-
-        WB_regfile_we_out    <= 0;
-        WB_sel_writeback     <= 0;
-        WB_csr_we_out        <= 0;
-        WB_csr_data_rd       <= 0;
-        WB_csr_addr_wr_out   <= 0;
-    end
-    else if(!pause) begin
-        WB_PC_step              <= EX_PC_step;
-        WB_exec_result       <= exec_result;
-        WB_EMDB              <= EMDB_in_extended;
-        WB_RD_addr_out       <= EX_RD_addr_in;
-
-        WB_regfile_we_out    <= EX_regfile_we_in;
-        WB_sel_writeback     <= EX_sel_writeback;
-        WB_csr_we_out        <= EX_csr_we_in;
-        WB_csr_data_rd       <= EX_csr_data_rd;
-        WB_csr_addr_wr_out   <= EX_csr_addr_wr_in;
-    end
+    if(!reset_n)
+        clear_mem_stage;
+    else if(!pause)
+        write_mem_stage;
 end
 
 

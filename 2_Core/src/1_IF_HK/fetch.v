@@ -35,7 +35,9 @@ wire [15:0] EIB_2 = EIB[31:16];
 //         - stores the upper part of EIB; can be either RVC or 1_RVI
 reg  [15:0] EIB_2_temp;
 always @(posedge clk, negedge reset_n) begin    
-    if(!reset_n || flush)               EIB_2_temp <= 16'd0;
+    if(!reset_n)                        EIB_2_temp <= 16'd0;
+    
+    else if(flush)                      EIB_2_temp <= 16'd0;
     else if(!pause && !stall) begin
         //Stores in temporal register if the lower 16 bits are a C instruction, or if you need to concatenate your lower 16 bits
         if(concatenate_in_next_cycle)   EIB_2_temp <= EIB[31:16];

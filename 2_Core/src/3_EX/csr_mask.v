@@ -30,7 +30,7 @@ wire [XLEN-1:0] mepc_mask   =   {in_raw[XLEN-1:1] , 1'b0}; // always mepc[0] = 0
 
 localparam MCAUSE_MASK      = {1'b0, 63'd2}; //MCause: Illegal instruction
 
-always @(*) begin
+always @( * ) begin
     case (csr_addr)
         `MSTATUS_ADDR: 
             out_masked = mstatus_mask;

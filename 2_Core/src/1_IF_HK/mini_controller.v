@@ -53,8 +53,9 @@ assign concatenate_in_next_cycle = ~core_jump & ((rvi_higher & ~rvi_lower & ~poi
 
 // -> concatenate flag 
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n || flush)           concatenate_flag <= 1'b0;
-
+    if(!reset_n)                    concatenate_flag <= 1'b0;
+    
+    else if(flush)                  concatenate_flag <= 1'b0;
     else if(!pause && !stall)       concatenate_flag <= concatenate_in_next_cycle;
 end
 

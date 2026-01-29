@@ -145,18 +145,30 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
 );
 
 // ------------------------------------- Connection to adjacent stage(s)
+
+task clear_if_stage;
+begin
+    ID_PC                      <= {XLEN{1'd0}};
+    ID_PC_step                 <= {XLEN{1'd0}};
+    ID_canonical_instruction   <= 32'd0;
+end
+endtask
+
+task write_if_stage;
+begin
+    ID_PC                      <= PC;
+    ID_PC_step                 <= PC_step;
+    ID_canonical_instruction   <= canonical_instruction;
+end
+endtask
 //ID
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n || IF_flush) begin
-        ID_PC                      <= 0;
-        ID_PC_step                    <= 0;
-        ID_canonical_instruction   <= 0;
-    end
-    else if(!pause && !IF_stall && !pause_to_concatenate) begin
-        ID_PC                      <= PC;
-        ID_PC_step                    <= PC_step;
-        ID_canonical_instruction   <= canonical_instruction;
-    end
+    if(!reset_n)
+        clear_if_stage;
+    else if (IF_flush)
+        clear_if_stage;
+    else if(!pause && !IF_stall && !pause_to_concatenate)
+        write_if_stage;
 end
 
 

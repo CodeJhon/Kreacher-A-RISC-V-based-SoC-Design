@@ -198,12 +198,12 @@ always @(regfile_RS1, regfile_RS2, EX_RD, ID_sel_RS1, ID_sel_RS2) begin
     case (ID_sel_RS1)
         `HCU_NO_BYPASS: RS1 = regfile_RS1;
         `HCU_BYPASS_WB: RS1 = EX_RD;
-        default:        RS1 = 0;
+        default:        RS1 = {XLEN{1'd0}};
     endcase
     case (ID_sel_RS2)
         `HCU_NO_BYPASS: RS2 = regfile_RS2;
         `HCU_BYPASS_WB: RS2 = EX_RD;
-        default:        RS2 = 0;
+        default:        RS2 = {XLEN{1'd0}};
     endcase
 end
 
@@ -259,7 +259,7 @@ always @(ID_sel_csr_data_rd, csr_bank_data_rd, EX_csr_data_wr) begin
     case (ID_sel_csr_data_rd)
         `HCU_NO_BYPASS: csr_data_rd = csr_bank_data_rd;
         `HCU_BYPASS_WB: csr_data_rd = EX_csr_data_wr;
-        default:        csr_data_rd = 0;
+        default:        csr_data_rd = {XLEN{1'd0}};
     endcase
 end
 
@@ -269,85 +269,97 @@ assign IF_exec_result       = EX_exec_result;
 assign IF_control_transfer_en       = EX_control_transfer_en;
 assign IF_illegal_trap     = illegal_trap;
 
+task clear_id_stage;
+begin
+        //Flags / Internal 
+    instr_valid         <= 1'd0;
+        //Data
+    EX_PC_step           <= {XLEN{1'd0}};
+    EX_PC                <= {XLEN{1'd0}};
+    EX_RS1               <= {XLEN{1'd0}};
+    EX_RS2               <= {XLEN{1'd0}};
+    EX_RD_addr_out       <= 5'd0;
+    EX_imm               <= {XLEN{1'd0}};
+    EX_csr_data_rd       <= {XLEN{1'd0}};
+    EX_csr_addr_wr_out   <= 12'd0;
+        //Control
+    EX_sel_opa           <= 2'd0;
+    EX_sel_opb           <= 2'd0;
+    EX_sel_op            <= 6'd0;
+    EX_regfile_we_out    <= 1'd0;
+    EX_jump              <= 1'd0;
+    EX_branch            <= 1'd0;
+    EX_sel_exec_result   <= 1'd0;
+    EX_csr_we_out        <= 1'd0;
+    EX_restore_mstatus_out <= 1'd0;
+
+    EX_mem_wr_en         <= 1'd0;
+    EX_val_rd_type       <= 3'd0;
+    EX_val_wr_type       <= 3'd0;
+    EX_result_type       <= 1'd0;
+    EX_sleep             <= 1'd0;
+
+    EX_sel_writeback     <= 3'd0; 
+
+    //Flags
+    EX_valid_data_read   <= 1'd0;
+    EX_valid_data_write  <= 1'd0;
+end
+endtask
+
+task write_id_stage;
+begin
+        //Flags / Internal 
+    instr_valid          <= 1'b1;
+        //Data
+    EX_PC_step              <= IF_PC_step;
+    EX_PC                <= IF_PC;
+    EX_RS1               <= RS1;
+    EX_RS2               <= RS2;
+    EX_RD_addr_out       <= IF_canonical_instruction[11:7];
+    EX_imm               <= imm;
+    EX_csr_data_rd       <= csr_data_rd;
+    EX_csr_addr_wr_out   <= IF_canonical_instruction[31:20];
+        //Control
+    EX_sel_opa           <= sel_opa;
+    EX_sel_opb           <= sel_opb;
+    EX_sel_op            <= sel_op;
+    EX_regfile_we_out    <= regfile_we;
+    EX_jump              <= jump;
+    EX_branch            <= branch;
+    EX_sel_exec_result   <= sel_exec_result;
+    EX_csr_we_out        <= csr_we;
+    EX_restore_mstatus_out <= restore_mstatus;
+
+    EX_mem_wr_en         <= mem_wr_en;
+    EX_val_rd_type       <= val_rd_type;
+    EX_val_wr_type       <= val_wr_type;
+    EX_result_type       <= result_type;
+    EX_sleep             <= sleep;
+
+    EX_sel_writeback     <= sel_writeback;
+
+    //Flags
+    EX_valid_data_read   <= valid_data_read;
+    EX_valid_data_write  <= valid_data_write;
+end
+endtask
+
 //EX
 always @(posedge clk, negedge reset_n) begin
-    if(!reset_n || ID_flush)begin
-            //Flags / Internal 
-        instr_valid         <= 0;
-            //Data
-        EX_PC_step              <= 0;
-        EX_PC                <= 0;
-        EX_RS1               <= 0;
-        EX_RS2               <= 0;
-        EX_RD_addr_out       <= 0;
-        EX_imm               <= 0;
-        EX_csr_data_rd       <= 0;
-        EX_csr_addr_wr_out   <= 0;
-            //Control
-        EX_sel_opa           <= 0;
-        EX_sel_opb           <= 0;
-        EX_sel_op            <= 0;
-        EX_regfile_we_out    <= 0;
-        EX_jump              <= 0;
-        EX_branch            <= 0;
-        EX_sel_exec_result   <= 0;
-        EX_csr_we_out        <= 0;
-        EX_restore_mstatus_out <= 0;
-
-        EX_mem_wr_en         <= 0;
-        EX_val_rd_type       <= 0;
-        EX_val_wr_type       <= 0;
-        EX_result_type       <= 0;
-        EX_sleep             <= 0;
-
-        EX_sel_writeback     <= 0; 
-
-        //Flags
-        EX_valid_data_read   <= 0;
-        EX_valid_data_write  <= 0;
-    end
-    else if(!pause) begin
-            //Flags / Internal 
-        instr_valid          <= 1'b1;
-            //Data
-        EX_PC_step              <= IF_PC_step;
-        EX_PC                <= IF_PC;
-        EX_RS1               <= RS1;
-        EX_RS2               <= RS2;
-        EX_RD_addr_out       <= IF_canonical_instruction[11:7];
-        EX_imm               <= imm;
-        EX_csr_data_rd       <= csr_data_rd;
-        EX_csr_addr_wr_out   <= IF_canonical_instruction[31:20];
-            //Control
-        EX_sel_opa           <= sel_opa;
-        EX_sel_opb           <= sel_opb;
-        EX_sel_op            <= sel_op;
-        EX_regfile_we_out    <= regfile_we;
-        EX_jump              <= jump;
-        EX_branch            <= branch;
-        EX_sel_exec_result   <= sel_exec_result;
-        EX_csr_we_out        <= csr_we;
-        EX_restore_mstatus_out <= restore_mstatus;
-
-        EX_mem_wr_en         <= mem_wr_en;
-        EX_val_rd_type       <= val_rd_type;
-        EX_val_wr_type       <= val_wr_type;
-        EX_result_type       <= result_type;
-        EX_sleep             <= sleep;
-
-        EX_sel_writeback     <= sel_writeback;
-
-        //Flags
-        EX_valid_data_read   <= valid_data_read;
-        EX_valid_data_write  <= valid_data_write;
-    end
+    if(!reset_n)
+        clear_id_stage;
+    else if (ID_flush)
+        clear_id_stage;
+    else if(!pause)
+        write_id_stage;
 end
 
 //HCU
 always@(posedge clk, negedge reset_n)begin
     if(!reset_n)begin
-        EX_RS1_addr          <= 0;
-        EX_RS2_addr          <= 0;
+        EX_RS1_addr          <= 5'd0;
+        EX_RS2_addr          <= 5'd0;
     end
     else if(!pause) begin
         EX_RS1_addr          <= IF_canonical_instruction[19:15];

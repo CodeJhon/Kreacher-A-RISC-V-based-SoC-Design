@@ -48,7 +48,7 @@ module tb_core_and_mem;
     
     //pause signals
     .pause_ID(dut.core_inst.u_pause_handler.pause_ID),
-    .pause_EX(dut.core_inst.u_pause_handler.pause_EX | dut.core_inst.u_EX.pause_to_calculate),
+    .pause_EX(dut.core_inst.u_pause_handler.pause_EX | dut.core_inst.u_EX.EX_pause_request),
     .pause_MEM(dut.core_inst.u_pause_handler.pause_MEM),
     
     .IF_PC(dut.core_inst.IF_PC_ID),
