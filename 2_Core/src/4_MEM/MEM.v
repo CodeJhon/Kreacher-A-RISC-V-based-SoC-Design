@@ -78,7 +78,8 @@ wire [XLEN-1:0] EMDB_in_extended;
 extension_rd #(.XLEN(XLEN)) extend_read (
     .extend_in(EMDB_in),
     .extend_out(EMDB_in_extended),
-    .extension_type(EX_val_rd_type)
+    .extension_type(EX_val_rd_type),
+    .extension_start_addr(EX_exec_result[2:0])
 );
 
 wire[XLEN-1:0] exec_result;

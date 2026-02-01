@@ -12,124 +12,182 @@ module spi_slave_interface #(
   output reg                  O_MISO,
 
   // external memory interface
-  output wire                 external_mem_we,    
+  output wire                 external_mem_we,
   output wire                 external_mem_cs,
   output reg  [ADDR14_W-1:0]  external_mem_addr,
-  output wire [XLEN-1:0]      external_mem_wdata, 
+  output wire [XLEN-1:0]      external_mem_wdata,
   input  wire [XLEN-1:0]      external_mem_rdata
 );
 
-  assign external_mem_cs = ~I_SS_N;
+  assign external_mem_cs = state == S_DATA;
 
-  // FSM States
-  localparam [1:0] S_IDLE=2'd0, S_HDR=2'd1, S_DATA=2'd2;
+  // ------------------------------------------------------------
+  // FSM
+  // ------------------------------------------------------------
+  localparam [1:0]
+    S_IDLE = 2'd0,
+    S_HDR  = 2'd1,
+    S_DATA = 2'd2;
+
   reg [1:0] state;
 
-  // Logic
-  reg [15:0] hdr_shift;
+  // Header receive (MSB-first): [15]=RW, [14:1]=ADDR14, [0]=dummy
   reg [4:0]  hdr_cnt;
   reg        is_write;
-  wire [15:0] hdr_assembled = {hdr_shift[14:0], I_MOSI};
-  
-  reg [DATA_W-1:0] rx_shift; 
-  reg [DATA_W-1:0] tx_shift; 
+
+  // Data path
+  reg [DATA_W-1:0] rx_shift;
+  reg [DATA_W-1:0] tx_shift;
   reg [6:0]        bit_cnt;
 
-  // ---------------------------------------------------------
-  // 1. COMBINATORIAL WRITE LOGIC (The Fix)
-  // ---------------------------------------------------------
-  // Assert WE immediately when we are at the last bit (bit_cnt==0) 
-  // of the DATA state, and it is a write operation.
-  assign external_mem_we = (state == S_DATA && is_write && bit_cnt == 7'd0 && !I_SS_N);
+  // Drop one dummy bit-time after header
+  reg dummy_skip;
 
-  // Assemble the Write Data immediately using the current MOSI bit
-  // so it is ready for the upcoming clock edge.
+  // First data bit of each read word uses RAM MSB directly
+  reg rd_first_bit;
+
+  // ------------------------------------------------------------
+  // Write interface (capture on last data bit)
+  // ------------------------------------------------------------
+  assign external_mem_we =
+      (state == S_DATA) && is_write && !dummy_skip && (bit_cnt == 7'd0);
+
   assign external_mem_wdata = {rx_shift[DATA_W-2:0], I_MOSI};
-  // ---------------------------------------------------------
 
+  // ------------------------------------------------------------
+  // MISO output
+  // ------------------------------------------------------------
+  always @* begin
+    if (!I_RSTN) begin
+      O_MISO = 1'b0;
+    end else if (I_SS_N) begin
+      O_MISO = 1'b0;
+    end else if ((state == S_DATA) && !is_write && !dummy_skip) begin
+      O_MISO = rd_first_bit ? external_mem_rdata[DATA_W-1] : tx_shift[DATA_W-1];
+    end else begin
+      O_MISO = 1'b0;
+    end
+  end
+
+  // ------------------------------------------------------------
+  // Sequential
+  // ------------------------------------------------------------
   always @(posedge I_CLK or negedge I_RSTN) begin
     if (!I_RSTN) begin
-      state     <= S_IDLE;
-      hdr_shift <= 0;
-      hdr_cnt   <= 0;
-      is_write  <= 0;
-      external_mem_addr  <= 0;
-      // external_mem_we / external_mem_wdata removed from reset (now wires)
-      rx_shift  <= 0;
-      tx_shift  <= 0;
-      bit_cnt   <= 0;
+      state             <= S_IDLE;
+      hdr_cnt           <= 5'd0;
+      is_write          <= 1'b0;
+      external_mem_addr <= {ADDR14_W{1'b0}};
+
+      rx_shift          <= {DATA_W{1'b0}};
+      tx_shift          <= {DATA_W{1'b0}};
+      bit_cnt           <= 7'd0;
+
+      dummy_skip        <= 1'b0;
+      rd_first_bit      <= 1'b0;
+
     end else begin
       if (I_SS_N) begin
-        state <= S_IDLE;
+        state        <= S_IDLE;
+        hdr_cnt      <= 5'd0;
+        bit_cnt      <= 7'd0;
+        dummy_skip   <= 1'b0;
+        rd_first_bit <= 1'b0;
+
       end else begin
         case (state)
+
           S_IDLE: begin
-            state   <= S_HDR;
-            hdr_cnt <= 5'd15;
+            state             <= S_HDR;
+            hdr_cnt           <= 5'd14;
+            is_write          <= I_MOSI;
+            external_mem_addr <= {ADDR14_W{1'b0}};
+
+            rx_shift          <= {DATA_W{1'b0}};
+            tx_shift          <= {DATA_W{1'b0}};
+            bit_cnt           <= 7'd0;
+
+            dummy_skip        <= 1'b0;
+            rd_first_bit      <= 1'b0;
           end
 
           S_HDR: begin
-            hdr_shift <= {hdr_shift[14:0], I_MOSI};
-            
-            // Pre-fetch Address Logic
-            if (hdr_cnt == 5'd1) begin
-               external_mem_addr <= hdr_assembled[14:1];
+            // RW bit (first header bit)
+            // Address bits [14:1], MSB-first
+            if ((hdr_cnt <= 5'd14) && (hdr_cnt >= 5'd1)) begin
+              external_mem_addr <= {external_mem_addr[ADDR14_W-2:0], I_MOSI};
             end
 
-            if (hdr_cnt != 5'd0) begin
-              hdr_cnt <= hdr_cnt - 1;
+            // After receiving header[1], next bit-time is dummy (header[0])
+            if (hdr_cnt == 5'd1) begin
+              state        <= S_DATA;
+              bit_cnt      <= DATA_W - 1;
+              dummy_skip   <= 1'b1;
+              rd_first_bit <= 1'b1;
+
+              rx_shift     <= {DATA_W{1'b0}};
+              tx_shift     <= {DATA_W{1'b0}};
             end else begin
-              is_write <= hdr_assembled[15];
-              external_mem_addr <= hdr_assembled[14:1]; 
-              state    <= S_DATA;
-              bit_cnt  <= DATA_W - 1;
-              if (!hdr_assembled[15]) tx_shift <= external_mem_rdata;
+              hdr_cnt <= hdr_cnt - 5'd1;
             end
           end
 
           S_DATA: begin
-            if (is_write) begin
-               rx_shift <= {rx_shift[DATA_W-2:0], I_MOSI};
-            end
+            // Dummy bit-time: ignore MOSI and do not advance counters
+            if (dummy_skip) begin
+              dummy_skip <= 1'b0;
 
-            // Burst Read Pre-fetch
-            if (!is_write && bit_cnt == 32) begin
-               external_mem_addr <= external_mem_addr + 1;
-            end
-
-            if (bit_cnt != 0) begin
-               bit_cnt <= bit_cnt - 1;
             end else begin
-               // --- WORD COMPLETE ---
-               bit_cnt <= DATA_W - 1;
+              if (is_write) begin
+                // Write: shift in data
+                rx_shift <= {rx_shift[DATA_W-2:0], I_MOSI};
 
-               if (is_write) begin
-                  // WRITE MODE:
-                  // The 'external_mem_we' wire is ALREADY High right now (combinatorial).
-                  // The external memory will capture the write on this clock edge.
-                  
-                  // We only need to increment address for the NEXT word.
-                  external_mem_addr <= external_mem_addr + 1; 
-               end else begin
-                  // READ MODE:
-                  tx_shift <= external_mem_rdata;
-               end
+                if (bit_cnt != 0) begin
+                  bit_cnt <= bit_cnt - 7'd1;
+                end else begin
+                  bit_cnt           <= DATA_W - 1;
+                  external_mem_addr <= external_mem_addr + 1;
+                end
+
+              end else begin
+                // Read: first bit uses RAM MSB, remaining bits use tx_shift
+                if (rd_first_bit) begin
+                  tx_shift     <= {external_mem_rdata[DATA_W-2:0], 1'b0};
+                  rd_first_bit <= 1'b0;
+
+                  if (bit_cnt != 0) begin
+                    bit_cnt <= bit_cnt - 7'd1;
+                  end else begin
+                    bit_cnt      <= DATA_W - 1;
+                    rd_first_bit <= 1'b1;
+                  end
+
+                end else begin
+                  tx_shift <= {tx_shift[DATA_W-2:0], 1'b0};
+
+                  // Prefetch next word early (sync RAM latency hiding)
+                  if (bit_cnt == 32) begin
+                    external_mem_addr <= external_mem_addr + 1;
+                  end
+
+                  if (bit_cnt != 0) begin
+                    bit_cnt <= bit_cnt - 7'd1;
+                  end else begin
+                    bit_cnt      <= DATA_W - 1;
+                    rd_first_bit <= 1'b1;
+                    tx_shift     <= {DATA_W{1'b0}};
+                  end
+                end
+              end
             end
           end
+
+          default: begin
+            state <= S_IDLE;
+          end
+
         endcase
       end
-    end
-  end
-
-  // MISO Drive (Negedge) - Unchanged
-  always @(negedge I_CLK or negedge I_RSTN) begin
-    if (!I_RSTN) O_MISO <= 0;
-    else begin
-       if (I_SS_N || state != S_DATA || is_write) O_MISO <= 0;
-       else begin
-          O_MISO   <= tx_shift[DATA_W-1];
-          tx_shift <= {tx_shift[DATA_W-2:0], 1'b0};
-       end
     end
   end
 

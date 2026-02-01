@@ -14,9 +14,9 @@ module mini_controller (
     input       core_jump,
 
     //Control
-    output wire concatenate_in_next_cycle,
+    output reg concatenate_in_next_cycle,
     output reg  concatenate_flag,
-    output wire pause_to_concatenate,
+    output reg pause_to_concatenate,
 
     output reg  instr_type,
     output reg  sel_PC_step,
@@ -46,10 +46,27 @@ always @(posedge clk, negedge reset_n) begin
 end
 
 //------------------------------------------------- Outputs
+// -> internal pause core to wait 1 extra cycle to fetch 2RV
+always @( * ) begin
+        pause_to_concatenate = 1'b0;
 
-// -> concatenate in next cycle
-//                                           | 1RV | C  |                   | 1RV | C  | , | 1RV | 2RV |
-assign concatenate_in_next_cycle = ~core_jump & ((rvi_higher & ~rvi_lower & ~pointer) |     (rvi_higher & pointer));
+    if(!pause)
+        pause_to_concatenate = rvi_higher & pointer & old_core_jump;
+end
+
+always @(*) begin
+    concatenate_in_next_cycle = 1'b0;
+
+    if(pause_to_concatenate)
+        concatenate_in_next_cycle = 1'b1;
+    else if(core_jump)                         //Clean if current instr is a jump
+        concatenate_in_next_cycle = 1'b0;
+    else if((rvi_higher & ~rvi_lower & ~pointer) || (rvi_higher & pointer))
+        // -> concatenate in next cycle
+        //   | 1RV | C  | , | 1RV | C  | , | 1RV | 2RV |
+        concatenate_in_next_cycle = 1'b1;
+end
+
 
 // -> concatenate flag 
 always @(posedge clk, negedge reset_n) begin
@@ -59,8 +76,6 @@ always @(posedge clk, negedge reset_n) begin
     else if(!pause && !stall)       concatenate_flag <= concatenate_in_next_cycle;
 end
 
-// -> internal pause core to wait 1 extra cycle to fetch 2RV
-assign pause_to_concatenate = rvi_higher & pointer & old_core_jump;
 
 // -> instruction type & related PC step
 always @( * ) begin

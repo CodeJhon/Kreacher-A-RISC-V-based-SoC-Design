@@ -18,6 +18,7 @@ module init_memory_controller #(
     // -----------------------------------------------------------------
     input  wire                 EMCB,
     input  wire [ADDR_BYTE_W-1:0] EMAB,
+    input  wire                 external_access,
     input  wire [XLEN-1:0]       EMDB_write,
     input  wire                 valid_instr_fetch,
     input  wire                 valid_data_read,
@@ -26,13 +27,15 @@ module init_memory_controller #(
 
     output wire [XLEN-1:0]       EMDB_read,
     output wire [IXLEN-1:0]      EIB,
-    output wire                 pause_core,
+    output wire                  pause_request_scheduler,
+    output wire                  pause_request_initialization,
+    output wire                  pause_request_load_store,
 
     // -----------------------------------------------------------------
     // SPI interface
     // -----------------------------------------------------------------
     input  wire                 rvalid,
-    input  wire [XLEN-1:0]       rdata,
+    input  wire [XLEN-1:0]      rdata,
     input  wire                 busy,
     input  wire                 done,
 
@@ -47,6 +50,7 @@ module init_memory_controller #(
     // -----------------------------------------------------------------
     input  wire [XLEN-1:0]       data_read,
     input  wire [IXLEN-1:0]      instruction_read,
+    input wire                 pause_to_schedule,
 
     output wire                 addr_data_valid,
     output wire                 addr_inst_valid,
@@ -104,6 +108,8 @@ module init_memory_controller #(
         .IXLEN       (IXLEN),
         .BURST_LEN   (BURST_LEN)
     ) u_mem_ctrl (
+        .clk                 (clk),
+        .reset_n             (reset_n),
         // Init controller interface
         .state               (state),
         .burst_dim           (burst_dim),
@@ -119,12 +125,15 @@ module init_memory_controller #(
         // Core interface
         .EMCB                (EMCB),
         .EMAB                (EMAB),
+        .external_access     (external_access),
         .EMDB_write          (EMDB_write),
         .valid_instr_fetch   (valid_instr_fetch),
         .valid_data_read     (valid_data_read),
         .valid_data_write    (valid_data_write),
         .EMDB_read           (EMDB_read),
-        .pause_core          (pause_core),
+        .pause_request_scheduler(pause_request_scheduler),
+        .pause_request_initialization(pause_request_initialization),
+        .pause_request_load_store(pause_request_load_store),
 
         // Instruction interface
         .EIAB                (EIAB),
@@ -150,7 +159,8 @@ module init_memory_controller #(
         .inst_data_write     (inst_data_write),
         .data_read_write_adr (data_read_write_adr),
         .inst_fetch_adr      (inst_fetch_adr),
-        .is_write_PRAM       (is_write_PRAM)
+        .is_write_PRAM       (is_write_PRAM),
+        .pause_to_schedule   (pause_to_schedule)
     );
 
 endmodule

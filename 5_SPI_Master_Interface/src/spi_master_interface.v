@@ -1,263 +1,286 @@
 `timescale 1ns/1ps
 
 module spi_master_interface #(
-  parameter ADDR_BYTE_W = 17,     // byte address width
-  parameter DATA_W      = 64      // data width: 32 or 64 bits
+  parameter ADDR_BYTE_W = 17,
+  parameter DATA_W      = 64
 )(
   input  wire                   I_CLK,
   input  wire                   I_RSTN,
 
-  // control
   input  wire                   start,
-  input  wire                   is_write,          // 1=write, 0=read
-  input  wire [ADDR_BYTE_W-1:0] byte_addr,         // must be aligned to DATA_W/8
-  input  wire [15:0]            burst_len,         // number of DATA_W-bit words (>=1)
+  input  wire                   is_write,
+  input  wire [ADDR_BYTE_W-1:0] byte_addr,   // 8B aligned for DATA_W=64
+  input  wire [15:0]            burst_len,   // number of DATA_W words; 0 treated as 1
 
-  // data
-  input  wire [DATA_W-1:0]      wdata,             // provide per word for burst
+  input  wire [DATA_W-1:0]      wdata,
   output reg  [DATA_W-1:0]      rdata,
   output reg                    rvalid,
 
   output reg                    busy,
   output reg                    done,
 
-  // SPI pins
-  output reg                    O_SS,              // active low
-  output reg                    O_MOSI,            // master out
-  input  wire                   I_MISO             // master in
+  output reg                    O_SS,         // active low
+  output reg                    O_MOSI,
+  input  wire                   I_MISO
 );
 
-  // -------------------------------------------------
-  // Derived parameters (from DATA_W)
-  // -------------------------------------------------
-  // Number of bytes per word (4 for 32-bit, 8 for 64-bit)
   localparam integer BYTES_PER_WORD = DATA_W / 8;
-  // Max bit index for one data word (31 or 63)
-  localparam [6:0] BITCNT_MAX     = DATA_W - 1;
+  localparam [6:0]   BITCNT_MAX     = DATA_W - 1;
 
-  // -------------------------------------------------
-  // FSM encoding
-  // -------------------------------------------------
   localparam [2:0]
-    S_IDLE    = 3'd0,          // Idle : wait for start
-    S_CS_LOW  = 3'd1,          // drive O_SS low
-    S_HDR     = 3'd2,          // send 16-bit header
-    S_WDATA   = 3'd3,          // write-data phase
-    S_RDATA   = 3'd4,          // read-data phase
-    S_CS_HIGH = 3'd5;          // drive O_SS high
+    S_IDLE    = 3'd0,
+    S_CS_LOW  = 3'd1,
+    S_HDR     = 3'd2,
+    S_WDATA   = 3'd3,
+    S_RDATA   = 3'd4,
+    S_CS_HIGH = 3'd5;
 
-  reg [2:0] state, state_next;
+  // ------------------------------------------------------------
+  // State / registers
+  // ------------------------------------------------------------
+  reg [2:0] state, next_state;
 
-  // counters / registers
-  reg [15:0] words_left, words_left_next;   // words remaining in the burst
-  reg [4:0]  hdr_cnt,    hdr_cnt_next;      // 16-bit header counter (15..0)
-  reg [6:0]  bit_cnt,    bit_cnt_next;      // data bit counter (covers 0..63)
+  reg [15:0] words_left, next_words_left;
+  reg [4:0]  hdr_cnt,    next_hdr_cnt;
+  reg [6:0]  bit_cnt,    next_bit_cnt;
 
-  reg [ADDR_BYTE_W-1:0] addr_b, addr_b_next;  // current byte address
-  reg [15:0]            hdr_shift, hdr_shift_next;  // header shift register
+  reg [ADDR_BYTE_W-1:0] addr_b,     next_addr_b;
+  reg [15:0]            hdr_shift,  next_hdr_shift;
 
-  reg [DATA_W-1:0]      tx_shift;        // transmit (TX) shift register
-  reg [DATA_W-1:0]      rx_shift, rx_shift_next;    // receive (RX) shift register
+  reg [DATA_W-1:0]      tx_shift,   next_tx_shift;
+  reg [DATA_W-1:0]      rx_shift,   next_rx_shift;
 
-  wire is_burst  = (burst_len > 16'd1);
-  wire dummy_bit = is_burst ? 1'b1 : 1'b0;
+  // Skip first RDATA cycle (dummy turnaround)
+  reg                   skip_sample, next_skip_sample;
 
-  // -------------------------------------------------
+  // Next registered outputs
+  reg [DATA_W-1:0]       next_rdata;
+  reg                    next_rvalid;
+  reg                    next_busy;
+  reg                    next_done;
+  reg                    next_O_SS;
+  reg                    next_O_MOSI;
+
+  // Header format (MSB-first):
+  // [15]=RW, [14:1]=byte_addr[16:3], [0]=0 (dummy)
+  wire [14:0] hdr_init = {byte_addr[16:3], 1'b0};
+
+  // ------------------------------------------------------------
   // Combinational next-state logic
-  // -------------------------------------------------
+  // ------------------------------------------------------------
   always @* begin
-    // defaults
-    state_next      = state;
-    words_left_next = words_left;
-    addr_b_next     = addr_b;
-    hdr_cnt_next    = hdr_cnt;
-    bit_cnt_next    = bit_cnt;
-    hdr_shift_next  = hdr_shift;
-    rx_shift_next   = rx_shift;
+    next_state       = state;
 
-    done         = 1'b0;
+    next_words_left  = words_left;
+    next_hdr_cnt     = hdr_cnt;
+    next_bit_cnt     = bit_cnt;
+
+    next_addr_b      = addr_b;
+    next_hdr_shift   = hdr_shift;
+
+    next_tx_shift    = tx_shift;
+    next_rx_shift    = rx_shift;
+
+    next_skip_sample = skip_sample;
+
+    next_rdata       = rdata;
+    next_rvalid      = 1'b0;
+    next_done        = 1'b0;
+
+    next_O_SS        = O_SS;
+    next_O_MOSI      = O_MOSI;
+
+    next_busy        = (next_state != S_IDLE);
 
     case (state)
+
       S_IDLE: begin
+        next_O_SS        = 1'b1;
+        next_O_MOSI      = 1'b0;
+        next_busy        = 1'b0;
+        next_skip_sample = 1'b0;
+
         if (start) begin
-          addr_b_next     = byte_addr;
-          // treat burst_len==0 as 1 word
-          words_left_next = (burst_len == 16'd0) ? 16'd1 : burst_len;
-          // header: {R/W, ADDR[13:0], DUMMY}
-          // NOTE: still fixed 16-bit header; only low 14 bits of byte_addr are encoded.
-          hdr_shift_next  = {is_write, byte_addr[16:3], dummy_bit}; // 1+14+1 = 16
-          hdr_cnt_next    = 5'd15;
-          state_next      = S_CS_LOW;
+          next_addr_b     = byte_addr;
+          next_words_left = (burst_len == 16'd0) ? 16'd1 : burst_len;
+
+          next_hdr_shift  = hdr_init;
+          next_hdr_cnt    = 5'd14;
+
+          next_state      = S_CS_LOW;
+          next_busy       = 1'b1;
         end
       end
 
       S_CS_LOW: begin
-        // one cycle to assert CS low, then start shifting header
-        state_next = S_HDR;
+        next_O_SS        = 1'b0;
+        next_O_MOSI      = is_write;
+        next_state       = S_HDR;
+        next_busy        = 1'b1;
+        next_skip_sample = 1'b0;
       end
 
       S_HDR: begin
-        // when header shift counter reaches zero, move to data phase
-        if (hdr_cnt == 5'd0) begin
-          bit_cnt_next = BITCNT_MAX;            // DATA_W-1
-          state_next   = is_write ? S_WDATA : S_RDATA;
-        end
-      end
+        next_O_SS   = 1'b0;
+        next_O_MOSI = hdr_shift[14];
+        next_busy   = 1'b1;
 
-      S_WDATA: begin
-        // one data word completed
-        if (bit_cnt == 7'd0) begin
-          if (words_left == 16'd1) begin
-            state_next = S_CS_HIGH;
+        next_hdr_shift = {hdr_shift[13:0], 1'b0};
+
+        if (hdr_cnt != 5'd0) begin
+          next_hdr_cnt = hdr_cnt - 5'd1;
+        end else begin
+          
+
+          if (is_write) begin
+            next_tx_shift    = wdata;
+            next_state       = S_WDATA;
+            next_skip_sample = 1'b0;
+            next_bit_cnt = BITCNT_MAX + 1;
           end else begin
-            // next DATA_W-bit word: bump byte address by BYTES_PER_WORD
-            addr_b_next     = addr_b + BYTES_PER_WORD[ADDR_BYTE_W-1:0];
-            words_left_next = words_left - 16'd1;
-            bit_cnt_next    = BITCNT_MAX;
-            state_next      = S_WDATA;     // continue burst
+            next_rx_shift    = {DATA_W{1'b0}};
+            next_state       = S_RDATA;
+            next_skip_sample = 1'b1;   // one dummy cycle in RDATA
+            next_bit_cnt = BITCNT_MAX;
           end
         end
       end
 
+      S_WDATA: begin
+        next_O_SS   = 1'b0;
+        next_O_MOSI = tx_shift[DATA_W-1];
+        next_busy   = 1'b1;
+
+
+            next_tx_shift = {tx_shift[DATA_W-2:0], 1'b0};
+    
+            if (bit_cnt != 7'd0) begin
+              next_bit_cnt = bit_cnt - 7'd1;
+            end else begin
+              if (words_left == 16'd1) begin
+                next_state = S_CS_HIGH;
+                next_O_SS        = 1'b1;
+                next_O_MOSI      = 1'b0;
+                next_done        = 1'b1;
+                next_busy        = 1'b0;
+              end else begin
+                next_words_left = words_left - 16'd1;
+                next_addr_b     = addr_b + BYTES_PER_WORD[ADDR_BYTE_W-1:0];
+    
+                next_tx_shift   = wdata;
+                next_bit_cnt    = BITCNT_MAX+1;
+                next_state      = S_WDATA;
+              end
+            end
+          end
       S_RDATA: begin
-        if (bit_cnt == 7'd0) begin
-          if (words_left == 16'd1) begin
-            state_next = S_CS_HIGH;
+        next_O_SS   = 1'b0;
+        next_O_MOSI = 1'b0;
+        next_busy   = 1'b1;
+
+        if (skip_sample) begin
+          next_skip_sample = 1'b0;   // dummy turnaround
+          next_rx_shift    = rx_shift;
+          next_bit_cnt     = bit_cnt;
+        end else begin
+          next_rx_shift = {rx_shift[DATA_W-2:0], I_MISO};
+
+          if (bit_cnt != 7'd0) begin
+            next_bit_cnt = bit_cnt - 7'd1;
           end else begin
-            addr_b_next     = addr_b + BYTES_PER_WORD[ADDR_BYTE_W-1:0];
-            words_left_next = words_left - 16'd1;
-            bit_cnt_next    = BITCNT_MAX;
-            state_next      = S_RDATA;
+            next_rdata  = {rx_shift[DATA_W-2:0], I_MISO};
+            next_rvalid = 1'b1;
+
+            if (words_left == 16'd1) begin
+              next_state = S_CS_HIGH;
+              next_O_SS        = 1'b1;
+              next_O_MOSI      = 1'b0;
+              next_done        = 1'b1;
+              next_busy        = 1'b0;
+              next_skip_sample = 1'b0;
+            end else begin
+              next_words_left  = words_left - 16'd1;
+              next_addr_b      = addr_b + BYTES_PER_WORD[ADDR_BYTE_W-1:0];
+              next_bit_cnt     = BITCNT_MAX;
+              next_state       = S_RDATA;
+              next_skip_sample = 1'b0;
+            end
           end
         end
       end
 
       S_CS_HIGH: begin
-        done    = 1'b1;
-        state_next = S_IDLE;
+        next_O_SS        = 1'b1;
+        next_O_MOSI      = 1'b0;
+        next_done        = 1'b0;
+        next_state       = S_IDLE;
+        next_busy        = 1'b0;
+        next_skip_sample = 1'b0;
       end
 
       default: begin
-        state_next = S_IDLE;
+        next_state       = S_IDLE;
+        next_O_SS        = 1'b1;
+        next_O_MOSI      = 1'b0;
+        next_busy        = 1'b0;
+        next_skip_sample = 1'b0;
       end
+
     endcase
   end
 
-  // -------------------------------------------------
-  // Sequential: posedge clock
-  //  - advance FSM/counters
-  //  - sample MISO into rx_shift
-  //  - load tx_shift when entering S_WDATA (no shifting here)
-  // -------------------------------------------------
+  // ------------------------------------------------------------
+  // Sequential register update
+  // ------------------------------------------------------------
   always @(posedge I_CLK or negedge I_RSTN) begin
     if (!I_RSTN) begin
-      state      <= S_IDLE;
-      words_left <= 16'd0;
-      addr_b     <= {ADDR_BYTE_W{1'b0}};
-      hdr_cnt    <= 5'd0;
-      bit_cnt    <= 7'd0;
-      hdr_shift  <= 16'd0;
-      rx_shift   <= {DATA_W{1'b0}};
-      rdata      <= {DATA_W{1'b0}};
-      rvalid     <= 1'b0;
-      busy       <= 1'b0;
-      tx_shift   <= {DATA_W{1'b0}};
+      state       <= S_IDLE;
+
+      words_left  <= 16'd0;
+      hdr_cnt     <= 5'd0;
+      bit_cnt     <= 7'd0;
+
+      addr_b      <= {ADDR_BYTE_W{1'b0}};
+      hdr_shift   <= 16'd0;
+
+      tx_shift    <= {DATA_W{1'b0}};
+      rx_shift    <= {DATA_W{1'b0}};
+
+      rdata       <= {DATA_W{1'b0}};
+      rvalid      <= 1'b0;
+
+      busy        <= 1'b0;
+      done        <= 1'b0;
+
+      O_SS        <= 1'b1;
+      O_MOSI      <= 1'b0;
+
+      skip_sample <= 1'b0;
+
     end else begin
-      state      <= state_next;
-      words_left <= words_left_next;
-      addr_b     <= addr_b_next;
-      hdr_cnt    <= hdr_cnt_next;
-      bit_cnt    <= bit_cnt_next;
-      hdr_shift  <= hdr_shift_next;
-      rx_shift   <= rx_shift_next;
+      state       <= next_state;
 
-      busy       <= (state_next != S_IDLE);
-      rvalid     <= 1'b0;
+      words_left  <= next_words_left;
+      hdr_cnt     <= next_hdr_cnt;
+      bit_cnt     <= next_bit_cnt;
 
-      case (state)
-        S_HDR: begin
-          // shift header MSB-first on each posedge (sampling edge)
-          hdr_shift <= {hdr_shift[14:0], 1'b0};
-          if (hdr_cnt != 5'd0) hdr_cnt <= hdr_cnt - 5'd1;
-        end
+      addr_b      <= next_addr_b;
+      hdr_shift   <= next_hdr_shift;
 
-        S_RDATA: begin
-          // sample MISO on posedge, MSB-first
-          rx_shift <= {rx_shift[DATA_W-2:0], I_MISO};
-          if (bit_cnt != 7'd0) bit_cnt <= bit_cnt - 7'd1;
-          if (bit_cnt == 7'd0) begin
-            // full DATA_W-bit word received
-            rdata  <= {rx_shift[DATA_W-2:0], I_MISO};
-            rvalid <= 1'b1;
-          end
-        end
+      tx_shift    <= next_tx_shift;
+      rx_shift    <= next_rx_shift;
 
-        S_WDATA: begin
-          // only count bits here; actual MOSI shift happens on negedge
-          if (bit_cnt != 7'd0) bit_cnt <= bit_cnt - 7'd1;
-        end
-      endcase
+      rdata       <= next_rdata;
+      rvalid      <= next_rvalid;
 
-      // Load tx_shift when:
-      //  - just entering S_WDATA from S_HDR (first word), or
-      //  - staying in S_WDATA and bit_cnt wrapped to BITCNT_MAX (next burst word)
-      if ((state == S_HDR    && state_next == S_WDATA) ||
-          (state == S_WDATA && bit_cnt == 7'd0 && state_next == S_WDATA)) begin
-        tx_shift <= wdata;  // upstream must provide the next word in time
-      end
-    end
-  end
+      busy        <= next_busy;
+      done        <= next_done;
 
-  // -------------------------------------------------
-  // Sequential: negedge clock
-  //  - drive O_SS / O_MOSI
-  //  - shift tx_shift for write on each negedge during S_WDATA
-  // -------------------------------------------------
-  always @(negedge I_CLK or negedge I_RSTN) begin
-    if (!I_RSTN) begin
-      O_SS   <= 1'b1;                 // idle deasserted
-      O_MOSI <= 1'b0;
-    end else begin
-      case (state)
-        S_IDLE: begin
-          O_SS   <= 1'b1;
-          O_MOSI <= 1'b0;
-        end
+      O_SS        <= next_O_SS;
+      O_MOSI      <= next_O_MOSI;
 
-        S_CS_LOW: begin
-          O_SS <= 1'b0;
-        end
-
-        S_HDR: begin
-          O_SS   <= 1'b0;
-          O_MOSI <= hdr_shift[15];    // send header MSB first
-        end
-
-        S_WDATA: begin
-          O_SS   <= 1'b0;
-          O_MOSI <= tx_shift[DATA_W-1];
-          // shift on negedge so peer samples stable data on next posedge
-          tx_shift <= {tx_shift[DATA_W-2:0], 1'b0};
-        end
-
-        S_RDATA: begin
-          O_SS   <= 1'b0;
-          O_MOSI <= 1'b0;             // don't care during read data phase
-        end
-
-        S_CS_HIGH: begin
-          O_SS   <= 1'b1;
-          O_MOSI <= 1'b0;
-        end
-
-        default: begin
-          O_SS   <= 1'b1;
-          O_MOSI <= 1'b0;
-        end
-      endcase
+      skip_sample <= next_skip_sample;
     end
   end
 
 endmodule
-
-

@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--create", action="store_true")
 args = parser.parse_args()
 
+
 def extend_inst(raw_instr):
     extend_instr_bin_str = "00000000000000000000000000010011"
     raw_instr_bin_str = format(int(raw_instr, 16), '016b')
@@ -21,20 +22,27 @@ def extend_inst(raw_instr):
     funct4 = raw_instr_bin_str[-16:-12]
     funct6 = raw_instr_bin_str[-16:-10]
 
-    sel_sign_extension = not ((quadrant=="01" and funct3 == "100" and (funct2_p=="00" or funct2_p=="01")) or (quadrant == "10" and funct3 == "000"))
+    sel_sign_extension = not ((quadrant == "01" and funct3 == "100" and (funct2_p == "00" or funct2_p == "01")) or (
+                quadrant == "10" and funct3 == "000"))
 
-    imm_c_alu = (raw_instr_bin_str[-13]*6 if sel_sign_extension else "000000") + raw_instr_bin_str[-13] + raw_instr_bin_str[-7:-2]
-    imm_c_addi16sp = raw_instr_bin_str[-13]*3 + raw_instr_bin_str[-5:-3] + raw_instr_bin_str[-6] + raw_instr_bin_str[-3] + raw_instr_bin_str[-7] + "0000"
-    imm_c_addi4spn = "00" + raw_instr_bin_str[-11:-7] + raw_instr_bin_str[-13:-11] + raw_instr_bin_str[-6] + raw_instr_bin_str[-7] + "00"
-    imm_c_lui = raw_instr_bin_str[-13]*14 + raw_instr_bin_str[-13] + raw_instr_bin_str[-7:-2]
-    imm_c_branch = raw_instr_bin_str[-13]*4 + raw_instr_bin_str[-7:-5] + raw_instr_bin_str[-3] + raw_instr_bin_str[-12] + raw_instr_bin_str[-11] + raw_instr_bin_str[-5:-3] + raw_instr_bin_str[-13]
-    imm_c_jal = (raw_instr_bin_str[-13] + raw_instr_bin_str[-9] + raw_instr_bin_str[-11] + raw_instr_bin_str[-10] + raw_instr_bin_str[-7] + raw_instr_bin_str[-8] + raw_instr_bin_str[-3]
-                + raw_instr_bin_str[-12] + raw_instr_bin_str[-6] + raw_instr_bin_str[-5] + raw_instr_bin_str[-4] + raw_instr_bin_str[-13]*9)  
+    imm_c_alu = (raw_instr_bin_str[-13] * 6 if sel_sign_extension else "000000") + raw_instr_bin_str[
+        -13] + raw_instr_bin_str[-7:-2]
+    imm_c_addi16sp = raw_instr_bin_str[-13] * 3 + raw_instr_bin_str[-5:-3] + raw_instr_bin_str[-6] + raw_instr_bin_str[
+        -3] + raw_instr_bin_str[-7] + "0000"
+    imm_c_addi4spn = "00" + raw_instr_bin_str[-11:-7] + raw_instr_bin_str[-13:-11] + raw_instr_bin_str[-6] + \
+                     raw_instr_bin_str[-7] + "00"
+    imm_c_lui = raw_instr_bin_str[-13] * 14 + raw_instr_bin_str[-13] + raw_instr_bin_str[-7:-2]
+    imm_c_branch = raw_instr_bin_str[-13] * 4 + raw_instr_bin_str[-7:-5] + raw_instr_bin_str[-3] + raw_instr_bin_str[
+        -12] + raw_instr_bin_str[-11] + raw_instr_bin_str[-5:-3] + raw_instr_bin_str[-13]
+    imm_c_jal = (raw_instr_bin_str[-13] + raw_instr_bin_str[-9] + raw_instr_bin_str[-11] + raw_instr_bin_str[-10] +
+                 raw_instr_bin_str[-7] + raw_instr_bin_str[-8] + raw_instr_bin_str[-3]
+                 + raw_instr_bin_str[-12] + raw_instr_bin_str[-6] + raw_instr_bin_str[-5] + raw_instr_bin_str[-4] +
+                 raw_instr_bin_str[-13] * 9)
     imm_c_lw_sw = "00000" + raw_instr_bin_str[-6] + raw_instr_bin_str[-13:-10] + raw_instr_bin_str[-7] + "00"
     imm_c_ld_sd = "0000" + raw_instr_bin_str[-7:-5] + raw_instr_bin_str[-13:-10] + "000"
     imm_c_lwsp = "0000" + raw_instr_bin_str[-4:-2] + raw_instr_bin_str[-13] + raw_instr_bin_str[-7:-4] + "00"
     imm_c_ldsp = "000" + raw_instr_bin_str[-5:-2] + raw_instr_bin_str[-13] + raw_instr_bin_str[-7:-5] + "000"
-    imm_c_swsp_sdsp = "0000" + raw_instr_bin_str[-9:-7] + raw_instr_bin_str[-13:-9] + "00"
+    imm_c_swsp_sdsp = "000" + raw_instr_bin_str[-10:-7] + raw_instr_bin_str[-13:-10] + "000"
 
     if quadrant == "00":
         if funct3 == "000":
@@ -44,7 +52,7 @@ def extend_inst(raw_instr):
         elif funct3 == "011":
             extend_instr_bin_str = imm_c_ld_sd + rd_rs1_p + "011" + rd_rs2_p + "0000011"
         elif funct3 == "110":
-            extend_instr_bin_str = imm_c_lw_sw[-12:-5] + rd_rs2_p + rd_rs1_p + "010" + imm_c_lw_sw[-5:] + "0100011"  
+            extend_instr_bin_str = imm_c_lw_sw[-12:-5] + rd_rs2_p + rd_rs1_p + "010" + imm_c_lw_sw[-5:] + "0100011"
         elif funct3 == "111":
             extend_instr_bin_str = imm_c_ld_sd[-12:-5] + rd_rs2_p + rd_rs1_p + "011" + imm_c_ld_sd[-5:] + "0100011"
     elif quadrant == "01":
@@ -68,16 +76,16 @@ def extend_inst(raw_instr):
                     extend_instr_bin_str = "000000" + imm_c_alu[-6:] + rd_rs1_p + "101" + rd_rs1_p + "0010011"
             elif funct2_p == "01":  # C.SRAI
                 if imm_c_alu != "000000000000":
-                    extend_instr_bin_str = "010000" + imm_c_alu[-6:] + rd_rs1_p + "101" + rd_rs1_p + "0010011" 
+                    extend_instr_bin_str = "010000" + imm_c_alu[-6:] + rd_rs1_p + "101" + rd_rs1_p + "0010011"
             elif funct2_p == "10":  # C.ANDI
-                extend_instr_bin_str = imm_c_alu + rd_rs1_p + "111" + rd_rs1_p + "0010011"           
+                extend_instr_bin_str = imm_c_alu + rd_rs1_p + "111" + rd_rs1_p + "0010011"
         elif funct3 == "101":
-                extend_instr_bin_str = imm_c_jal + "00000" + "1101111"
+            extend_instr_bin_str = imm_c_jal + "00000" + "1101111"
         elif funct3 == "110":
-                extend_instr_bin_str = imm_c_branch[-12:-5] + "00000" + rd_rs1_p + "000" + imm_c_branch[-5:] + "1100011"
+            extend_instr_bin_str = imm_c_branch[-12:-5] + "00000" + rd_rs1_p + "000" + imm_c_branch[-5:] + "1100011"
         elif funct3 == "111":
-                extend_instr_bin_str = imm_c_branch[-12:-5] + "00000" + rd_rs1_p + "001" + imm_c_branch[-5:] + "1100011"
-        if funct6 == "100011":  
+            extend_instr_bin_str = imm_c_branch[-12:-5] + "00000" + rd_rs1_p + "001" + imm_c_branch[-5:] + "1100011"
+        if funct6 == "100011":
             if funct2 == "00":  # C.SUB
                 extend_instr_bin_str = "0100000" + rd_rs2_p + rd_rs1_p + "000" + rd_rs1_p + "0110011"
             elif funct2 == "01":  # C.XOR
@@ -91,10 +99,10 @@ def extend_inst(raw_instr):
                 extend_instr_bin_str = "0100000" + rd_rs2_p + rd_rs1_p + "000" + rd_rs1_p + "0111011"
             elif funct2 == "01":  # C.ADDW
                 extend_instr_bin_str = "0000000" + rd_rs2_p + rd_rs1_p + "000" + rd_rs1_p + "0111011"
-    elif quadrant == "10":    
+    elif quadrant == "10":
         if funct3 == "000":
             if imm_c_alu != "000000000000" and rd_rs1 != "00000":
-                extend_instr_bin_str = "000000" + imm_c_alu[-6:] + rd_rs1 + "001" + rd_rs1 + "0010011"           
+                extend_instr_bin_str = "000000" + imm_c_alu[-6:] + rd_rs1 + "001" + rd_rs1 + "0010011"
         elif funct3 == "010":
             if rd_rs1 != "00000":
                 extend_instr_bin_str = imm_c_lwsp + "00010" + "010" + rd_rs1 + "0000011"
@@ -108,23 +116,24 @@ def extend_inst(raw_instr):
         if funct4 == "1000":
             if rd_rs1 != "00000":
                 if rs_2 == "00000":
-                    extend_instr_bin_str = "0"*12 + rd_rs1 + "000" + "00000" + "1100111"   
+                    extend_instr_bin_str = "0" * 12 + rd_rs1 + "000" + "00000" + "1100111"
                 else:
                     extend_instr_bin_str = "0000000" + rs_2 + "00000" + "000" + rd_rs1 + "0110011"
         elif funct4 == "1001":
             if rd_rs1 != "00000":
                 if rs_2 == "00000":
-                    extend_instr_bin_str = "0"*12 + rd_rs1 + "000" + "00001" + "1100111"   
+                    extend_instr_bin_str = "0" * 12 + rd_rs1 + "000" + "00001" + "1100111"
                 else:
                     extend_instr_bin_str = "0000000" + rs_2 + rd_rs1 + "000" + rd_rs1 + "0110011"
     return extend_instr_bin_str
 
+
 # extend_instruction_test = extend_inst("0x00fe")
 # print(int(extend_instruction_test, 2))
-        
+
 pc = []
 instruction = []
-instruction_raw =  []
+instruction_raw = []
 wb_reg = []
 wb_val = []
 DMEM_addr = []
@@ -164,8 +173,17 @@ with open(spike_path, "r", encoding="utf-8") as f:
         match_store = pattern_store.search(line)
         if match_store:
             # Store instruction: record Memories address and data
-            mem_addr = int(match_store.group(3), 16)
-            mem_data = int(match_store.group(4), 16)
+            try:
+                mem_addr = int(match_store.group(3), 16)
+            except (ValueError, TypeError) as e:
+                print(f"[WARN] Can't convert addreess to int: {match_store.group(3)}，error: {e}")
+                mem_addr = None
+            try:
+                mem_data = int(match_store.group(4), 16)
+            except (ValueError, TypeError) as e:
+                print(f"[WARN] Can't convert data to int: {match_store.group(4)}，error: {e}")
+                mem_data = None
+
             DMEM_addr.append(mem_addr)
             DMEM_data.append(mem_data)
             DMEM_data_hex.append(match_store.group(4))
@@ -181,14 +199,38 @@ with open(spike_path, "r", encoding="utf-8") as f:
             val_hex = match_load.group(4)
             # mem_addr = match_load.group(5)  # Optional: can also record load address
             if reg_str is not None and val_hex is not None:
-                wb_reg.append(int(reg_str))
-                wb_val.append(int(val_hex, 16))
-                pc.append(int(pc_hex, 16))
-                instruction_raw.append(int(inst_hex, 16))
-                if (bin(int(inst_hex[-1],16))[-2:] == "11"):
-                    instruction.append(int(inst_hex, 16))
+                try:
+                    wb_reg.append(int(reg_str))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert register addreess to int: {match_store.group(3)}，error: {e}")
+                    wb_reg.append(None)
+                try:
+                    wb_val.append(int(val_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert write back value to hex: {match_store.group(4)}，error: {e}")
+                    wb_val.append(None)
+                try:
+                    pc.append(int(pc_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert PC to hex: {match_store.group(1)}，error: {e}")
+                    pc.append(None)
+                try:
+                    instruction_raw.append(int(inst_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert instruction to hex: {match_store.group(2)}，error: {e}")
+                    instruction_raw.append(None)
+                if (bin(int(inst_hex[-1], 16))[-2:] == "11"):
+                    try:
+                        instruction.append(int(inst_hex, 16))
+                    except (ValueError, TypeError) as e:
+                        print(f"[WARN] Can't convert instruction to hex: {match_store.group(2)}，error: {e}")
+                        instruction.append(None)
                 else:
-                    instruction.append(int(extend_inst(inst_hex), 2))
+                    try:
+                        instruction.append(int(extend_inst(inst_hex), 2))
+                    except (ValueError, TypeError) as e:
+                        print(f"[WARN] Can't convert instruction to hex: {extend_inst(inst_hex)}，error: {e}")
+                        instruction.append(None)
             continue
 
         # Try to match normal pattern (no mem keyword)
@@ -201,14 +243,38 @@ with open(spike_path, "r", encoding="utf-8") as f:
 
             # Handle optional write-back information
             if reg_str is not None and val_hex is not None:
-                wb_reg.append(int(reg_str))
-                wb_val.append(int(val_hex, 16))
-                pc.append(int(pc_hex, 16))
-                instruction_raw.append(int(inst_hex, 16))
-                if (bin(int(inst_hex[-1],16))[-2:] == "11"):
-                    instruction.append(int(inst_hex, 16))
+                try:
+                    wb_reg.append(int(reg_str))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert register addreess to int: {match_store.group(3)}，error: {e}")
+                    wb_reg.append(None)
+                try:
+                    wb_val.append(int(val_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert write back value to hex: {match_store.group(4)}，error: {e}")
+                    wb_val.append(None)
+                try:
+                    pc.append(int(pc_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert PC to hex: {match_store.group(1)}，error: {e}")
+                    pc.append(None)
+                try:
+                    instruction_raw.append(int(inst_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert instruction to hex: {match_store.group(2)}，error: {e}")
+                    instruction_raw.append(None)
+                if (bin(int(inst_hex[-1], 16))[-2:] == "11"):
+                    try:
+                        instruction.append(int(inst_hex, 16))
+                    except (ValueError, TypeError) as e:
+                        print(f"[WARN] Can't convert instruction to hex: {match_store.group(2)}，error: {e}")
+                        instruction.append(None)
                 else:
-                    instruction.append(int(extend_inst(inst_hex), 2))
+                    try:
+                        instruction.append(int(extend_inst(inst_hex), 2))
+                    except (ValueError, TypeError) as e:
+                        print(f"[WARN] Can't convert instruction to hex: {extend_inst(inst_hex)}，error: {e}")
+                        instruction.append(None)
 
 pc_sim = []
 instruction_sim = []
@@ -216,7 +282,8 @@ wb_reg_sim = []
 wb_val_sim = []
 
 # Open the CSV file (replace 'sim_data.csv' with your filename)
-with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreacher_trace.csv", "r", encoding="utf-8") as f:
+with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreacher_trace.csv", "r",
+          encoding="utf-8") as f:
     reader = csv.reader(f, delimiter=',')  # Assuming tab-separated, change delimiter if needed
     next(reader)  # Skip the header line
 
@@ -240,12 +307,20 @@ with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreach
         if (rd_str != '0'):
             pc_sim.append(int(pc_hex, 16))
             instruction_sim.append(int(inst_hex, 16))
-            wb_reg_sim.append(int(rd_str))
-            wb_val_sim.append(int(val_hex, 16))
-
+            try:
+                wb_reg_sim.append(int(rd_str))
+            except (ValueError, TypeError) as e:
+                print(f"[WARN] Can't convert simulated register address to int: {rd_str}，error: {e}")
+                wb_reg_sim.append(None)
+            try:
+                wb_val_sim.append(int(val_hex, 16))
+            except (ValueError, TypeError) as e:
+                print(f"[WARN] Can't convert simulated write back value to hex: {val_hex}，error: {e}")
+                wb_val_sim.append(None)
 
 # Open the input file
 instruction_file_path = "temp/instructions.txt" if args.create else "PMEM_instructions.txt"
+
 
 def find_instruction_by_hex(target_hex):
     with open(instruction_file_path, "r", encoding="utf-8") as f:
@@ -265,6 +340,7 @@ def find_instruction_by_hex(target_hex):
                 return instruction
 
     return None
+
 
 pc_i = 100000
 ins_i = 100000
@@ -289,7 +365,7 @@ for i in range(min(len(wb_val), len(wb_val_sim))):
 
 i_min = min(pc_i, ins_i, wb_reg_i, wb_val_i)
 if i_min != 100000:
-    print(f"First mismatch at item {i_min+1}")
+    print(f"First mismatch at item {i_min + 1}")
     print(f"Simulated PC:{hex(pc_sim[i_min])}")
     print(f"Reference PC:{hex(pc[i_min])}")
     print(f"Simulated instruction:{hex(instruction_sim[i_min])}")
@@ -313,7 +389,7 @@ if len(pc) != len(pc_sim):
     print("Length of simulated PC list:", len(pc_sim))
     for i in range(min(len(pc), len(pc_sim))):
         if pc[i] != pc_sim[i]:
-            print(f"First mismatch at item {i+1}")
+            print(f"First mismatch at item {i + 1}")
             print(f"Simulated PC:{hex(pc_sim[i])}")
             print(f"Reference PC:{hex(pc[i])}")
             break
@@ -343,8 +419,8 @@ for i in range(len(pc)):
     if wb_val[i] != wb_val_sim[i]:
         wb_val_diff_indices.append(i)
 
-
 output_file = open("run_logs/compare_output.txt", "w", encoding="utf-8")
+
 
 def log(msg):
     """Print to console and write to file at the same time."""
@@ -399,10 +475,13 @@ else:
 
 DMEM_old_data = []
 DMEM_simulate_data = []
+
+
 def split_hex_to_bytes(value):
     bytes_str = [value[i:i + 2] for i in range(0, len(value), 2)]
     bytes_str.reverse()
     return bytes_str
+
 
 def verify_dmem_content(DMEM_addr, DMEM_data):
     """
@@ -414,16 +493,23 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
     """
     mem_file_path = "../../Memories/src/DMEM_content.mem"
     with open(mem_file_path, "r") as f:
-        for byte_data in f.read().split():
-            if byte_data != "xx":
-                DMEM_old_data.append(byte_data)
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
 
+            chunks = [line[i:i + 8] for i in range(0, len(line), 8)]
+            DMEM_old_data.extend(reversed(chunks))
 
     mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/DMEM_result.mem"
     with open(mem_file_path, "r") as f:
-        for byte_data in f.read().split():
-            if byte_data != "xx":
-                DMEM_simulate_data.append(byte_data)
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            chunks = [line[i:i + 8] for i in range(0, len(line), 8)]
+            DMEM_simulate_data.extend(reversed(chunks))
+    DMEM_simulate_data[:] = [element for element in DMEM_simulate_data if element != 'xxxxxxxx']
     diff = []
     if DMEM_addr:
         for i in range(len(DMEM_addr)):
@@ -433,16 +519,16 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
             # Convert to hex and extract lower 17 bits
             addr_hex = addr & 0x1FFFF  # 0x1FFFF = 17-bit mask
             k = addr_hex  # Convert to decimal (already in decimal)
-
             # Check if line number is out of range
-            if k >= len(DMEM_old_data):
+            if k / 4 >= len(DMEM_old_data):
                 print(
-                    f"Error: Address 0x{addr:08x} corresponds to line {k}, which exceeds file size ({len(DMEM_old_data)} lines)")
+                    f"Error: Address 0x{addr:08x} corresponds to line {k / 8}, which exceeds file size ({len(DMEM_old_data)} lines)")
                 continue
-
-            replace_bytes = split_hex_to_bytes(expected_data_hex)
-            for index, new_bytes in enumerate(replace_bytes):
-                DMEM_old_data[k + index] = new_bytes
+            # TODO: This is for SD only, SW/SH/SB requires different logic
+            # print(DMEM_old_data[int(k / 4)], DMEM_old_data[int(k / 4) + 1])
+            DMEM_old_data[int(k / 4)] = expected_data_hex[-8:]
+            DMEM_old_data[int(k / 4) + 1] = expected_data_hex[0:-8]
+            # print(DMEM_old_data[int(k / 4)], DMEM_old_data[int(k / 4) + 1])
             if len(DMEM_old_data) != len(DMEM_simulate_data):
                 raise ValueError(
                     f"Length mismatch: len(DMEM_ref_data)={len(DMEM_old_data)}, len(DMEM_simulate_data)={len(DMEM_simulate_data)}"
@@ -470,10 +556,10 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
         print("                    ==          ==")
         print("                       ==    ==")
         print("                          ==")
-    else:  
+    else:
         for i in diff:
-            print(f"addr = 0x{i:08x}, DMEM_ref_data = {DMEM_old_data[i]}, DMEM_simulate_data = {DMEM_simulate_data[i]}")
-
+            print(
+                f"addr = 0x{(i * 4):08x}, DMEM_ref_data = {DMEM_old_data[i]}, DMEM_simulate_data = {DMEM_simulate_data[i]}")
 
 
 # Usage example
@@ -481,4 +567,3 @@ verify_dmem_content(DMEM_addr, DMEM_data)
 # Close the output file
 output_file.close()
 
-    
