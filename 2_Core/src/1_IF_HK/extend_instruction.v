@@ -151,10 +151,10 @@ wire [11:0] imm_c_ldsp = {
                             
 wire [11:0] imm_c_swsp_sdsp = {
                             //----- imm[11:0] ---------
-                            4'd0,                            //imm[11:8]
-                            compressed_instruction[8:7],     //imm[7:6]
-                            compressed_instruction[12:9],    //imm[5:2]
-                            2'd0 };                          //imm[1:0]
+                            3'd0,                            //imm[11:9]
+                            compressed_instruction[9:7],     //imm[8:6]
+                            compressed_instruction[12:10],    //imm[5:2]
+                            3'd0 };                          //imm[1:0]
 
 //NOTE -> Any ILLEGAL C-instructions will be sent to the ID stage as 32'h11111111 (To invalid opcode case)
 localparam ILLEGAL = 32'h11111111; 

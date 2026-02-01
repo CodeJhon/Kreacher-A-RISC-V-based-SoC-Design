@@ -15,8 +15,10 @@ module core #(parameter XLEN = 64)(//RV64I
     output            valid_data_read,
     output            valid_data_write,
 
-    //Control
-    input             pause_core,
+    //Pause requests (external)
+    input             pause_request_scheduler,
+    input             pause_request_initialization,
+    input             pause_request_load_store,
 
     //Buses
     input  [31:0]     EIB,             //External Instruction Bus
@@ -191,13 +193,13 @@ wire [2:0] MEM_sel_writeback_WB;
 wire       ID_valid_data_read_EX;
 wire       EX_valid_data_read_MEM;
 
-assign     valid_data_read = EX_valid_data_read_MEM;
+assign     valid_data_read = EX_valid_data_read_MEM & (!IF_pause_request);;
 
 //valid_data_write
 wire       ID_valid_data_write_EX;
 wire       EX_valid_data_write_MEM;
 
-assign     valid_data_write = EX_valid_data_write_MEM;
+assign     valid_data_write = EX_valid_data_write_MEM & (!IF_pause_request);
 
 //csr_we_in
 wire ID_csr_we_in_EX;
@@ -237,12 +239,17 @@ pause_handler u_pause_handler (
     .irq1_sync          (irq1_sync),
     
     //Control
-    .external_pause     (pause_core),
     .sleep              (EX_sleep_MEM),
 
-    //Pause requests
+    //Pause requests (external)
+    .pause_request_scheduler        (pause_request_scheduler),
+    .pause_request_initialization   (pause_request_initialization),
+    .pause_request_load_store       (pause_request_load_store),
+    
+    //Pause requests (internal)
     .IF_pause_request   (IF_pause_request),
     .EX_pause_request   (EX_pause_request),
+    
     //Output to stages
     .pause_IF           (pause_IF),
     .pause_ID           (pause_ID),

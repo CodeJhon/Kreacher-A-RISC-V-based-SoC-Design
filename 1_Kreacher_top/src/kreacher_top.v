@@ -26,7 +26,7 @@ module kreacher_top #(
     // Core signals
     // ---------------------------------------------------------------------
     wire EMCB;
-    wire [ADDR_BYTE_W-1:0] EMAB;
+    wire [ADDR_BYTE_W:0] EMAB;
     wire [XLEN-1:0] EMDB_write;
     wire valid_data_read;
     wire valid_data_write;
@@ -34,7 +34,9 @@ module kreacher_top #(
     wire [ADDR_BYTE_W-1:0] EIAB;
 
     wire [XLEN-1:0] EMDB_read;
-    wire pause_core;
+    wire pause_request_scheduler;
+    wire pause_request_initialization;
+    wire pause_request_load_store;
     wire [IXLEN-1:0] EIB;
 
     // ---------------------------------------------------------------------
@@ -49,6 +51,7 @@ module kreacher_top #(
     wire [ADDR_BYTE_W-1:0] data_read_write_adr;
     wire [ADDR_BYTE_W-1:0] inst_fetch_adr;
     wire is_write_PRAM;
+    wire pause_to_schedule;
 
     // ---------------------------------------------------------------------
     // SPI interface
@@ -76,11 +79,18 @@ module kreacher_top #(
         .valid_data_read    (valid_data_read),
         .valid_data_write   (valid_data_write),
         .EMDB_in            (EMDB_read),
-        .pause_core         (pause_core),
+        .pause_request_scheduler(pause_request_scheduler),
+        .pause_request_initialization(pause_request_initialization),
+        .pause_request_load_store(pause_request_load_store),
         .EIAB               (EIAB),
         .EIB                (EIB)
     );
-
+    
+    wire [ADDR_BYTE_W-1:0] EMAB_16_0;
+    wire external_access;
+    assign EMAB_16_0 = EMAB[16:0];
+    assign external_access = EMAB[17];
+    
     // ---------------------------------------------------------------------
     // Memory + Init Controller (REPLACED)
     // ---------------------------------------------------------------------
@@ -95,7 +105,8 @@ module kreacher_top #(
 
         // Core interface
         .EMCB                (EMCB),
-        .EMAB                (EMAB),
+        .EMAB                (EMAB_16_0),
+        .external_access     (external_access),
         .EMDB_write          (EMDB_write),
         .valid_instr_fetch   (valid_instr_fetch),
         .valid_data_read     (valid_data_read),
@@ -104,7 +115,9 @@ module kreacher_top #(
 
         .EMDB_read           (EMDB_read),
         .EIB                 (EIB),
-        .pause_core          (pause_core),
+        .pause_request_scheduler(pause_request_scheduler),
+        .pause_request_initialization(pause_request_initialization),
+        .pause_request_load_store(pause_request_load_store),
 
         // SPI interface
         .rvalid              (rvalid),
@@ -125,7 +138,8 @@ module kreacher_top #(
         .inst_data_write     (inst_data_write),
         .data_read_write_adr (data_read_write_adr),
         .inst_fetch_adr      (inst_fetch_adr),
-        .is_write_PRAM       (is_write_PRAM)
+        .is_write_PRAM       (is_write_PRAM),
+        .pause_to_schedule   (pause_to_schedule)
     );
 
     // ---------------------------------------------------------------------
@@ -170,6 +184,7 @@ module kreacher_top #(
         .is_write_PRAM       (is_write_PRAM),
         .data_read           (data_read),
         .instruction_read    (instruction_read),
+        .pause_to_schedule   (pause_to_schedule),
 
         .clk                 (clk),
         .reset_n             (I_A_RESET_L)

@@ -49,9 +49,6 @@ wire valid_instr_fetch;
 core core_inst (
     .clk(clk), 
     .reset_n(reset_n),
-    
-    //Control
-    .pause_core(1'b0),
 
     // Interrupt pins (synchronous)
     .irq0_sync(irq0_sync),
@@ -59,6 +56,11 @@ core core_inst (
 
     .acknowledge_irq0(acknowledge_irq0),
     .acknowledge_irq1(acknowledge_irq1),
+
+    //Pause requests (external)
+    .pause_request_scheduler        (1'b0),
+    .pause_request_initialization   (1'b0),
+    .pause_request_load_store       (1'b0),
 
     //PMEM signals
     .EIB(EIB),

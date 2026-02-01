@@ -11,10 +11,14 @@ module pause_handler (
     input irq1_sync,
     
     //Control
-    input external_pause,
     input sleep,
 
-    //Pause requests
+    //Pause requests (external)
+    input pause_request_scheduler,
+    input pause_request_initialization,
+    input pause_request_load_store,
+    
+    //Pause requests (internal)
     input IF_pause_request,
     input EX_pause_request,
     
@@ -48,10 +52,16 @@ always @(posedge clk or negedge reset_n) begin
 end
 
 //General pause -> external or sync reset
-wire pause_core_general = ~reset_n_sync | external_pause | sleep_mode;
+wire pause_core_general =   ~reset_n_sync                   |
+                            sleep_mode                      |
 
-//Pause output to stages
+                            pause_request_initialization    |
+                            pause_request_load_store        |
+                            pause_request_scheduler;
+
 wire EX_pause_request_real = (~IF_pause_request) & EX_pause_request; //Give priority to the IF pause request
+
+//------------- Pause output to stages
 assign pause_IF = pause_core_general                    | EX_pause_request_real;
 assign pause_ID = pause_core_general | IF_pause_request | EX_pause_request_real;
 assign pause_EX = pause_core_general | IF_pause_request;

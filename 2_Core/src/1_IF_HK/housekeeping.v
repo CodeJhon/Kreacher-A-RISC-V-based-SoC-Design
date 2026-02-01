@@ -71,7 +71,15 @@ always@(posedge clk, negedge reset_n)begin
 end
 
 //Output to EIAB
-wire [XLEN-1:0] to_EIAB = concatenate_in_next_cycle ? (next_PC + {{(XLEN-2){1'b0}}, 2'd2}) : next_PC; // <- extra +2 needed to go to next row and concatenate
+reg [XLEN-1:0] to_EIAB;
+
+always @(*) begin
+    //Default
+    to_EIAB = next_PC;
+
+    if(concatenate_in_next_cycle)
+        to_EIAB = next_PC + {{(XLEN-2){1'b0}}, 2'd2}; // <- extra +2 needed to go to next row and concatenate
+end
 
 assign EIAB = to_EIAB[16:0];
 
