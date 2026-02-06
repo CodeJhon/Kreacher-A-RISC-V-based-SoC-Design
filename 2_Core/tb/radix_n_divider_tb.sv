@@ -14,7 +14,7 @@ module tb_radix_4_divider_edge64_no_div0;
     reg [XLEN-1:0] dividend;
     reg [XLEN-1:0] divisor;
 
-    wire [XLEN:0]   remainder;
+    wire [XLEN-1:0]   remainder;
     wire [XLEN-1:0] quotient;
     wire busy;
     wire done;

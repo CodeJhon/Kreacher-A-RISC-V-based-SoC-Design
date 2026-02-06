@@ -17,6 +17,7 @@ module PMEM_interface
     input  [ADDR_BYTE_W-1:0] inst_fetch_adr,
     input  addr_inst_valid,
     input  is_write_PRAM,
+    input  [XLEN-1:0] init_internal_mask,
     output reg [XLEN-1:0] data_read,
     output [IXLEN-1:0] EIB_instruction_read,
     output pause_to_schedule,
@@ -26,6 +27,7 @@ module PMEM_interface
     input  [IXLEN-1:0] inst_out1,
     output [XLEN-1:0] data_in,
     output [ADDR_BYTE_W-1:0] addr_handler1,
+    output [XLEN-1:0] init_internal_mask_odd_even,
     output reg we_0,
     output reg we_1,
     output cs_0,
@@ -49,6 +51,7 @@ reg [IXLEN-1:0] instruction_read;
 
 // ---------- Pause to schedule flag to update data valid signal ----------
 wire addr_data_valid_gated;
+wire is_write_PRAM_gated;
 reg pause_to_schedule_flag;
 
 assign data_in = inst_data_write;
@@ -78,6 +81,8 @@ assign EIB_instruction_read  = pause_to_schedule_flag ? old_instruction_read : i
 assign addr_data_valid_h     = addr_data_valid_gated;
 assign addr_inst_valid_h     = addr_inst_valid;
 
+assign init_internal_mask_odd_even = init_internal_mask;
+
 // ---------- Address scheduler ----------
 scheduler #(.ADDR_BYTE_W(ADDR_BYTE_W)) scheduler_inst(
     .clk(clk),
@@ -93,7 +98,7 @@ scheduler #(.ADDR_BYTE_W(ADDR_BYTE_W)) scheduler_inst(
 );
 
 // ---------- Data chip select ----------
-always @(*) begin
+always @( * ) begin
     data_cs0 = 0;
     data_cs1 = 0;
     case (data_handler_sel)
@@ -109,7 +114,7 @@ always @(*) begin
 end
 
 // ---------- Instruction chip select ----------
-always @(*) begin
+always @( * ) begin
     inst_cs0 = 0;
     inst_cs1 = 0;
     case (inst_pram_sel)
@@ -126,7 +131,7 @@ assign cs_0 = data_cs0 | inst_cs0;
 assign cs_1 = data_cs1 | inst_cs1;
 
 // ---------- Write enable ----------
-always @(*) begin
+always @( * ) begin
     we_0 = 0;
     we_1 = 0;
     case (data_handler_sel)
@@ -150,7 +155,7 @@ always @(posedge clk, negedge reset_n) begin
 end
 
 // ---------- Instruction from different handler-------
-always @(*) begin
+always @( * ) begin
     case(old_inst_fetch_adr)
         `HANDLER_0: instruction_read = inst_out1;
         default:    instruction_read = 0;
@@ -175,7 +180,7 @@ always @(posedge clk, negedge reset_n) begin
         old_data_read_write_adr <= data_handler_sel;
 end
 
-always @(*) begin
+always @( * ) begin
     data_read = 0;
     case (old_data_read_write_adr)
         `HANDLER_0: data_read = data_out1;

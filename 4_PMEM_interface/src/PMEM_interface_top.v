@@ -16,6 +16,7 @@ module PMEM_interface_top
     input  [ADDR_BYTE_W-1:0] inst_fetch_adr,
     input  addr_inst_valid,
     input  is_write_PRAM,
+    input  [XLEN-1:0] init_internal_mask,
     output [XLEN-1:0] data_read,
     output [IXLEN-1:0] instruction_read,
     output pause_to_schedule,
@@ -30,10 +31,13 @@ module PMEM_interface_top
     // -------------------------
     //pmem and odd even handler
     wire  [XLEN-1:0]      data_in_w;
+    wire  [XLEN-1:0] init_internal_mask;
     wire  [ADDR_BYTE_W-1:0] addr_handler_w;
     wire  addr_data_valid_w;
     wire  addr_inst_valid_w;
     wire [IXLEN-1:0]     inst_out_w;
+    wire [IXLEN-1:0] init_internal_mask_odd;
+    wire [IXLEN-1:0] init_internal_mask_even;
     wire  we0_w;
     wire  we1_w;
     wire  cs0_w;
@@ -73,6 +77,7 @@ module PMEM_interface_top
         .data_read(data_read),
         .EIB_instruction_read(instruction_read),
         .pause_to_schedule(pause_to_schedule),
+        .init_internal_mask(init_internal_mask),
 
         // Odd-even handler interface
         .data_out1(data_out_w),
@@ -101,12 +106,15 @@ module PMEM_interface_top
         .addr_handler(addr_handler_w),
         .addr_data_valid(addr_data_valid_w),
         .addr_inst_valid(addr_inst_valid_w),
+        .init_internal_mask_odd_even(init_internal_mask),
         .inst_out(inst_out_w),
         .macro_sel_hold(pause_to_schedule),
         .we0(we0_w),
         .we1(we1_w),
         .cs0(cs0_w),
         .cs1(cs1_w),
+        .init_internal_mask_odd(init_internal_mask_odd),
+        .init_internal_mask_even(init_internal_mask_even),
         .data_out(data_out_w),
 
         // PRAM interface
@@ -137,7 +145,7 @@ module PMEM_interface_top
         .WE_I(we_even_w),
         .RE_I(~we_even_w),
         .ADDR_I(even_addr),
-        .BM_I(32'hff_ff_ff_ff),
+        .BM_I(init_internal_mask_even),
         .DW_I(data_in_even_w),
         .DR_O(data_out_even_w)
     );
@@ -154,7 +162,7 @@ module PMEM_interface_top
         .WE_I(we_odd_w),
         .RE_I(~we_odd_w),
         .ADDR_I(odd_addr),
-        .BM_I(32'hff_ff_ff_ff),
+        .BM_I(init_internal_mask_odd),
         .DW_I(data_in_odd_w),
         .DR_O(data_out_odd_w)
     );

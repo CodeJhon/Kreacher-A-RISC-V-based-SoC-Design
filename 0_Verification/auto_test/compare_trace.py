@@ -136,9 +136,38 @@ instruction = []
 instruction_raw = []
 wb_reg = []
 wb_val = []
+
 DMEM_addr = []
 DMEM_data = []
 DMEM_data_hex = []
+
+PMEM_addr_0 = []
+PMEM_data_0 = []
+PMEM_data_hex_0 = []
+PMEM_addr_1 = []
+PMEM_data_1 = []
+PMEM_data_hex_1 = []
+
+PMEM_addr_2 = []
+PMEM_data_2 = []
+PMEM_data_hex_2 = []
+PMEM_addr_3 = []
+PMEM_data_3 = []
+PMEM_data_hex_3 = []
+
+PMEM_addr_4 = []
+PMEM_data_4 = []
+PMEM_data_hex_4 = []
+PMEM_addr_5 = []
+PMEM_data_5 = []
+PMEM_data_hex_5 = []
+
+PMEM_addr_6 = []
+PMEM_data_6 = []
+PMEM_data_hex_6 = []
+PMEM_addr_7 = []
+PMEM_data_7 = []
+PMEM_data_hex_7 = []
 # Regex patterns
 # Pattern 1: Normal instruction with optional write-back (no mem)
 pattern_normal = re.compile(
@@ -183,10 +212,63 @@ with open(spike_path, "r", encoding="utf-8") as f:
             except (ValueError, TypeError) as e:
                 print(f"[WARN] Can't convert data to int: {match_store.group(4)}，error: {e}")
                 mem_data = None
-
-            DMEM_addr.append(mem_addr)
-            DMEM_data.append(mem_data)
-            DMEM_data_hex.append(match_store.group(4))
+            if(mem_addr & 0x3FFFF) < 0x08000:
+                if(mem_addr & 0x3FFFF) < 0X2000:
+                    if ((mem_addr & 0x3FFFF) % 8) < 4:
+                        PMEM_addr_0.append(mem_addr)
+                        PMEM_data_0.append(mem_data & 0x00000000FFFFFFFF)
+                        PMEM_data_hex_0.append(match_store.group(4))
+                        if mem_data > 0xFFFFFFFF:
+                            PMEM_addr_1.append(mem_addr + 4)
+                            PMEM_data_1.append((mem_data >> 32) & 0xFFFFFFFF)
+                            PMEM_data_hex_1.append(match_store.group(4))
+                    else:
+                        PMEM_addr_1.append(mem_addr)
+                        PMEM_data_1.append(mem_data)
+                        PMEM_data_hex_1.append(match_store.group(4)) 
+                elif (mem_addr & 0x3FFFF) < 0X4000:
+                    if ((mem_addr & 0x3FFFF) % 8) < 4:
+                        PMEM_addr_2.append(mem_addr-8192)
+                        PMEM_data_2.append(mem_data & 0x00000000FFFFFFFF)
+                        PMEM_data_hex_2.append(match_store.group(4))
+                        if mem_data > 0xFFFFFFFF:
+                            PMEM_addr_3.append(mem_addr -8192 + 4)
+                            PMEM_data_3.append((mem_data >> 32) & 0xFFFFFFFF)
+                            PMEM_data_hex_3.append(match_store.group(4))
+                    else:
+                        PMEM_addr_3.append(mem_addr - 8192)
+                        PMEM_data_3.append(mem_data)
+                        PMEM_data_hex_3.append(match_store.group(4))
+                elif (mem_addr & 0x3FFFF) < 0X6000:
+                    if ((mem_addr & 0x3FFFF) % 8) < 4:
+                        PMEM_addr_4.append(mem_addr-16384)
+                        PMEM_data_4.append(mem_data & 0x00000000FFFFFFFF)
+                        PMEM_data_hex_4.append(match_store.group(4))
+                        if mem_data > 0xFFFFFFFF:
+                            PMEM_addr_5.append(mem_addr -16384 + 4)
+                            PMEM_data_5.append((mem_data >> 32) & 0xFFFFFFFF)
+                            PMEM_data_hex_5.append(match_store.group(4))
+                    else:
+                        PMEM_addr_5.append(mem_addr -16384)
+                        PMEM_data_5.append(mem_data)
+                        PMEM_data_hex_5.append(match_store.group(4))
+                else:
+                    if ((mem_addr & 0x3FFFF) % 8) < 4:
+                        PMEM_addr_6.append(mem_addr -24576)
+                        PMEM_data_6.append(mem_data & 0x00000000FFFFFFFF)
+                        PMEM_data_hex_6.append(match_store.group(4))
+                        if mem_data > 0xFFFFFFFF:
+                            PMEM_addr_7.append(mem_addr -24576 + 4)
+                            PMEM_data_7.append((mem_data >> 32) & 0xFFFFFFFF)
+                            PMEM_data_hex_7.append(match_store.group(4))
+                    else:
+                        PMEM_addr_7.append(mem_addr -24576)
+                        PMEM_data_7.append(mem_data)
+                        PMEM_data_hex_7.append(match_store.group(4))
+            else:    
+                DMEM_addr.append(mem_addr)
+                DMEM_data.append(mem_data)
+                DMEM_data_hex.append(match_store.group(4))
             continue
 
         # Try to match load pattern
@@ -476,13 +558,99 @@ else:
 DMEM_old_data = []
 DMEM_simulate_data = []
 
+PMEM_old_data_0 = []
+PMEM_old_data_1 = []
+PMEM_old_data_2 = []
+PMEM_old_data_3 = []
+PMEM_old_data_4 = []
+PMEM_old_data_5 = []
+PMEM_old_data_6 = []
+PMEM_old_data_7 = []
+
+PMEM_simulate_data_0 = []
+PMEM_simulate_data_1 = []
+PMEM_simulate_data_2 = []
+PMEM_simulate_data_3 = []
+PMEM_simulate_data_4 = []
+PMEM_simulate_data_5 = []
+PMEM_simulate_data_6 = []
+PMEM_simulate_data_7 = []
 
 def split_hex_to_bytes(value):
     bytes_str = [value[i:i + 2] for i in range(0, len(value), 2)]
     bytes_str.reverse()
     return bytes_str
 
-
+def pmem_split_save():
+    mem_file_path = "../../Memories/src/PMEM_test.mem"
+    with open(mem_file_path, 'r') as f:
+        for line_num, line in enumerate(f, start=1):
+            if line_num <= 2048:
+                line = line.rstrip('\n')
+                if line_num % 2 == 1:
+                    PMEM_old_data_0.append(line)
+                else:
+                    PMEM_old_data_1.append(line)
+            elif line_num <= 4096:
+                line = line.rstrip('\n')
+                if line_num % 2 == 1:
+                    PMEM_old_data_2.append(line)
+                else:
+                    PMEM_old_data_3.append(line)
+            elif line_num <= 6144:
+                line = line.rstrip('\n')
+                if line_num % 2 == 1:
+                    PMEM_old_data_4.append(line)
+                else:
+                    PMEM_old_data_5.append(line)
+            elif line_num <= 8192:
+                line = line.rstrip('\n')
+                if line_num % 2 == 1:
+                    PMEM_old_data_6.append(line)
+                else:
+                    PMEM_old_data_7.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_0.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_0.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_1.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_1.append(line)
+    #TODO: Enable other PMEM parts if needed
+    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_2.mem"
+    # with open(mem_file_path, 'r') as f:
+    #     for line in f:
+    #         line = line.rstrip('\n')
+    #         PMEM_simulate_data_2.append(line)
+    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_3.mem"
+    # with open(mem_file_path, 'r') as f:
+    #     for line in f:
+    #         line = line.rstrip('\n')
+    #         PMEM_simulate_data_3.append(line)
+    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_4.mem"
+    # with open(mem_file_path, 'r') as f:
+    #     for line in f:
+    #         line = line.rstrip('\n')
+    #         PMEM_simulate_data_4.append(line)
+    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_5.mem"
+    # with open(mem_file_path, 'r') as f:
+    #     for line in f:
+    #         line = line.rstrip('\n')
+    #         PMEM_simulate_data_5.append(line)
+    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_6.mem"
+    # with open(mem_file_path, 'r') as f:
+    #     for line in f:
+    #         line = line.rstrip('\n')
+    #         PMEM_simulate_data_6.append(line)
+    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_7.mem"
+    # with open(mem_file_path, 'r') as f:
+    #     for line in f:
+    #         line = line.rstrip('\n')
+    #         PMEM_simulate_data_7.append(line)
+    
 def verify_dmem_content(DMEM_addr, DMEM_data):
     """
     Verify DMEM content matches expected values
@@ -526,8 +694,25 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
                 continue
             # TODO: This is for SD only, SW/SH/SB requires different logic
             # print(DMEM_old_data[int(k / 4)], DMEM_old_data[int(k / 4) + 1])
-            DMEM_old_data[int(k / 4)] = expected_data_hex[-8:]
-            DMEM_old_data[int(k / 4) + 1] = expected_data_hex[0:-8]
+            if len(expected_data_hex) > 8:
+                DMEM_old_data[int(k / 4)] = expected_data_hex[-8:]
+                DMEM_old_data[int(k / 4) + 1] = expected_data_hex[0:-8]
+            elif len(expected_data_hex) > 4:
+                DMEM_old_data[int(k / 4)] = expected_data_hex
+            elif len(expected_data_hex) > 2:
+                if k % 4 == 0:
+                    DMEM_old_data[int(k / 4)] = DMEM_old_data[int(k / 4)][0:4] + expected_data_hex
+                else:
+                    DMEM_old_data[int(k / 4)] = expected_data_hex + DMEM_old_data[int(k / 4)][-4:]
+            else:
+                if k % 4 == 0:
+                    DMEM_old_data[int(k / 4)] = DMEM_old_data[int(k / 4)][0:6] + expected_data_hex
+                elif k % 4 == 1:
+                    DMEM_old_data[int(k / 4)] = DMEM_old_data[int(k / 4)][0:4] + expected_data_hex + DMEM_old_data[int(k / 4)][-2:]
+                elif k % 4 == 2:
+                    DMEM_old_data[int(k / 4)] = DMEM_old_data[int(k / 4)][0:2] + expected_data_hex + DMEM_old_data[int(k / 4)][-4:]
+                elif k % 4 == 3:
+                    DMEM_old_data[int(k / 4)] = expected_data_hex + DMEM_old_data[int(k / 4)][-6:]
             # print(DMEM_old_data[int(k / 4)], DMEM_old_data[int(k / 4) + 1])
             if len(DMEM_old_data) != len(DMEM_simulate_data):
                 raise ValueError(
@@ -540,30 +725,91 @@ def verify_dmem_content(DMEM_addr, DMEM_data):
 
     if not diff:
         print("Store word instructions checked. DMEM result matched.")
-        print("Congratulations! You have survived the torture test!")
-        print(" ")
-        print("           ###                          ###            ")
-        print("         ##   ##                      ##   ##         ")
-        print("       ##       ##                  ##       ##   ")
-        print("      ##          ##               ##          ## ")
-        print("        ")
-        print("                           ||   ")
-        print("                           ||")
-        print("                           ||   ")
-        print("                           }}")
-        print("                              ")
-        print("                   ==            ==")
-        print("                    ==          ==")
-        print("                       ==    ==")
-        print("                          ==")
+        
+    else:  
+        for i in diff:
+            print(f"addr = 0x{(i*4):08x}, DMEM_ref_data = {DMEM_old_data[i]}, DMEM_simulate_data = {DMEM_simulate_data[i]}")
+        raise ValueError("DMEM content verification failed.")
+
+def verify_pmem_content(PMEM_addr, PMEM_data, PMEM_data_hex, PMEM_old_data, PMEM_simulate_data, PMEM_index):
+
+    diff = []
+    if PMEM_addr:
+        for i in range(len(PMEM_addr)):
+            addr = PMEM_addr[i]
+            expected_data = PMEM_data[i]
+            # expected_data_hex = PMEM_data_hex[i]
+            # Convert to hex and extract lower 17 bits
+            addr_hex = addr & 0x1FFFF  # 0x1FFFF = 17-bit mask
+            k = addr_hex  # Convert to decimal (already in decimal)
+            # Check if line number is out of range
+            if int(k/8) >= len(PMEM_old_data):
+                print(
+                    f"Error: Address 0x{addr:08x} corresponds to line {k/8}, which exceeds file size ({len(PMEM_old_data)} lines)")
+                continue
+            # TODO: This is for SD only, SW/SH/SB requires different logic
+            # print(DMEM_old_data[int(k / 4)], DMEM_old_data[int(k / 4) + 1])
+            if len(PMEM_data_hex[i]) > 4:
+                PMEM_old_data[int(k / 8)] = format(expected_data, '08x')
+            elif len(PMEM_data_hex[i]) > 2:
+                if k % 4 == 0:
+                    PMEM_old_data[int(k / 8)] = PMEM_old_data[int(k / 8)][0:4] + format(expected_data, '04x')
+                else:
+                    PMEM_old_data[int(k / 8)] = format(expected_data, '04x') + PMEM_old_data[int(k / 8)][-4:]
+            else:
+                if k % 4 == 0:
+                    PMEM_old_data[int(k / 8)] = PMEM_old_data[int(k / 8)][0:6] + format(expected_data, '02x')
+                elif k % 4 == 1:
+                    PMEM_old_data[int(k / 8)] = PMEM_old_data[int(k / 8)][0:4] + format(expected_data, '02x') + PMEM_old_data[int(k / 8)][-2:]
+                elif k % 4 == 2:
+                    PMEM_old_data[int(k / 8)] = PMEM_old_data[int(k / 8)][0:2] + format(expected_data, '02x') + PMEM_old_data[int(k / 8)][-4:]
+                elif k % 4 == 3:
+                    PMEM_old_data[int(k / 8)] = format(expected_data, '02x') + PMEM_old_data[int(k / 8)][-6:]
+            # print(DMEM_old_data[int(k / 4)], DMEM_old_data[int(k / 4) + 1])
+            if len(PMEM_old_data) != len(PMEM_simulate_data):
+                raise ValueError(
+                    f"Length mismatch: len(PMEM_ref_data)={len(PMEM_old_data)}, len(PMEM_simulate_data)={len(PMEM_simulate_data)}"
+                )
+
+        for i, (x, y) in enumerate(zip(PMEM_old_data, PMEM_simulate_data)):
+            if x != y:
+                diff.append(i)
+
+    if not diff:
+        print(f"Store word instructions checked. PMEM_{PMEM_index} result matched.")
     else:
         for i in diff:
-            print(
-                f"addr = 0x{(i * 4):08x}, DMEM_ref_data = {DMEM_old_data[i]}, DMEM_simulate_data = {DMEM_simulate_data[i]}")
-
+            print(f"In PMEM_{PMEM_index} @ addr = 0x{(i*4):08x}, PMEM_ref_data = {PMEM_old_data[i]}, PMEM_simulate_data = {PMEM_simulate_data[i]}")
+        raise ValueError(f"PMEM_{PMEM_index} content verification failed.")
 
 # Usage example
 verify_dmem_content(DMEM_addr, DMEM_data)
+pmem_split_save()
+verify_pmem_content(PMEM_addr_0, PMEM_data_0, PMEM_data_hex_0, PMEM_old_data_0, PMEM_simulate_data_0, 0)
+verify_pmem_content(PMEM_addr_1, PMEM_data_1, PMEM_data_hex_1, PMEM_old_data_1, PMEM_simulate_data_1, 1)
+# verify_pmem_content(PMEM_addr_2, PMEM_data_2, PMEM_data_hex_2, PMEM_old_data_2, PMEM_simulate_data_2, 2)
+# verify_pmem_content(PMEM_addr_3, PMEM_data_3, PMEM_data_hex_3, PMEM_old_data_3, PMEM_simulate_data_3, 3)
+# verify_pmem_content(PMEM_addr_4, PMEM_data_4, PMEM_data_hex_4, PMEM_old_data_4, PMEM_simulate_data_4, 4)
+# verify_pmem_content(PMEM_addr_5, PMEM_data_5, PMEM_data_hex_5, PMEM_old_data_5, PMEM_simulate_data_5, 5)
+# verify_pmem_content(PMEM_addr_6, PMEM_data_6, PMEM_data_hex_6, PMEM_old_data_6, PMEM_simulate_data_6, 6)
+# verify_pmem_content(PMEM_addr_7, PMEM_data_7, PMEM_data_hex_7, PMEM_old_data_7, PMEM_simulate_data_7, 7)
+print("Store word instructions checked. All PMEM results matched.")
+print("Congratulations! You have survived the torture test!")
+print(" ")
+print("           ###                          ###            ")
+print("         ##   ##                      ##   ##         ")
+print("       ##       ##                  ##       ##   ")
+print("      ##          ##               ##          ## ")
+print("        ")
+print("                           ||   ")
+print("                           ||")
+print("                           ||   ")
+print("                           }}")
+print("                              ")
+print("                   ==            ==")
+print("                    ==          ==")
+print("                       ==    ==")
+print("                          ==")
 # Close the output file
 output_file.close()
 

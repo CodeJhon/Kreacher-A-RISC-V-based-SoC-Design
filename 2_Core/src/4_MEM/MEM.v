@@ -9,6 +9,7 @@ module MEM #(parameter XLEN = 64)(
     //Buses
     output [XLEN-1:0]     EMAB,            //External Memory Address Bus
     output                EMCB,            //External Memory Control Bus
+    output [XLEN-1:0]     EMCB_mask,       //External Memory Control Bus -> Bit Mask
     input  [XLEN-1:0]     EMDB_in,            //External Memory Input Data Bus
     output [XLEN-1:0]     EMDB_out,          //External Memory Output Data Bus
 
@@ -68,10 +69,13 @@ module MEM #(parameter XLEN = 64)(
 
 // ---------------------------------- Implementation of modules
 
+wire [XLEN-1:0] bit_mask;
 extension_wr #(.XLEN(XLEN)) extend_write (
     .extend_in(EX_RS2),
     .extend_out(EMDB_out),
-    .extension_type(EX_val_wr_type)
+    .bit_mask(bit_mask),
+    .extension_type(EX_val_wr_type),
+    .extension_start_addr(EX_exec_result[1:0])
 );
 
 wire [XLEN-1:0] EMDB_in_extended;
@@ -142,5 +146,6 @@ end
 // -------------------------------------- Connection to buses (if any)
 assign EMAB                 = EX_exec_result;
 assign EMCB                 = EX_mem_wr_en;
+assign EMCB_mask            = bit_mask;
 
 endmodule

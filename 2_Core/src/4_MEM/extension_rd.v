@@ -14,7 +14,7 @@ localparam EXT_16 = XLEN - 16;
 localparam EXT_8 = XLEN - 8;
 
 //Implementation
-always @(extension_type, extend_in) begin
+always @( * ) begin
     case(extension_type)
         `FORWARD_INPUT:  extend_out = extend_in;
 
@@ -70,7 +70,7 @@ always @(extension_type, extend_in) begin
             3'b111:extend_out = {{EXT_8{1'b0}},extend_in[XLEN-1:XLEN-8]};
             endcase
         end
-        `MEM_NOT_USED: extend_out = 0;
+        `MEM_NOT_USED: extend_out = {XLEN{1'b0}};
     endcase
 end
 

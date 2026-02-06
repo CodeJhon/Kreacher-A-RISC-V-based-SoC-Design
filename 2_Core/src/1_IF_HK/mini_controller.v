@@ -54,7 +54,7 @@ always @( * ) begin
         pause_to_concatenate = rvi_higher & pointer & old_core_jump;
 end
 
-always @(*) begin
+always @( * ) begin
     concatenate_in_next_cycle = 1'b0;
 
     if(pause_to_concatenate)

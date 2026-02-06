@@ -4,10 +4,10 @@ module tb_top_wrapper;
 
   // Parameters
   localparam XLEN = 64;
-  localparam CLK_PERIOD_NS = 10;           
+  localparam CLK_PERIOD_NS = 20;           
   localparam RESET_CYCLES = 2;            
   localparam MAX_COMMITS = 10000;       
-  localparam ECALL_INSTR = 32'h00000073;  
+  localparam ECALL_INSTR = 32'h7ff0801b;  
 
   localparam ADDR_BYTE_W = 17;
   localparam DATA_W      = 64;
@@ -50,7 +50,7 @@ module tb_top_wrapper;
     
     //pause signals
     .pause_ID(dut.u_kreacher_top.core_inst.u_pause_handler.pause_ID),
-    .pause_EX(dut.u_kreacher_top.core_inst.u_pause_handler.pause_EX),
+    .pause_EX(dut.u_kreacher_top.core_inst.u_pause_handler.pause_EX | dut.u_kreacher_top.core_inst.u_EX.EX_pause_request),
     .pause_MEM(dut.u_kreacher_top.core_inst.u_pause_handler.pause_MEM),
     
     .IF_PC(dut.u_kreacher_top.core_inst.IF_PC_ID),
@@ -66,7 +66,12 @@ module tb_top_wrapper;
     .commit_PC(commit_PC),
     .commit_instruction(commit_instruction),
     .commit_rd_addr(commit_rd_addr),
-    .commit_rd_value(commit_rd_value)
+    .commit_rd_value(commit_rd_value),
+
+    //HCU flush signals (for better visualization when flushing happen)
+    // IF_flush is already implicit within IF_PC
+    .ID_flush(dut.u_kreacher_top.core_inst.u_HCU.ID_flush),
+    .EX_flush(dut.u_kreacher_top.core_inst.u_HCU.EX_flush)
   );
 
   // clock generation
@@ -106,10 +111,20 @@ module tb_top_wrapper;
     // We'll run until ECALL commit is observed or MAX_COMMITS reached.
     while (commit_count < MAX_COMMITS) begin
       @(posedge clk);
-      if (commit_valid) commit_count = commit_count + 1;
+      if(commit_valid) commit_count = commit_count + 1;
 
 `ifndef SYNTHESIS
-      if (commit_valid) begin
+      if (commit_instruction == ECALL_INSTR) begin
+          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, commit_count);
+            // Clean up
+          $fclose(trace_fd);
+        #100; // let final events settle
+          //print_coverage_report();
+          $finish;
+      end
+      
+      else begin
+      if (commit_valid && (commit_PC >= 32'h8000002c)) begin
         // Print to console for interactive debugging
         $display("[%0t ns] COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h",
                  $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
@@ -118,18 +133,8 @@ module tb_top_wrapper;
         // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
         $fwrite(trace_fd, "%0d,0x%08h,0x%08h,%0d,0x%0h\n",
                 $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
+      end  
       end
-      else begin
-        if (commit_instruction == ECALL_INSTR) begin
-          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, commit_count);
-            // Clean up
-          $fclose(trace_fd);
-        #100; // let final events settle
-          //print_coverage_report();
-          $finish;
-        end
-      end
-
 `endif
     end // while
 
@@ -148,6 +153,8 @@ module tb_top_wrapper;
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
     $writememh("DMEM_result.mem", dut.external_memory.memory);
+    $writememh("PMEM_result_0.mem", dut.u_kreacher_top.PMEM_interface_top_inst.PRAM_even.memory);
+    $writememh("PMEM_result_1.mem", dut.u_kreacher_top.PMEM_interface_top_inst.PRAM_odd.memory);
     $display("Simulation finished at time %0t ns, cycles = %0d", $time, commit_count);
   end
 

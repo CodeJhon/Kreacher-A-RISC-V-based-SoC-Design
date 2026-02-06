@@ -1,5 +1,6 @@
 module kreacher_top #(
     parameter ADDR_BYTE_W                 = 17,
+    parameter ADDR_INIT_W                 = 16,
     parameter XLEN                        = 64,
     parameter IXLEN                       = 32,
     parameter [ADDR_BYTE_W-1:0] BASE_ADDR = 17'h00000,
@@ -26,7 +27,8 @@ module kreacher_top #(
     // Core signals
     // ---------------------------------------------------------------------
     wire EMCB;
-    wire [ADDR_BYTE_W:0] EMAB;
+    wire [XLEN-1:0] EMCB_mask;
+    wire [XLEN-1:0] EMAB;
     wire [XLEN-1:0] EMDB_write;
     wire valid_data_read;
     wire valid_data_write;
@@ -37,6 +39,7 @@ module kreacher_top #(
     wire pause_request_scheduler;
     wire pause_request_initialization;
     wire pause_request_load_store;
+    wire pause_request_partial_store;
     wire [IXLEN-1:0] EIB;
 
     // ---------------------------------------------------------------------
@@ -52,6 +55,7 @@ module kreacher_top #(
     wire [ADDR_BYTE_W-1:0] inst_fetch_adr;
     wire is_write_PRAM;
     wire pause_to_schedule;
+    wire [XLEN-1:0] init_internal_mask;
 
     // ---------------------------------------------------------------------
     // SPI interface
@@ -74,6 +78,7 @@ module kreacher_top #(
         .reset_n            (I_A_RESET_L),
         .EMAB               (EMAB),
         .EMCB               (EMCB),
+        .EMCB_mask          (EMCB_mask),
         .EMDB_out           (EMDB_write),
         .valid_instr_fetch  (valid_instr_fetch),
         .valid_data_read    (valid_data_read),
@@ -82,14 +87,10 @@ module kreacher_top #(
         .pause_request_scheduler(pause_request_scheduler),
         .pause_request_initialization(pause_request_initialization),
         .pause_request_load_store(pause_request_load_store),
+        .pause_request_partial_store(pause_request_partial_store),
         .EIAB               (EIAB),
         .EIB                (EIB)
     );
-    
-    wire [ADDR_BYTE_W-1:0] EMAB_16_0;
-    wire external_access;
-    assign EMAB_16_0 = EMAB[16:0];
-    assign external_access = EMAB[17];
     
     // ---------------------------------------------------------------------
     // Memory + Init Controller (REPLACED)
@@ -105,8 +106,8 @@ module kreacher_top #(
 
         // Core interface
         .EMCB                (EMCB),
-        .EMAB                (EMAB_16_0),
-        .external_access     (external_access),
+        .EMAB                (EMAB),
+        .EMCB_mask           (EMCB_mask),
         .EMDB_write          (EMDB_write),
         .valid_instr_fetch   (valid_instr_fetch),
         .valid_data_read     (valid_data_read),
@@ -118,6 +119,7 @@ module kreacher_top #(
         .pause_request_scheduler(pause_request_scheduler),
         .pause_request_initialization(pause_request_initialization),
         .pause_request_load_store(pause_request_load_store),
+        .pause_request_partial_store(pause_request_partial_store),
 
         // SPI interface
         .rvalid              (rvalid),
@@ -139,7 +141,8 @@ module kreacher_top #(
         .data_read_write_adr (data_read_write_adr),
         .inst_fetch_adr      (inst_fetch_adr),
         .is_write_PRAM       (is_write_PRAM),
-        .pause_to_schedule   (pause_to_schedule)
+        .pause_to_schedule   (pause_to_schedule),
+        .init_internal_mask  (init_internal_mask)
     );
 
     // ---------------------------------------------------------------------
@@ -185,6 +188,7 @@ module kreacher_top #(
         .data_read           (data_read),
         .instruction_read    (instruction_read),
         .pause_to_schedule   (pause_to_schedule),
+        .init_internal_mask   (init_internal_mask),
 
         .clk                 (clk),
         .reset_n             (I_A_RESET_L)
