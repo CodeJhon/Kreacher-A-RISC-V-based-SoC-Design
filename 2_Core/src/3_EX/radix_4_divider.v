@@ -53,16 +53,16 @@ reg load_operands;
 reg iteration_en;
 
 //Count register
-reg [5:0] count_reg;
+reg [6:0] count_reg;
 
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
-            count_reg  <= XLEN;
+            count_reg  <= 7'd0;
     else if(!pause) begin
-        if(clear_result)
-            count_reg <= XLEN;
+        if(load_operands)
+            count_reg <= 7'd64;
         else if(iteration_en)
-            count_reg <= count_reg - 6'd2;
+            count_reg <= count_reg - 7'd2;
     end
 end
 

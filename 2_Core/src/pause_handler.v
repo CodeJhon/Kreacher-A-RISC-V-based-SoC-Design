@@ -17,6 +17,7 @@ module pause_handler (
     input pause_request_scheduler,
     input pause_request_initialization,
     input pause_request_load_store,
+    input pause_request_partial_store,
     
     //Pause requests (internal)
     input IF_pause_request,
@@ -57,7 +58,8 @@ wire pause_core_general =   ~reset_n_sync                   |
 
                             pause_request_initialization    |
                             pause_request_load_store        |
-                            pause_request_scheduler;
+                            pause_request_scheduler         |
+                            pause_request_partial_store;
 
 wire EX_pause_request_real = (~IF_pause_request) & EX_pause_request; //Give priority to the IF pause request
 

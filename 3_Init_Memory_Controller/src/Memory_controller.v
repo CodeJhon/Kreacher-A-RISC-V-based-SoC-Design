@@ -3,36 +3,43 @@
 
 module Memory_controller #(
     parameter ADDR_BYTE_W = 17,
-    parameter XLEN = 64,     // Full data width
-    parameter IXLEN = 32,     // Instruction width
-    parameter BURST_LEN = 16'd1024
+    parameter ADDR_INIT_W = 16,
+    parameter XLEN        = 64,     // Full data width
+    parameter IXLEN       = 32,     // Instruction width
+    parameter BURST_LEN   = 16'd1024
 )(
      // ================= Init controller interface =================
     input clk,
     input reset_n,
-    input [2:0] state,
+    input [3:0] state,
     input burst_dim,
     input PRAM_in,
     input PRAM_addr_type,
-    input SPI_rdata_type,
+    input [1:0]SPI_rdata_type,
     input ROM_addr_type,
     input [ADDR_BYTE_W-1:0] INITIALIZATION_addr,
     input mem_init,
-    input first_fetch,
+    input pre_fetch,
+    input [1:0] write_enable_state,
+    input write_state,
+    output masking_enabled,
     output enable,
+    output partial_write_done,
+    output partial_read_done,
 
      // ================= Core interface =================
     input EMCB,
-    input [ADDR_BYTE_W-1:0] EMAB,
-    input external_access,
+    input [XLEN-1:0] EMAB,
     input [XLEN-1:0] EMDB_write,
     input valid_instr_fetch,
     input valid_data_read,
     input valid_data_write,
+    input [XLEN-1:0] EMCB_mask,
     output [XLEN-1:0] EMDB_read,
     output pause_request_scheduler,
     output pause_request_initialization,
     output pause_request_load_store,
+    output pause_request_partial_store,
 
     // 32-bit core instruction interface
     input [ADDR_BYTE_W-1:0] EIAB,
@@ -44,64 +51,78 @@ module Memory_controller #(
     input busy,
     input done,
     output start,
-    output is_write_SPI,
+    output reg is_write_SPI,
     output [ADDR_BYTE_W-1:0] byte_addr,
-    output [ADDR_BYTE_W-1:0] burst_len,
-    output [XLEN-1:0] wdata,
+    output [ADDR_INIT_W-1:0] burst_len,
+    output reg [XLEN-1:0] wdata,
 
      // ================= Memory interface =================
     input [XLEN-1:0] data_read,
     input [IXLEN-1:0] instruction_read,
-    input init_done,
     input pause_to_schedule,
     output addr_data_valid,
     output addr_inst_valid,
     output [XLEN-1:0] inst_data_write,
     output [ADDR_BYTE_W-1:0] data_read_write_adr,
     output [ADDR_BYTE_W-1:0] inst_fetch_adr,
-    output is_write_PRAM
+    output is_write_PRAM,
+    output [XLEN-1:0] init_internal_mask
 );
 
      // ================= Internal signals =================
-    reg  mem_sel;
     reg mem_sel_q;
+    reg [XLEN-1:0] ROM_EMBD_read;
+    reg [XLEN-1:0] initialize_rdata;
+    reg [XLEN-1:0] partial_read_d;
+    reg [XLEN-1:0] partial_read_q;
+    reg [XLEN-1:0]internal_wdata;
+    reg [XLEN-1:0]ext_wdata;
+    reg [XLEN-1:0] ext_EMCB_mask;
+    reg [XLEN-1:0] internal_EMCB_mask;
+    wire [XLEN-1:0] default_mask;
     wire [ADDR_BYTE_W-1:0] mem_address;
     wire [ADDR_BYTE_W-1:0] EMAB_rom;
     wire [ADDR_BYTE_W-1:0] EMAB_pram;
-    wire [XLEN-1:0] ROM_EMBD_read;
-    wire [XLEN-1:0] initialize_rdata;
     wire [XLEN-1:0] PRAM_EMBD_read;
-    wire [XLEN-1:0]EMDB_write_w;
-    wire instantiation_state;
     wire addr_data_valid_c;
     wire addr_pmem_data_valid_c;
     wire valid_instr_fetch_internal;
     wire addr_data_valid_internal;
     wire pram_write_core;
     wire pram_write_init;
+    wire full_write;
+    wire full_read;
+    wire ext_addr_hit;
+    wire first_fetching;
+    wire normal_write_enable;
+    wire mem_sel;
+    wire [XLEN-1:0] masked_wdata;
+
+    // wire spi_start_req;
 
      // ================= local parameters =================
     localparam EXT_ADDR_BITS = 3'b000;
 
      // ================= Core signals =================
-    assign valid_instr_fetch_internal   = (state == `S_SUCCESS) & !(done ? 1'b0 : (busy | mem_sel)); 
-    assign pause_request_initialization = (state != `S_SUCCESS);
-    assign pause_request_load_store     = done ? 1'b0 : (busy | mem_sel);
+    assign valid_instr_fetch_internal   = (state == `S_NORMAL_OP) & !(done ? 1'b0 : (busy | mem_sel)); 
+    assign pause_request_initialization = state == `S_FIRST_FETCH || state == `S_WAIT || state == `S_START;
+    assign pause_request_load_store     = (state == `S_PARTIAL_STORE_DONE)? 1'b0 : (done ? 1'b0 : (busy | mem_sel));
+    assign pause_request_partial_store  = state == `S_PARTIAL_READ || state == `S_APPLY_MASK || state == `S_PARTIAL_WRITE;
     assign pause_request_scheduler      = pause_to_schedule;
     assign EIB                          = instruction_read;
     assign EMDB_read                    = mem_sel_q ? ROM_EMBD_read : PRAM_EMBD_read;
     assign addr_data_valid_c            = valid_data_read | valid_data_write;
-    assign addr_pmem_data_valid_c       = mem_sel ? 0 : addr_data_valid_c;
+    assign addr_pmem_data_valid_c       = (state == `S_FIRST_FETCH) ? 1'b0: (~mem_sel) & addr_data_valid_c;
 
     // ================= Memory selection =================
     // Decide whether core access targets external SPI ROM or internal PRAM.
     // External access stalls core until SPI completes.
-    wire ext_addr_hit;
-    assign ext_addr_hit = ({external_access,EMAB[16:15]} != EXT_ADDR_BITS);
+    
+    assign ext_addr_hit = (EMAB[17:15] != EXT_ADDR_BITS);
 
-    always @(*) begin //to differntiate internal or external memory access
-        mem_sel = addr_data_valid_c & ext_addr_hit;
-    end
+    //to differntiate internal or external memory access
+
+    assign mem_sel = addr_data_valid_c & ext_addr_hit;
 
     always@(posedge clk, negedge reset_n)begin
         if(!reset_n)begin
@@ -114,30 +135,109 @@ module Memory_controller #(
 
     assign mem_address         = EMAB[ADDR_BYTE_W-1:0];
     assign EMAB_rom            = mem_sel ? mem_address : 0;
-    assign EMAB_pram           = mem_sel ? ((state == `S_SUCCESS)? mem_address: 0) : mem_address;
-    assign EMDB_write_w        = mem_sel ? 0 : EMDB_write;
-    assign ROM_EMBD_read       = SPI_rdata_type ? rdata : 0;
-    assign initialize_rdata    = SPI_rdata_type ? 0 : rdata;
+    assign EMAB_pram           = mem_sel ? ((state == `S_NORMAL_OP)? mem_address: 0) : mem_address;
+    
+
+    always@( * )begin
+        ROM_EMBD_read          = {XLEN{1'b0}};
+        initialize_rdata       = {XLEN{1'b0}};
+        partial_read_d         = {XLEN{1'b0}};
+        case(SPI_rdata_type)
+            `INITIALIZATION_R      : begin
+                initialize_rdata  = rdata;
+            end
+            `LOAD_STORE_OPERATION_R: begin
+                ROM_EMBD_read     = rdata;
+            end
+            `PARTIAL_READ          : begin
+                 partial_read_d    = rdata;
+            end
+            default: ;
+        endcase
+    end
+
+    always@(posedge clk or negedge reset_n) begin
+        if(!reset_n) partial_read_q <= {XLEN{1'b0}};
+        else if(state == `S_NORMAL_OP)         partial_read_q <= {XLEN{1'b0}}; //apply enable
+        else if(state == `S_PARTIAL_READ)   partial_read_q <= partial_read_d;
+        else                                partial_read_q <= partial_read_q;//hold
+    end
+
+    assign default_mask        = 64'hffff_ffff_ffff_ffff;
     assign PRAM_EMBD_read      = data_read;
-    assign instantiation_state = (state == `S_WAIT) | (state == `S_START);
+    //FOR READING IT SHOULD BE HIGH
+    assign full_write          = &(EMCB_mask);
+    assign full_read           = !EMCB;
+    assign init_internal_mask = mem_init ? default_mask : internal_EMCB_mask;
+
+    always@( * )begin
+        ext_EMCB_mask      = default_mask;
+        internal_EMCB_mask = default_mask;
+        case(mem_sel)
+            1'b0: internal_EMCB_mask = EMCB_mask;
+            1'b1: ext_EMCB_mask      = EMCB_mask;
+        endcase
+    end
 
     // ================= Init controller =================
-    assign enable              = mem_init & rvalid;
+    assign enable              = mem_init && rvalid;
+    assign masking_enabled     = (ext_EMCB_mask != default_mask) && EMCB;
+    assign partial_write_done  = done & (!rvalid);
+    assign partial_read_done   = done & rvalid;
 
     // ================= SPI INTERFACE =================
     assign byte_addr          = ROM_addr_type ? EMAB_rom : INITIALIZATION_addr;
-    assign is_write_SPI       = instantiation_state ? 1'b0 : (EMCB & mem_sel);
-    assign start              = (state == `S_START) | mem_sel;
-    assign burst_len          = burst_dim ? 16'd1 : BURST_LEN;
-    assign wdata              = mem_sel ? EMDB_write : 0;
+
+    assign normal_write_enable = EMCB & mem_sel;
+    always@( * )begin
+        is_write_SPI = 1'b0;
+        case(write_enable_state)
+            `LOAD_STORE_OPERATION_W : is_write_SPI = normal_write_enable;
+            `INITIALIZATION_W       : is_write_SPI = 1'b0; //no writing to external
+            `PARTIAL_WRITE          : is_write_SPI = 1'b1;
+            default: ;
+        endcase
+    end
+
+    assign start              = 
+            (state == `S_START)         || 
+            (state == `S_PARTIAL_READ)  || 
+            (state == `S_PARTIAL_WRITE) || 
+            ((full_read || full_write)  && mem_sel);
+    //To make it pulse instead of level sensitive signal
+    // assign spi_start          = spi_start_req & (~busy);
+    assign burst_len          = burst_dim ? { {(ADDR_INIT_W-4){1'b0}}, 4'd1 } : BURST_LEN;
+
+
+    always@( * )begin
+        ext_wdata       = {XLEN{1'b0}};
+        internal_wdata  = {XLEN{1'b0}};
+        case(mem_sel)
+            `INTERNAL : internal_wdata = EMDB_write;
+            `EXTERNAL : ext_wdata      = EMDB_write;
+            default   : ;
+        endcase
+    end
+    assign masked_wdata = (ext_wdata & EMCB_mask) | (partial_read_q & ~EMCB_mask); //partial masked data
+
+    always@( * )begin
+        wdata = {XLEN{1'b0}};
+        case(write_state)
+            `NORMAL_WDATA : wdata = ext_wdata;
+            `MASKED_WDATA : wdata = masked_wdata;
+            default: ;
+        endcase
+    end
 
     // =================  Memory interface =================
-    assign inst_data_write     = PRAM_in ? EMDB_write_w : initialize_rdata;
+    assign first_fetching      = state == `S_FIRST_FETCH;
+    assign inst_data_write     = PRAM_in ? internal_wdata : initialize_rdata;
     assign data_read_write_adr = PRAM_addr_type ? EMAB_pram : INITIALIZATION_addr;
-    assign inst_fetch_adr      = EIAB;
-    assign pram_write_core     = EMCB && !mem_sel;
+    assign inst_fetch_adr      = first_fetching ? {{(ADDR_BYTE_W-4){1'b0}}, 4'd8} :  EIAB;
+    assign pram_write_core     = EMCB & !mem_sel;
     assign pram_write_init     = mem_init;
-    assign is_write_PRAM       = (state == `S_FIRST_FETCH) ? 1'b0 : (pram_write_core | pram_write_init);
+    assign is_write_PRAM       = first_fetching ? 1'b0 : (pram_write_core | pram_write_init);
     assign addr_data_valid     = mem_init | addr_pmem_data_valid_c;
-    assign addr_inst_valid     = valid_instr_fetch_internal | first_fetch;
+    assign addr_inst_valid     = valid_instr_fetch_internal | pre_fetch;
 endmodule
+

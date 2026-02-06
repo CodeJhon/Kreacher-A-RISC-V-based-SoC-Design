@@ -20,6 +20,7 @@ module odd_even_handler
     input                    cs0,
     input                    cs1,
     input                    macro_sel_hold,
+    input [XLEN-1:0]         init_internal_mask_odd_even,
     output [XLEN-1:0]        data_out,
 
     // PRAM interface
@@ -32,7 +33,9 @@ module odd_even_handler
     output                   cs_even,
     output                   cs_odd,
     output                   we_even,
-    output                   we_odd
+    output                   we_odd,
+    output [IXLEN-1:0]       init_internal_mask_odd,
+    output [IXLEN-1:0]       init_internal_mask_even
 );
 
     reg macro_sel_q;
@@ -41,6 +44,10 @@ module odd_even_handler
     wire [ADDR_WORD_W-1:0] addr;
     wire [ADDR_WORD_W-1:0] macro_addr_lower;
     wire [ADDR_WORD_W-1:0] macro_addr_higher;
+    wire [IXLEN-1:0] init_internal_mask_lower;
+    wire [IXLEN-1:0] init_internal_mask_higher;
+    wire [IXLEN-1:0] data_in_lower;
+    wire [IXLEN-1:0] data_in_higher;
 
     assign word_lane_sel     = addr_handler[2];
     assign addr              = addr_handler[ADDR_WORD_W+2:3];
@@ -58,14 +65,23 @@ module odd_even_handler
     end
 
     // PRAM interface: split 64-bit access across even/odd 32-bit macros
-    assign data_in_even = data_in[31:0];
-    assign data_in_odd  = data_in[63:32];
+    assign data_in_lower = data_in[31:0];
+    assign data_in_higher  = data_in[63:32];
+
+    assign init_internal_mask_lower  = init_internal_mask_odd_even[31:0];
+    assign init_internal_mask_higher = init_internal_mask_odd_even[63:32];
     
     assign odd_addr     = word_lane_sel ? macro_addr_lower : macro_addr_higher;
     assign even_addr    = word_lane_sel ? macro_addr_higher : macro_addr_lower;
 
     assign cs_odd       = addr_data_valid ? any_cs : cs1;
     assign cs_even      = addr_data_valid ? any_cs : cs0;
+
+    assign init_internal_mask_odd  = word_lane_sel ? init_internal_mask_lower : init_internal_mask_higher;
+    assign init_internal_mask_even = word_lane_sel ? init_internal_mask_higher : init_internal_mask_lower;
+
+    assign data_in_odd  = word_lane_sel ? data_in_lower : data_in_higher;
+    assign data_in_even = word_lane_sel ? data_in_higher : data_in_lower;
 
     assign we_odd       = we1;
     assign we_even      = we0;

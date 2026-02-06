@@ -99,7 +99,17 @@ module tb_core_and_mem;
       if(commit_valid) commit_count = commit_count + 1;
 
 `ifndef SYNTHESIS
-      if (commit_valid && (commit_PC == 32'h80000008 || commit_PC >= 32'h80000034)) begin
+      if (commit_instruction == ECALL_INSTR) begin
+          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, commit_count);
+            // Clean up
+          $fclose(trace_fd);
+        #100; // let final events settle
+          //print_coverage_report();
+          $finish;
+      end
+      
+      else begin
+      if (commit_valid && (commit_PC >= 32'h80000008)) begin
         // Print to console for interactive debugging
         $display("[%0t ns] COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h",
                  $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
@@ -108,16 +118,7 @@ module tb_core_and_mem;
         // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
         $fwrite(trace_fd, "%0d,0x%08h,0x%08h,%0d,0x%0h\n",
                 $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
-      end
-      else begin
-        if (commit_instruction == ECALL_INSTR) begin
-          $display("[%0t ns] ECALL observed. Finishing simulation after %0d cycles.", $time, commit_count);
-            // Clean up
-          $fclose(trace_fd);
-        #100; // let final events settle
-          //print_coverage_report();
-          $finish;
-        end
+      end  
       end
 `endif
     end // while

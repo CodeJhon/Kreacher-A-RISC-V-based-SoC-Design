@@ -19,6 +19,7 @@ module core #(parameter XLEN = 64)(//RV64I
     input             pause_request_scheduler,
     input             pause_request_initialization,
     input             pause_request_load_store,
+    input             pause_request_partial_store,
 
     //Buses
     input  [31:0]     EIB,             //External Instruction Bus
@@ -26,6 +27,7 @@ module core #(parameter XLEN = 64)(//RV64I
 
     output [XLEN-1:0] EMAB,            //External Memory Address Bus
     output            EMCB,            //External Memory Control Bus
+    output [XLEN-1:0] EMCB_mask,       //External Memory Control Bus -> Bit Mask
     output [XLEN-1:0] EMDB_out,        //External Memory Data Bus, output for the core, input for the external memory
     input  [XLEN-1:0] EMDB_in          //External Memory Data Bus, input for the core, output for the external memory
     
@@ -193,13 +195,13 @@ wire [2:0] MEM_sel_writeback_WB;
 wire       ID_valid_data_read_EX;
 wire       EX_valid_data_read_MEM;
 
-assign     valid_data_read = EX_valid_data_read_MEM & (!IF_pause_request);;
+assign     valid_data_read = EX_valid_data_read_MEM & (~IF_pause_request);
 
 //valid_data_write
 wire       ID_valid_data_write_EX;
 wire       EX_valid_data_write_MEM;
 
-assign     valid_data_write = EX_valid_data_write_MEM & (!IF_pause_request);
+assign     valid_data_write = EX_valid_data_write_MEM & (~IF_pause_request);
 
 //csr_we_in
 wire ID_csr_we_in_EX;
@@ -245,6 +247,7 @@ pause_handler u_pause_handler (
     .pause_request_scheduler        (pause_request_scheduler),
     .pause_request_initialization   (pause_request_initialization),
     .pause_request_load_store       (pause_request_load_store),
+    .pause_request_partial_store    (pause_request_partial_store),
     
     //Pause requests (internal)
     .IF_pause_request   (IF_pause_request),
@@ -266,6 +269,9 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     .clk(clk),
     .reset_n(reset_n),
     .pause(pause_IF),
+
+    //Special pause signal
+    .EX_pause_request   (EX_pause_request),
     
     //Interrupt Handler
     .acknowledge_irq0(acknowledge_irq0),
@@ -469,6 +475,7 @@ MEM #(.XLEN(XLEN)) u_MEM (
     // Buses
     .EMAB(EMAB), //Memory Address
     .EMCB(EMCB), //Memory Control
+    .EMCB_mask(EMCB_mask), //Memory Bit mask
     .EMDB_in(EMDB_in), //Memory Data
     .EMDB_out(EMDB_out),
 

@@ -6,6 +6,9 @@ module housekeeping #(parameter XLEN = 64)(
     input reset_n,
     input pause,
 
+    //Special pause signal
+    input EX_pause_request,
+
     //Interrupt Handler
     input acknowledge_irq0,
     input acknowledge_irq1,
@@ -52,7 +55,7 @@ end
 //next PC (considering external intervention)
 reg [XLEN-1:0] next_PC;
 always @( * ) begin
-    if(pause || pause_to_concatenate)
+    if(pause_to_concatenate || EX_pause_request)
             next_PC = PC;
     else begin
         if(acknowledge_irq0)
@@ -73,7 +76,7 @@ end
 //Output to EIAB
 reg [XLEN-1:0] to_EIAB;
 
-always @(*) begin
+always @( * ) begin
     //Default
     to_EIAB = next_PC;
 

@@ -149,12 +149,19 @@ wire [11:0] imm_c_ldsp = {
                             compressed_instruction[6:5],     //imm[4:3]
                             3'd0 };                          //imm[2:0]
                             
-wire [11:0] imm_c_swsp_sdsp = {
+wire [11:0] imm_c_swsp = {
+                            //----- imm[11:0] ---------
+                            4'd0,                            //imm[11:8]
+                            compressed_instruction[8:7],     //imm[7:6]
+                            compressed_instruction[12:9],    //imm[5:2]
+                            2'd0 };                          //imm[1:0]
+
+wire [11:0] imm_c_sdsp = {
                             //----- imm[11:0] ---------
                             3'd0,                            //imm[11:9]
                             compressed_instruction[9:7],     //imm[8:6]
-                            compressed_instruction[12:10],    //imm[5:2]
-                            3'd0 };                          //imm[1:0]
+                            compressed_instruction[12:10],    //imm[5:3]
+                            3'd0 };                          //imm[2:0]
 
 //NOTE -> Any ILLEGAL C-instructions will be sent to the ID stage as 32'h11111111 (To invalid opcode case)
 localparam ILLEGAL = 32'h11111111; 
@@ -247,9 +254,9 @@ always @( * ) begin
                 3'd3://                                              C.LDSP     -> ld rd, uimm(x2)
                     if(rd_rs1 != 5'd0)                               extended_instruction = {imm_c_ldsp, `X_2, `LD, rd_rs1, `LOAD};
                 3'd6://                                              C.SWSP     -> sw rs2, uimm(x2)
-                                                                     extended_instruction = {imm_c_swsp_sdsp[11:5], rs2, `X_2, `SW, imm_c_swsp_sdsp[4:0], `STORE};
+                                                                     extended_instruction = {imm_c_swsp[11:5], rs2, `X_2, `SW, imm_c_swsp[4:0], `STORE};
                 3'd7://                                              C.SDSP     -> sd rs2, uimm(x2)
-                                                                     extended_instruction = {imm_c_swsp_sdsp[11:5], rs2, `X_2, `SD, imm_c_swsp_sdsp[4:0], `STORE};
+                                                                     extended_instruction = {imm_c_sdsp[11:5], rs2, `X_2, `SD, imm_c_sdsp[4:0], `STORE};
             endcase
 
             case (funct4)

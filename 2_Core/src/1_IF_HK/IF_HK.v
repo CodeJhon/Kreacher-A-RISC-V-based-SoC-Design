@@ -5,6 +5,9 @@ module IF_HK #(parameter XLEN = 64)(
     input clk,
     input reset_n,
     input pause,
+    
+    //Special pause signal
+    input EX_pause_request,
 
     //Interrupt Handler
     input acknowledge_irq0,
@@ -101,6 +104,9 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
     .clk                (clk),
     .reset_n            (reset_n),
     .pause              (pause),
+
+    //Special pause signal
+    .EX_pause_request   (EX_pause_request),
 
     //Interrupt Handler
     .acknowledge_irq0(acknowledge_irq0),

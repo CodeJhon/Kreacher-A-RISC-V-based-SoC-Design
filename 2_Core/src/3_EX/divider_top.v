@@ -19,8 +19,21 @@ module divider_top #(parameter XLEN = 64)(
     output reg signed [XLEN-1:0] quotient_result
 );
 
-wire signed [XLEN-1:0] dividend = opa;
-wire signed [XLEN-1:0] divisor = opb;
+//Obtaining the lower part in the _W type instructions
+reg signed [XLEN-1:0] dividend;
+reg signed [XLEN-1:0] divisor;
+always @(*) begin
+    case (sel_operation)
+        `ALU_DIVW, `ALU_DIVUW, `ALU_REMW, `ALU_REMUW:begin
+            dividend = $signed(opa[31:0]);
+            divisor =  $signed(opb[31:0]);
+        end
+        default:begin
+            dividend = opa;
+            divisor  = opb;
+        end
+    endcase 
+end
 
 //Determining if operands are signed / unsigned -> Depending on the instruction
 reg rs1_is_signed;
@@ -41,6 +54,13 @@ always @( * ) begin
     endcase
 end
 
+// Obtaining the absolute value of dividend & divisor -> For quick-result cases
+wire a_neg = rs1_is_signed & dividend[XLEN-1];
+wire b_neg = rs2_is_signed & divisor[XLEN-1];
+
+wire [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 1'b1) : dividend;
+wire [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 1'b1) : divisor;
+
 //Quick-Result cases: Allow us to throw a result in the same cycle and not use the dedicated divider module
 // Cases: Divide by zero, divisor greater than divider, divide by same number ...busy
 reg flag_result_one;
@@ -58,7 +78,7 @@ always @( * ) begin
 
     if(divisor == {XLEN{1'b0}})
         flag_division_by_zero = 1'b1;
-    else if(dividend == {XLEN{1'b0}})
+    else if((dividend == {XLEN{1'b0}}) || (divisor_abs > dividend_abs))
         flag_result_zero      = 1'b1;
     else if((-divisor == dividend) || (divisor == dividend))
         flag_result_one       = 1'b1;
@@ -110,18 +130,20 @@ radix_4_divider #(.XLEN(64)) radix_4_divider_inst (
 //Output assignation
 
 //Remainder result
-wire instr_is_rem_signed = (sel_operation == `ALU_REM || sel_operation == `ALU_REMW);
 always @( * ) begin
     //Default value
     remainder_result = remainder;
 
     //Quick-Result cases
-    if ((flag_result_one && instr_is_rem_signed) || (flag_division_by_zero || flag_result_zero))begin
+    if(flag_division_by_zero)
+            remainder_result = dividend;
+    else if (flag_result_one)
             remainder_result = {XLEN{1'b0}};
-    end
+    else if(flag_result_zero)
+            remainder_result = dividend;
             
     //-> For REM, the sign of the result equals the sign of the dividend
-    else if (dividend[XLEN-1] && instr_is_rem_signed)
+    else if (dividend[XLEN-1])
             remainder_result = $signed(-remainder); //Invert remainder sign
 end
 
@@ -131,14 +153,19 @@ always @( * ) begin
     //Default value
     quotient_result = quotient;
     
-    //Quick-Result cases
-    if (flag_result_one)begin //Division by same magnitude
+    //------ Quick-Result cases-----
+
+    //Division by zero
+    if (flag_division_by_zero)
+        quotient_result = {XLEN{1'b1}}; //Send FFFFFFFF_FFFFFFFF
+
+    else if (flag_result_one)begin //Division by same magnitude
         if(rs1_is_signed == rs2_is_signed)
             quotient_result = $signed(1);
         else
             quotient_result = $signed(-1);
     end
-    else if (flag_division_by_zero || flag_result_zero) // Division by 0 or by a/b (b>a)
+    else if (flag_result_zero) // Division by 0 or by a/b (b>a)
             quotient_result = {XLEN{1'b0}};
 end
 
