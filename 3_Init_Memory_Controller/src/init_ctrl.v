@@ -17,7 +17,6 @@ module init_ctrl #(
   input  wire                 masking_enabled,
   input  wire                 partial_read_done,
   input  wire                 partial_write_done,
-  input  wire                 masking_done,
 
   // -------------------------------------------------------------------------
   // Encoded FSM state (visible to MemCtrl / top-level)
@@ -46,7 +45,6 @@ module init_ctrl #(
   // Address counter instance
   // -------------------------------------------------------------------------
   wire [ADDR_W-1:0] count;
-  wire last_initialisation;
   reg mem_init_done;
 
   up_counter #(
@@ -214,7 +212,6 @@ module init_ctrl #(
       S_PARTIAL_STORE_DONE:begin
         pre_fetch   = 1'b1;
       end
-      default: ;
     endcase
   end
 

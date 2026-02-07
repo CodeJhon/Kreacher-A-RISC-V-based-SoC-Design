@@ -16,7 +16,7 @@ module mini_controller (
     //Control
     output reg concatenate_in_next_cycle,
     output reg  concatenate_flag,
-    output reg pause_to_concatenate,
+    output      pause_to_concatenate,
 
     output reg  instr_type,
     output reg  sel_PC_step
@@ -44,12 +44,7 @@ end
 
 //------------------------------------------------- Outputs
 // -> internal pause core to wait 1 extra cycle to fetch 2RV
-always @( * ) begin
-        pause_to_concatenate = 1'b0;
-
-    if(!pause)
-        pause_to_concatenate = rvi_higher & pointer & old_core_jump;
-end
+assign pause_to_concatenate = rvi_higher & pointer & old_core_jump;
 
 always @( * ) begin
     concatenate_in_next_cycle = 1'b0;

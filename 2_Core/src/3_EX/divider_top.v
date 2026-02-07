@@ -22,7 +22,7 @@ module divider_top #(parameter XLEN = 64)(
 //Obtaining the lower part in the _W type instructions
 reg signed [XLEN-1:0] dividend;
 reg signed [XLEN-1:0] divisor;
-always @(*) begin
+always @( * ) begin
     case (sel_operation)
         `ALU_DIVW, `ALU_DIVUW, `ALU_REMW, `ALU_REMUW:begin
             dividend = $signed(opa[31:0]);
@@ -58,8 +58,8 @@ end
 wire a_neg = rs1_is_signed & dividend[XLEN-1];
 wire b_neg = rs2_is_signed & divisor[XLEN-1];
 
-wire [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 1'b1) : dividend;
-wire [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 1'b1) : divisor;
+wire signed [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 64'd1) : dividend;
+wire signed [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 64'd1) : divisor;
 
 //Quick-Result cases: Allow us to throw a result in the same cycle and not use the dedicated divider module
 // Cases: Divide by zero, divisor greater than divider, divide by same number ...busy
@@ -116,8 +116,8 @@ radix_4_divider #(.XLEN(64)) radix_4_divider_inst (
     .rs2_is_signed(rs2_is_signed),
 
     //Operands & Result
-    .dividend(dividend),
-    .divisor(divisor),
+    .dividend($unsigned(dividend)),
+    .divisor($unsigned(divisor)),
 
     .remainder(remainder),
     .quotient(quotient),

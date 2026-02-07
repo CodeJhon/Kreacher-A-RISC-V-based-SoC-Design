@@ -11,8 +11,8 @@ module tb_top_wrapper;
 
   localparam ADDR_BYTE_W = 17;
   localparam DATA_W      = 64;
-  localparam RAM_WORDS   = 8192;
-  localparam RAM_ADDR_W  = 14;
+  localparam external_mem_WORDS   = 8192;
+  localparam external_mem_ADDR_W  = 14;
 
 
   // Clock & reset_n
@@ -34,8 +34,8 @@ module tb_top_wrapper;
   top_wrapper #(
   .ADDR_BYTE_W(ADDR_BYTE_W),
   .DATA_W(DATA_W),
-  .RAM_WORDS(RAM_WORDS),
-  .RAM_ADDR_W(RAM_ADDR_W)
+  .external_mem_WORDS(external_mem_WORDS),
+  .external_mem_ADDR_W(external_mem_ADDR_W)
   ) dut(
 	.I_CLK(clk),
   .I_A_RESET_L(reset_n),

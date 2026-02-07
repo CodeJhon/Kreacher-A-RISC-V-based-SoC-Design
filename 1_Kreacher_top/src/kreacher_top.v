@@ -6,7 +6,7 @@ module kreacher_top #(
     parameter [ADDR_BYTE_W-1:0] BASE_ADDR = 17'h00000,
     parameter [ADDR_BYTE_W-1:0] MEM_LIMIT = 17'h01FFF,
     parameter [ADDR_BYTE_W-1:0] INCR      = 17'd8,
-    parameter BURST_LEN                   = 16'd1024
+    parameter BURST_LENGTH                = 16'd1024
 )(
     input  I_CLK,
     input  I_A_RESET_L,
@@ -67,7 +67,7 @@ module kreacher_top #(
     wire start;
     wire is_write_SPI;
     wire [ADDR_BYTE_W-1:0] byte_addr;
-    wire [ADDR_BYTE_W-1:0] burst_len;
+    wire [ADDR_INIT_W-1:0] burst_len;
     wire [XLEN-1:0] wdata;
 
     // ---------------------------------------------------------------------
@@ -99,7 +99,7 @@ module kreacher_top #(
         .ADDR_BYTE_W (ADDR_BYTE_W),
         .XLEN        (XLEN),
         .IXLEN       (IXLEN),
-        .BURST_LEN   (BURST_LEN)
+        .BURST_LENGTH (BURST_LENGTH)
     ) init_memory_controller_inst (
         .clk                 (clk),
         .reset_n             (I_A_RESET_L),

@@ -6,7 +6,7 @@ module init_memory_controller #(
     parameter ADDR_INIT_W = 16,
     parameter XLEN        = 64,
     parameter IXLEN       = 32,
-    parameter BURST_LEN   = 16'd1024
+    parameter BURST_LENGTH   = 16'd1024
 )(
     // -----------------------------------------------------------------
     // Global
@@ -44,7 +44,7 @@ module init_memory_controller #(
     output wire                 start,
     output wire                 is_write_SPI,
     output wire [ADDR_BYTE_W-1:0] byte_addr,
-    output wire [ADDR_BYTE_W-1:0] burst_len,
+    output wire [ADDR_INIT_W-1:0] burst_len,
     output wire [XLEN-1:0]       wdata,
 
     // -----------------------------------------------------------------
@@ -80,6 +80,10 @@ module init_memory_controller #(
     wire partial_write_done;
     wire write_state;
     wire [1:0]write_enable_state;
+    wire masking_enabled;
+    wire zero;
+
+    assign zero = 1'b0;
 
     // =========================================================================
     // Init controller (internal only)
@@ -90,7 +94,7 @@ module init_memory_controller #(
         .clk                 (clk),
         .reset_n             (reset_n),
 
-        .interrupt           (1'b0),     // optional
+        .interrupt           (zero),     // optional
         .enable              (enable),
         .masking_enabled     (masking_enabled),
         .partial_read_done   (partial_read_done),
@@ -115,11 +119,11 @@ module init_memory_controller #(
     // Memory Controller (main datapath)
     // =========================================================================
     Memory_controller #(
-        .ADDR_BYTE_W (ADDR_BYTE_W),
-        .ADDR_INIT_W (ADDR_INIT_W),
-        .XLEN        (XLEN),
-        .IXLEN       (IXLEN),
-        .BURST_LEN   (BURST_LEN)
+        .ADDR_BYTE_W    (ADDR_BYTE_W),
+        .ADDR_INIT_W    (ADDR_INIT_W),
+        .XLEN           (XLEN),
+        .IXLEN          (IXLEN),
+        .BURST_LENGTH   (BURST_LENGTH)
     ) u_mem_ctrl (
         .clk                 (clk),
         .reset_n             (reset_n),
@@ -172,7 +176,6 @@ module init_memory_controller #(
         // PMEM / ROM interface
         .data_read           (data_read),
         .instruction_read    (instruction_read),
-        // .init_done           (done),
         .addr_data_valid     (addr_data_valid),
         .addr_inst_valid     (addr_inst_valid),
         .inst_data_write     (inst_data_write),

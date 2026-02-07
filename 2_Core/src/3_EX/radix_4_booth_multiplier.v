@@ -1,4 +1,5 @@
 `include "../../include/CORE_CONSTANTS.vh"
+
 module radix_4_booth_multiplier #(
     parameter XLEN   = 64,
     parameter P_XLEN = XLEN*2
@@ -30,7 +31,7 @@ reg move_to_next_group;
 reg clean_result;
 
 reg [6:0] iteration_counter;
-localparam MAX_ITERATIONS = XLEN/2;
+localparam MAX_ITERATIONS = 7'd32;
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
         iteration_counter <= 7'd0;

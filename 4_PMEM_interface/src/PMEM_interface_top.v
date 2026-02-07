@@ -3,7 +3,6 @@
 
 module PMEM_interface_top
 #(
-    parameter PRAMS = 2,        //PRAM count
     parameter XLEN = 64,        // Full data width
     parameter IXLEN = 32,       // Instruction width
     parameter ADDR_BYTE_W = 17  //Address width
@@ -25,25 +24,24 @@ module PMEM_interface_top
     input clk,
     input reset_n
 );
-
+parameter INITFILE = "none";
     // -------------------------
     // Wires between modules
     // -------------------------
     //pmem and odd even handler
     wire  [XLEN-1:0]      data_in_w;
-    wire  [XLEN-1:0] init_internal_mask;
     wire  [ADDR_BYTE_W-1:0] addr_handler_w;
     wire  addr_data_valid_w;
     wire  addr_inst_valid_w;
     wire [IXLEN-1:0]     inst_out_w;
     wire [IXLEN-1:0] init_internal_mask_odd;
     wire [IXLEN-1:0] init_internal_mask_even;
+    wire [XLEN-1:0]    init_internal_mask_odd_even;
     wire  we0_w;
     wire  we1_w;
     wire  cs0_w;
     wire  cs1_w;
     wire [XLEN-1:0]      data_out_w;
-    wire pause_to_schedule;
     
     // PRAM interface
     wire  [IXLEN-1:0]     data_out_even_w;
@@ -57,6 +55,8 @@ module PMEM_interface_top
     wire cs_odd_w;
     wire we_even_w;
     wire we_odd_w;
+    wire [1:0]          zeros;
+    assign zeros =      2'b00;
 
     // -------------------------
     // PMEM_interface instance
@@ -89,7 +89,8 @@ module PMEM_interface_top
         .we_0(we0_w),
         .we_1(we1_w),
         .addr_data_valid_h(addr_data_valid_w),
-        .addr_inst_valid_h(addr_inst_valid_w)
+        .addr_inst_valid_h(addr_inst_valid_w),
+        .init_internal_mask_odd_even(init_internal_mask_odd_even)
     );
 
     // -------------------------
@@ -106,7 +107,7 @@ module PMEM_interface_top
         .addr_handler(addr_handler_w),
         .addr_data_valid(addr_data_valid_w),
         .addr_inst_valid(addr_inst_valid_w),
-        .init_internal_mask_odd_even(init_internal_mask),
+        .init_internal_mask_odd_even(init_internal_mask_odd_even),
         .inst_out(inst_out_w),
         .macro_sel_hold(pause_to_schedule),
         .we0(we0_w),
@@ -135,35 +136,35 @@ module PMEM_interface_top
     // PRAM instances
     // -------------------------
     HM_1P_GF28SLP_1024x32_1cr #(
-        .ADDR_LINES(10),
-        .WORDS  (1024),
-        .FILE_LOAD(0),
-        .ROW_WIDTH(32)
+        .INITFILE (INITFILE)
     ) PRAM_even (
         .CLK_I(clk),
         .CS_I(cs_even_w),
         .WE_I(we_even_w),
-        .RE_I(~we_even_w),
+        .RE_I(!we_even_w),
         .ADDR_I(even_addr),
         .BM_I(init_internal_mask_even),
         .DW_I(data_in_even_w),
-        .DR_O(data_out_even_w)
+        .DR_O(data_out_even_w),
+        .DLYCLK(zeros),
+        .DLYH(zeros),
+        .DLYL(zeros)
     );
 
 
     HM_1P_GF28SLP_1024x32_1cr #(
-        .ADDR_LINES(10),
-        .WORDS  (1024),
-        .FILE_LOAD(0),
-        .ROW_WIDTH(32)
+        .INITFILE (INITFILE)
     ) PRAM_odd (
         .CLK_I(clk),
         .CS_I(cs_odd_w),
         .WE_I(we_odd_w),
-        .RE_I(~we_odd_w),
+        .RE_I(!we_odd_w),
         .ADDR_I(odd_addr),
         .BM_I(init_internal_mask_odd),
         .DW_I(data_in_odd_w),
-        .DR_O(data_out_odd_w)
+        .DR_O(data_out_odd_w),
+        .DLYCLK(zeros),
+        .DLYH(zeros),
+        .DLYL(zeros)
     );
 endmodule

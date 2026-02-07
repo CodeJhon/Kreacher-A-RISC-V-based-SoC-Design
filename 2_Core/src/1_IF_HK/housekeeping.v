@@ -79,9 +79,9 @@ reg [XLEN-1:0] to_EIAB_old;
 
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
-        to_EIAB_old = {XLEN{1'd0}};
+        to_EIAB_old <= {XLEN{1'd0}};
     else if(!EX_pause_request)
-        to_EIAB_old = to_EIAB;
+        to_EIAB_old <= to_EIAB;
 end
 
 always @( * ) begin
