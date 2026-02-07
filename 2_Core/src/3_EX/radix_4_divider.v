@@ -1,4 +1,5 @@
 `include "../../include/CORE_CONSTANTS.vh"
+
 module radix_4_divider#(
     parameter XLEN = 64
 )(
@@ -90,7 +91,7 @@ always@( * )begin
         `S_ITERATE:begin
             busy = 1'b1;
             iteration_en = 1'b1;
-            if(count_reg <= 2)begin
+            if(count_reg <= 7'd2)begin
                 next_state = `S_DONE;
             end
          end
@@ -120,8 +121,8 @@ end
 
 //Remainder 
 reg [XLEN+1:0] remainder_reg;
-//                                                 MSB of divident shift register
-wire [XLEN+1:0] rem_shifted = (remainder_reg << 2) | dividend_shift_reg[XLEN-1:XLEN-2];
+//                                                        MSB of divident shift register
+wire [XLEN+1:0] rem_shifted = {remainder_reg[XLEN-1:0], dividend_shift_reg[XLEN-1:XLEN-2]};
 
 wire [XLEN+1:0] divisor1 = {2'b00, divisor_abs};
 wire [XLEN+1:0] divisor2 = divisor1 << 1;
@@ -134,11 +135,11 @@ always @(posedge clk, negedge reset_n) begin
         if(clear_result)
             remainder_reg <= {(XLEN+2){1'b0}};
         else if (iteration_en) begin
-            if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor3}))
+            if($unsigned(rem_shifted) >= $unsigned(divisor3))
                 remainder_reg <= rem_shifted - divisor3;
-            else if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor2}))
+            else if($unsigned(rem_shifted) >= $unsigned(divisor2))
                 remainder_reg <= rem_shifted - divisor2;
-            else if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor1}))
+            else if($unsigned(rem_shifted) >= $unsigned(divisor1))
                 remainder_reg <= rem_shifted - divisor1;
             else
                 remainder_reg <= rem_shifted;
@@ -155,11 +156,11 @@ always @(posedge clk, negedge reset_n) begin
         if(clear_result)
             quotient_reg  <= {(XLEN){1'b0}};
         else if (iteration_en) begin
-            if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor3}))
+            if($unsigned(rem_shifted) >= $unsigned(divisor3))
                 quotient_reg <= (quotient_reg << 2) | 64'd3;//11
-            else if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor2}))
+            else if($unsigned(rem_shifted) >= $unsigned(divisor2))
                 quotient_reg <= (quotient_reg << 2) | 64'd2;//10
-            else if($unsigned(rem_shifted) >= $unsigned({1'b0,divisor1}))
+            else if($unsigned(rem_shifted) >= $unsigned(divisor1))
                 quotient_reg <= (quotient_reg << 2) | 64'd1;//01
             else
                 quotient_reg <= (quotient_reg << 2) | 64'd0; //00

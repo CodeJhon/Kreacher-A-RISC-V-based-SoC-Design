@@ -2,7 +2,6 @@
 
 module PMEM_interface
 #(
-    parameter PRAMS = 2,        //PRAM count
     parameter XLEN = 64,        // Full data width
     parameter IXLEN = 32,       // Instruction width
     parameter ADDR_BYTE_W = 17  //Address width
@@ -39,8 +38,8 @@ module PMEM_interface
 // ---------- Wire/Reg declarations ----------
 wire [1:0]data_handler_sel;
 wire [1:0] inst_handler_sel;
-wire [3:0]data_pram_sel;
-wire [3:0] inst_pram_sel;
+// wire [2:0]data_pram_sel;
+wire [2:0] inst_pram_sel;
 
 reg data_cs0, data_cs1;
 reg inst_cs0, inst_cs1;
@@ -55,10 +54,10 @@ wire is_write_PRAM_gated;
 reg pause_to_schedule_flag;
 
 assign data_in = inst_data_write;
-assign inst_pram_sel = {inst_fetch_adr[14:13], inst_fetch_adr[2]};
-assign data_pram_sel = {data_read_write_adr[14:13], data_read_write_adr[2]};
 assign inst_handler_sel = inst_fetch_adr[14:13];
 assign data_handler_sel = data_read_write_adr[14:13];
+assign inst_pram_sel = {inst_handler_sel, inst_fetch_adr[2]};
+// assign data_pram_sel = {data_handler_sel, data_read_write_adr[2]};
 
 always@(posedge clk or negedge reset_n)begin
     if(!reset_n)begin
@@ -99,31 +98,23 @@ scheduler #(.ADDR_BYTE_W(ADDR_BYTE_W)) scheduler_inst(
 
 // ---------- Data chip select ----------
 always @( * ) begin
-    data_cs0 = 0;
-    data_cs1 = 0;
+    data_cs0 = 1'b0;
+    data_cs1 = 1'b0;
     case (data_handler_sel)
         `HANDLER_0: begin
             data_cs0 = addr_data_valid_gated;
             data_cs1 = addr_data_valid_gated;
-        end
-        default: begin
-            data_cs0 = 0;
-            data_cs1 = 0;
         end
     endcase
 end
 
 // ---------- Instruction chip select ----------
 always @( * ) begin
-    inst_cs0 = 0;
-    inst_cs1 = 0;
+    inst_cs0 = 1'b0;
+    inst_cs1 = 1'b0;
     case (inst_pram_sel)
         `PRAM_0: inst_cs0 = addr_inst_valid;
         `PRAM_1: inst_cs1 = addr_inst_valid;
-        default: begin
-            inst_cs0 = 0;
-            inst_cs1 = 0;
-        end
     endcase
 end
 
@@ -132,16 +123,12 @@ assign cs_1 = data_cs1 | inst_cs1;
 
 // ---------- Write enable ----------
 always @( * ) begin
-    we_0 = 0;
-    we_1 = 0;
+    we_0 = 1'b0;
+    we_1 = 1'b0;
     case (data_handler_sel)
         `HANDLER_0: begin
             we_0 = is_write_PRAM_gated; 
             we_1 = is_write_PRAM_gated;
-        end
-        default: begin
-            we_0 = 0;
-            we_1 = 0;
         end
     endcase
 end
@@ -156,10 +143,10 @@ end
 
 // ---------- Instruction from different handler-------
 always @( * ) begin
+    instruction_read =  {XLEN{1'b0}};
     case(old_inst_fetch_adr)
         `HANDLER_0: instruction_read = inst_out1;
-        default:    instruction_read = 0;
-endcase
+    endcase
 end
 
 //----------To send old instruction to core during pause scheduler------
@@ -181,10 +168,9 @@ always @(posedge clk, negedge reset_n) begin
 end
 
 always @( * ) begin
-    data_read = 0;
+    data_read = {XLEN{1'b0}};
     case (old_data_read_write_adr)
         `HANDLER_0: data_read = data_out1;
-        default:    data_read = 0;
     endcase
 end
 

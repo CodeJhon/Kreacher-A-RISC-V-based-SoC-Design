@@ -3,7 +3,8 @@ module HM_1P_GF28SLP_1024x32_1cr #(
     parameter WORDS = 1024,
     parameter FILE_LOAD = 0,
     parameter ROW_WIDTH = 32,
-    parameter MEM_FILE = "file_example.mem"
+    parameter MEM_FILE = "file_example.mem",
+    parameter INITFILE = "none"
 )(
     input CLK_I,
     input CS_I,
@@ -15,9 +16,9 @@ module HM_1P_GF28SLP_1024x32_1cr #(
     
     output reg [ROW_WIDTH-1:0]DR_O,
 
-    input DLYCLK,
-    input DLYH,
-    input DLYL
+    input [1:0]     DLYCLK,
+    input [1:0]     DLYH,
+    input [1:0]     DLYL
 );
 
     reg [ROW_WIDTH-1:0] memory [0:WORDS-1];

@@ -1,5 +1,6 @@
 module up_counter #(
-    parameter INCR      = 8, 
+    parameter integer ADDR_W         = 17,  
+    parameter [ADDR_W-1:0] INCR       = 8, 
     parameter LOAD_DIM  = 17,
     parameter COUNT_DIM = 17
 )(

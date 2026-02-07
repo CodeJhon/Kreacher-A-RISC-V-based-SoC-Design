@@ -54,7 +54,7 @@ assign scheduled_addr = a_hold_cycle ? addr_data
 // Normal mode
 // ==========================================================================
 always@( * )begin
-    if(~a_hold_cycle)begin
+    if(!a_hold_cycle)begin
         addr_handler = scheduled_addr;
     end
     else if(addr_data_valid)begin

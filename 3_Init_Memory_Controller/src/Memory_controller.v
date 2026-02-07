@@ -1,12 +1,12 @@
-`include "INIT_MEM_CONSTANTS.vh"
 `timescale 1ns/1ps
+`include "INIT_MEM_CONSTANTS.vh"
 
 module Memory_controller #(
     parameter ADDR_BYTE_W = 17,
     parameter ADDR_INIT_W = 16,
     parameter XLEN        = 64,     // Full data width
     parameter IXLEN       = 32,     // Instruction width
-    parameter BURST_LEN   = 16'd1024
+    parameter BURST_LENGTH   = 16'd1024
 )(
      // ================= Init controller interface =================
     input clk,
@@ -50,7 +50,7 @@ module Memory_controller #(
     input [XLEN-1:0] rdata,  
     input busy,
     input done,
-    output start,
+    output reg start,
     output reg is_write_SPI,
     output [ADDR_BYTE_W-1:0] byte_addr,
     output [ADDR_INIT_W-1:0] burst_len,
@@ -87,7 +87,6 @@ module Memory_controller #(
     wire addr_data_valid_c;
     wire addr_pmem_data_valid_c;
     wire valid_instr_fetch_internal;
-    wire addr_data_valid_internal;
     wire pram_write_core;
     wire pram_write_init;
     wire full_write;
@@ -118,6 +117,7 @@ module Memory_controller #(
     // Decide whether core access targets external SPI ROM or internal PRAM.
     // External access stalls core until SPI completes.
     
+
     assign ext_addr_hit = (EMAB[17:15] != EXT_ADDR_BITS);
 
     //to differntiate internal or external memory access
@@ -134,8 +134,8 @@ module Memory_controller #(
     end
 
     assign mem_address         = EMAB[ADDR_BYTE_W-1:0];
-    assign EMAB_rom            = mem_sel ? mem_address : 0;
-    assign EMAB_pram           = mem_sel ? ((state == `S_NORMAL_OP)? mem_address: 0) : mem_address;
+    assign EMAB_rom            = mem_sel ? mem_address : {ADDR_BYTE_W{1'b0}};
+    assign EMAB_pram           = mem_sel ? ((state == `S_NORMAL_OP)? mem_address: {ADDR_BYTE_W{1'b0}}) : mem_address;
     
 
     always@( * )begin
@@ -152,7 +152,6 @@ module Memory_controller #(
             `PARTIAL_READ          : begin
                  partial_read_d    = rdata;
             end
-            default: ;
         endcase
     end
 
@@ -195,18 +194,36 @@ module Memory_controller #(
             `LOAD_STORE_OPERATION_W : is_write_SPI = normal_write_enable;
             `INITIALIZATION_W       : is_write_SPI = 1'b0; //no writing to external
             `PARTIAL_WRITE          : is_write_SPI = 1'b1;
-            default: ;
         endcase
     end
 
-    assign start              = 
-            (state == `S_START)         || 
-            (state == `S_PARTIAL_READ)  || 
-            (state == `S_PARTIAL_WRITE) || 
-            ((full_read || full_write)  && mem_sel);
+    always @( * ) begin
+    start = 1'b0;  // default
+    case (state)
+        `S_IDLE,
+        `S_WAIT,
+        `S_FIRST_FETCH,
+        `S_APPLY_MASK,
+        `S_PARTIAL_STORE_DONE:
+            start = 1'b0;
+
+        `S_START,
+        `S_PARTIAL_WRITE,
+        `S_PARTIAL_READ:
+            start = 1'b1;
+
+        `S_NORMAL_OP: begin
+            if ((full_read || full_write) && mem_sel)
+                start = 1'b1;
+            else
+                start = 1'b0;
+            end
+        endcase
+    end
+
     //To make it pulse instead of level sensitive signal
     // assign spi_start          = spi_start_req & (~busy);
-    assign burst_len          = burst_dim ? { {(ADDR_INIT_W-4){1'b0}}, 4'd1 } : BURST_LEN;
+    assign burst_len          = burst_dim ? { {(ADDR_INIT_W-4){1'b0}}, 4'd1 } : BURST_LENGTH;
 
 
     always@( * )begin
@@ -215,7 +232,6 @@ module Memory_controller #(
         case(mem_sel)
             `INTERNAL : internal_wdata = EMDB_write;
             `EXTERNAL : ext_wdata      = EMDB_write;
-            default   : ;
         endcase
     end
     assign masked_wdata = (ext_wdata & EMCB_mask) | (partial_read_q & ~EMCB_mask); //partial masked data
@@ -225,7 +241,6 @@ module Memory_controller #(
         case(write_state)
             `NORMAL_WDATA : wdata = ext_wdata;
             `MASKED_WDATA : wdata = masked_wdata;
-            default: ;
         endcase
     end
 

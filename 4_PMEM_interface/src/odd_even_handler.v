@@ -53,7 +53,7 @@ module odd_even_handler
     assign addr              = addr_handler[ADDR_WORD_W+2:3];
     assign macro_addr_lower  = addr;
     assign macro_addr_higher = (word_lane_sel && addr_data_valid) ? (addr + 10'd1) : addr;
-    assign any_cs            = cs0 | cs1;
+    assign any_cs            = cs0 || cs1;
 
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin

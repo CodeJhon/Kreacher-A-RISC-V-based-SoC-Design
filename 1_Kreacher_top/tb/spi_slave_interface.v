@@ -19,7 +19,6 @@ module spi_slave_interface #(
   input  wire [XLEN-1:0]      external_mem_rdata
 );
 
-  assign external_mem_cs = state == S_DATA;
 
   // ------------------------------------------------------------
   // FSM
@@ -30,6 +29,8 @@ module spi_slave_interface #(
     S_DATA = 2'd2;
 
   reg [1:0] state;
+
+  assign external_mem_cs = state == S_DATA;
 
   // Header receive (MSB-first): [15]=RW, [14:1]=ADDR14, [0]=dummy
   reg [4:0]  hdr_cnt;
