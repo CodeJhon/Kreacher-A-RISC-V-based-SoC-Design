@@ -26,7 +26,7 @@ module housekeeping #(parameter XLEN = 64)(
     input [XLEN-1:0]      exec_result,
 
     //Outputs
-    output [16:0]         EIAB,
+    output reg [16:0]     EIAB,
 
     output reg [XLEN-1:0] PC,
     output reg [XLEN-1:0] PC_step,
@@ -75,6 +75,14 @@ end
 
 //Output to EIAB
 reg [XLEN-1:0] to_EIAB;
+reg [XLEN-1:0] to_EIAB_old;
+
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)
+        to_EIAB_old = {XLEN{1'd0}};
+    else if(!EX_pause_request)
+        to_EIAB_old = to_EIAB;
+end
 
 always @( * ) begin
     //Default
@@ -84,7 +92,13 @@ always @( * ) begin
         to_EIAB = next_PC + {{(XLEN-2){1'b0}}, 2'd2}; // <- extra +2 needed to go to next row and concatenate
 end
 
-assign EIAB = to_EIAB[16:0];
+always @( * ) begin
+    //Default
+    if(EX_pause_request)
+        EIAB = to_EIAB_old[16:0];
+    else
+        EIAB = to_EIAB[16:0];
+end
 
 
 endmodule
