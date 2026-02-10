@@ -14,12 +14,13 @@ module tb_top_wrapper;
   localparam external_mem_WORDS   = 8192;
   localparam external_mem_ADDR_W  = 14;
 
+  localparam INTERRUPT_TIME = 5264350;
 
   // Clock & reset_n
   reg clk;
   reg reset_n;
-  reg I_INTR_H;
-  reg O_INTR_ACK;
+  // reg I_INTR_H;
+  // reg O_INTR_ACK;
 
   // Wires to connect to DUT
 `ifndef SYNTHESIS
@@ -31,6 +32,12 @@ module tb_top_wrapper;
 `endif
 
   // Instantiate DUT (kreacher_top and external mem)
+  reg irq0;
+  reg irq1;
+  
+  wire acknowledge_irq0;
+  wire acknowledge_irq1;
+  
   top_wrapper #(
   .ADDR_BYTE_W(ADDR_BYTE_W),
   .DATA_W(DATA_W),
@@ -39,8 +46,8 @@ module tb_top_wrapper;
   ) dut(
 	.I_CLK(clk),
   .I_A_RESET_L(reset_n),
-	.I_INTR_H(I_INTR_H),
-	.O_INTR_ACK(O_INTR_ACK)
+	.I_INTR_H({irq1, irq0}),
+	.O_INTR_ACK({acknowledge_irq1, acknowledge_irq0})
   );
 
   
@@ -137,11 +144,39 @@ module tb_top_wrapper;
   
   end
 
+  // ------------------------------------------------------------
+  // Interrupt stimulus
+  // ------------------------------------------------------------
+
+   initial begin
+    //irq0
+    //Initialize interruot
+    irq0 <= 1'b0;
+    irq1 <= 1'b0;
+
+    #(INTERRUPT_TIME - 30);
+    // Assert interrupt
+    $display("[%0t ns] TB: Asserting irq0", $time);
+    irq0 <= 1'b1;
+    // Hold interrupt until core acknowledges it
+    @(posedge clk iff acknowledge_irq0);
+    // Deassert interrupt
+    $display("[%0t ns] TB: Deasserting irq0", $time);
+    irq0 <= 1'b0;
+end
+
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
     $writememh("DMEM_result.mem", dut.external_memory.memory);
-    $writememh("PMEM_result_0.mem", dut.u_kreacher_top.PMEM_interface_top_inst.PRAM_even.memory);
-    $writememh("PMEM_result_1.mem", dut.u_kreacher_top.PMEM_interface_top_inst.PRAM_odd.memory);
+    $writememh("PMEM_result_0.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[0].PRAM_even.sram_core_i.memory);
+    $writememh("PMEM_result_1.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[0].PRAM_odd.sram_core_i.memory);
+    $writememh("PMEM_result_2.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[1].PRAM_even.sram_core_i.memory);
+    $writememh("PMEM_result_3.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[1].PRAM_odd.sram_core_i.memory);
+    $writememh("PMEM_result_4.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[2].PRAM_even.sram_core_i.memory);
+    $writememh("PMEM_result_5.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[2].PRAM_odd.sram_core_i.memory);
+    $writememh("PMEM_result_6.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[3].PRAM_even.sram_core_i.memory);
+    $writememh("PMEM_result_7.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[3].PRAM_odd.sram_core_i.memory);
+    
     $display("Simulation finished at time %0t ns, cycles = %0d", $time, commit_count);
   end
 

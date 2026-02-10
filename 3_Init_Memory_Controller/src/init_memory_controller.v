@@ -6,13 +6,14 @@ module init_memory_controller #(
     parameter ADDR_INIT_W = 16,
     parameter XLEN        = 64,
     parameter IXLEN       = 32,
-    parameter BURST_LENGTH   = 16'd1024
+    parameter BURST_LENGTH   = 16'd4096
 )(
     // -----------------------------------------------------------------
     // Global
     // -----------------------------------------------------------------
     input  wire                 clk,
     input  wire                 reset_n,
+    input  wire                 interrupt,
 
     // -----------------------------------------------------------------
     // Core interface  (EXACT mirror of Memory_controller)
@@ -46,7 +47,8 @@ module init_memory_controller #(
     output wire [ADDR_BYTE_W-1:0] byte_addr,
     output wire [ADDR_INIT_W-1:0] burst_len,
     output wire [XLEN-1:0]       wdata,
-
+    output wire                  init_abort,
+    
     // -----------------------------------------------------------------
     // PMEM / ROM memory interface
     // -----------------------------------------------------------------
@@ -94,7 +96,7 @@ module init_memory_controller #(
         .clk                 (clk),
         .reset_n             (reset_n),
 
-        .interrupt           (zero),     // optional
+        .interrupt           (interrupt),    
         .enable              (enable),
         .masking_enabled     (masking_enabled),
         .partial_read_done   (partial_read_done),
@@ -128,6 +130,7 @@ module init_memory_controller #(
         .clk                 (clk),
         .reset_n             (reset_n),
         // Init controller interface
+        .interrupt           (interrupt), 
         .state               (state),
         .burst_dim           (burst_dim),
         .PRAM_in             (PRAM_in),
@@ -172,6 +175,7 @@ module init_memory_controller #(
         .byte_addr           (byte_addr),
         .burst_len           (burst_len),
         .wdata               (wdata),
+        .init_abort          (init_abort),
 
         // PMEM / ROM interface
         .data_read           (data_read),

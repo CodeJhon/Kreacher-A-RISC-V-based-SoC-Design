@@ -2,15 +2,16 @@
 `include "INIT_MEM_CONSTANTS.vh"
 
 module Memory_controller #(
-    parameter ADDR_BYTE_W = 17,
-    parameter ADDR_INIT_W = 16,
-    parameter XLEN        = 64,     // Full data width
-    parameter IXLEN       = 32,     // Instruction width
-    parameter BURST_LENGTH   = 16'd1024
+    parameter ADDR_BYTE_W       = 17,
+    parameter ADDR_INIT_W       = 16,
+    parameter XLEN              = 64,     // Full data width
+    parameter IXLEN             = 32,     // Instruction width
+    parameter BURST_LENGTH      = 16'd4096
 )(
      // ================= Init controller interface =================
     input clk,
     input reset_n,
+    input interrupt,
     input [3:0] state,
     input burst_dim,
     input PRAM_in,
@@ -55,6 +56,7 @@ module Memory_controller #(
     output [ADDR_BYTE_W-1:0] byte_addr,
     output [ADDR_INIT_W-1:0] burst_len,
     output reg [XLEN-1:0] wdata,
+    output init_abort,
 
      // ================= Memory interface =================
     input [XLEN-1:0] data_read,
@@ -96,8 +98,6 @@ module Memory_controller #(
     wire normal_write_enable;
     wire mem_sel;
     wire [XLEN-1:0] masked_wdata;
-
-    // wire spi_start_req;
 
      // ================= local parameters =================
     localparam EXT_ADDR_BITS = 3'b000;
@@ -156,10 +156,14 @@ module Memory_controller #(
     end
 
     always@(posedge clk or negedge reset_n) begin
-        if(!reset_n) partial_read_q <= {XLEN{1'b0}};
-        else if(state == `S_NORMAL_OP)         partial_read_q <= {XLEN{1'b0}}; //apply enable
-        else if(state == `S_PARTIAL_READ)   partial_read_q <= partial_read_d;
-        else                                partial_read_q <= partial_read_q;//hold
+        if(!reset_n) 
+            partial_read_q <= {XLEN{1'b0}};
+        else if(state == `S_NORMAL_OP)         
+            partial_read_q <= {XLEN{1'b0}}; //apply enable
+        else if(state == `S_PARTIAL_READ)   
+            partial_read_q <= partial_read_d;
+        else                                
+            partial_read_q <= partial_read_q; //hold
     end
 
     assign default_mask        = 64'hffff_ffff_ffff_ffff;
@@ -222,7 +226,7 @@ module Memory_controller #(
     end
 
     //To make it pulse instead of level sensitive signal
-    // assign spi_start          = spi_start_req & (~busy);
+    assign init_abort         = interrupt && (state == `S_WAIT);
     assign burst_len          = burst_dim ? { {(ADDR_INIT_W-4){1'b0}}, 4'd1 } : BURST_LENGTH;
 
 

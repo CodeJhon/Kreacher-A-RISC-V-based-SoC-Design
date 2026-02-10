@@ -141,10 +141,6 @@ always @( * ) begin
             remainder_result = {XLEN{1'b0}};
     else if(flag_result_zero)
             remainder_result = dividend;
-            
-    //-> For REM, the sign of the result equals the sign of the dividend
-    else if (dividend[XLEN-1])
-            remainder_result = $signed(-remainder); //Invert remainder sign
 end
 
 //Quotient result

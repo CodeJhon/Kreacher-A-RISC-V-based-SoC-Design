@@ -3,7 +3,7 @@
 module init_ctrl #(
   parameter integer ADDR_W         = 17,        // PRAM address width
   parameter [ADDR_W-1:0] BASE_ADDR = 17'h00000,  // init start address
-  parameter [ADDR_W-1:0] MEM_LIMIT = 17'h01FFF,   // MEM_LIMIT is an exclusive upper bound (init runs while addr < MEM_LIMIT)
+  parameter [ADDR_W-1:0] MEM_LIMIT = 17'h07FFF,   // MEM_LIMIT is an exclusive upper bound (init runs while addr < MEM_LIMIT)
   parameter [ADDR_W-1:0] INCR      = 17'd8
 )(
   input  wire                 clk,
@@ -116,10 +116,8 @@ module init_ctrl #(
 
       // Normal init in progress
       S_WAIT: begin
-        if (mem_init_done)
+        if (mem_init_done || interrupt)
           state_next = S_FIRST_FETCH;
-        else if (interrupt)
-          state_next = S_NORMAL_OP;
         else
           state_next = S_WAIT;
       end
