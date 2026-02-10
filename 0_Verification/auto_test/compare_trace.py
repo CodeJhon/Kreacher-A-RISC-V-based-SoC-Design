@@ -583,32 +583,38 @@ def split_hex_to_bytes(value):
 
 def pmem_split_save():
     mem_file_path = "../../Memories/src/PMEM_test.mem"
+
     with open(mem_file_path, 'r') as f:
-        for line_num, line in enumerate(f, start=1):
-            if line_num <= 2048:
-                line = line.rstrip('\n')
-                if line_num % 2 == 1:
-                    PMEM_old_data_0.append(line)
-                else:
-                    PMEM_old_data_1.append(line)
-            elif line_num <= 4096:
-                line = line.rstrip('\n')
-                if line_num % 2 == 1:
-                    PMEM_old_data_2.append(line)
-                else:
-                    PMEM_old_data_3.append(line)
-            elif line_num <= 6144:
-                line = line.rstrip('\n')
-                if line_num % 2 == 1:
-                    PMEM_old_data_4.append(line)
-                else:
-                    PMEM_old_data_5.append(line)
-            elif line_num <= 8192:
-                line = line.rstrip('\n')
-                if line_num % 2 == 1:
-                    PMEM_old_data_6.append(line)
-                else:
-                    PMEM_old_data_7.append(line)
+        lines = f.readlines()
+    if len(lines) < 8192:
+        lines.extend(["xxxxxxxx\n"] * (8192 - len(lines)))
+    for line_num, line in enumerate(lines[:8192], start=1):
+        line = line.rstrip('\n')
+
+        if line_num <= 2048:
+            if line_num % 2 == 1:
+                PMEM_old_data_0.append(line)
+            else:
+                PMEM_old_data_1.append(line)
+
+        elif line_num <= 4096:
+            if line_num % 2 == 1:
+                PMEM_old_data_2.append(line)
+            else:
+                PMEM_old_data_3.append(line)
+
+        elif line_num <= 6144:
+            if line_num % 2 == 1:
+                PMEM_old_data_4.append(line)
+            else:
+                PMEM_old_data_5.append(line)
+
+        elif line_num <= 8192:
+            if line_num % 2 == 1:
+                PMEM_old_data_6.append(line)
+            else:
+                PMEM_old_data_7.append(line)
+
     mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_0.mem"
     with open(mem_file_path, 'r') as f:
         for line in f:
@@ -620,36 +626,36 @@ def pmem_split_save():
             line = line.rstrip('\n')
             PMEM_simulate_data_1.append(line)
     #TODO: Enable other PMEM parts if needed
-    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_2.mem"
-    # with open(mem_file_path, 'r') as f:
-    #     for line in f:
-    #         line = line.rstrip('\n')
-    #         PMEM_simulate_data_2.append(line)
-    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_3.mem"
-    # with open(mem_file_path, 'r') as f:
-    #     for line in f:
-    #         line = line.rstrip('\n')
-    #         PMEM_simulate_data_3.append(line)
-    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_4.mem"
-    # with open(mem_file_path, 'r') as f:
-    #     for line in f:
-    #         line = line.rstrip('\n')
-    #         PMEM_simulate_data_4.append(line)
-    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_5.mem"
-    # with open(mem_file_path, 'r') as f:
-    #     for line in f:
-    #         line = line.rstrip('\n')
-    #         PMEM_simulate_data_5.append(line)
-    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_6.mem"
-    # with open(mem_file_path, 'r') as f:
-    #     for line in f:
-    #         line = line.rstrip('\n')
-    #         PMEM_simulate_data_6.append(line)
-    # mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_7.mem"
-    # with open(mem_file_path, 'r') as f:
-    #     for line in f:
-    #         line = line.rstrip('\n')
-    #         PMEM_simulate_data_7.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_2.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_2.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_3.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_3.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_4.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_4.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_5.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_5.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_6.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_6.append(line)
+    mem_file_path = "../../Vivado_Kreacher/Vivado_kreacher.sim/sim_1/behav/xsim/PMEM_result_7.mem"
+    with open(mem_file_path, 'r') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            PMEM_simulate_data_7.append(line)
     
 def verify_dmem_content(DMEM_addr, DMEM_data):
     """
@@ -787,12 +793,12 @@ verify_dmem_content(DMEM_addr, DMEM_data)
 pmem_split_save()
 verify_pmem_content(PMEM_addr_0, PMEM_data_0, PMEM_data_hex_0, PMEM_old_data_0, PMEM_simulate_data_0, 0)
 verify_pmem_content(PMEM_addr_1, PMEM_data_1, PMEM_data_hex_1, PMEM_old_data_1, PMEM_simulate_data_1, 1)
-# verify_pmem_content(PMEM_addr_2, PMEM_data_2, PMEM_data_hex_2, PMEM_old_data_2, PMEM_simulate_data_2, 2)
-# verify_pmem_content(PMEM_addr_3, PMEM_data_3, PMEM_data_hex_3, PMEM_old_data_3, PMEM_simulate_data_3, 3)
-# verify_pmem_content(PMEM_addr_4, PMEM_data_4, PMEM_data_hex_4, PMEM_old_data_4, PMEM_simulate_data_4, 4)
-# verify_pmem_content(PMEM_addr_5, PMEM_data_5, PMEM_data_hex_5, PMEM_old_data_5, PMEM_simulate_data_5, 5)
-# verify_pmem_content(PMEM_addr_6, PMEM_data_6, PMEM_data_hex_6, PMEM_old_data_6, PMEM_simulate_data_6, 6)
-# verify_pmem_content(PMEM_addr_7, PMEM_data_7, PMEM_data_hex_7, PMEM_old_data_7, PMEM_simulate_data_7, 7)
+verify_pmem_content(PMEM_addr_2, PMEM_data_2, PMEM_data_hex_2, PMEM_old_data_2, PMEM_simulate_data_2, 2)
+verify_pmem_content(PMEM_addr_3, PMEM_data_3, PMEM_data_hex_3, PMEM_old_data_3, PMEM_simulate_data_3, 3)
+verify_pmem_content(PMEM_addr_4, PMEM_data_4, PMEM_data_hex_4, PMEM_old_data_4, PMEM_simulate_data_4, 4)
+verify_pmem_content(PMEM_addr_5, PMEM_data_5, PMEM_data_hex_5, PMEM_old_data_5, PMEM_simulate_data_5, 5)
+verify_pmem_content(PMEM_addr_6, PMEM_data_6, PMEM_data_hex_6, PMEM_old_data_6, PMEM_simulate_data_6, 6)
+verify_pmem_content(PMEM_addr_7, PMEM_data_7, PMEM_data_hex_7, PMEM_old_data_7, PMEM_simulate_data_7, 7)
 print("Store word instructions checked. All PMEM results matched.")
 print("Congratulations! You have survived the torture test!")
 print(" ")

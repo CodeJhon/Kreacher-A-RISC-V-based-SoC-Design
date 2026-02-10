@@ -4,9 +4,9 @@ module kreacher_top #(
     parameter XLEN                        = 64,
     parameter IXLEN                       = 32,
     parameter [ADDR_BYTE_W-1:0] BASE_ADDR = 17'h00000,
-    parameter [ADDR_BYTE_W-1:0] MEM_LIMIT = 17'h01FFF,
+    parameter [ADDR_BYTE_W-1:0] MEM_LIMIT = 17'h07FFF,
     parameter [ADDR_BYTE_W-1:0] INCR      = 17'd8,
-    parameter BURST_LENGTH                = 16'd1024
+    parameter BURST_LENGTH                = 16'd4096
 )(
     input  I_CLK,
     input  I_A_RESET_L,
@@ -14,14 +14,15 @@ module kreacher_top #(
     output O_SS,
     output O_MOSI,
     input  O_MISO,
-    input  I_INTR_H,
-    output O_INTR_ACK
+    input  [1:0] I_INTR_H,
+    output [1:0] O_INTR_ACK
 );
 
     // ---------------------------------------------------------------------
     // Clock
     // ---------------------------------------------------------------------
     wire clk = I_CLK;
+    wire reset_n = I_A_RESET_L;
 
     // ---------------------------------------------------------------------
     // Core signals
@@ -69,6 +70,29 @@ module kreacher_top #(
     wire [ADDR_BYTE_W-1:0] byte_addr;
     wire [ADDR_INIT_W-1:0] burst_len;
     wire [XLEN-1:0] wdata;
+    wire init_abort;
+
+    //---- Interrupt synchronization
+    
+    reg irq0_ff1, irq0_ff2;
+    reg irq1_ff1, irq1_ff2;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            irq0_ff1 <= 1'b0;
+            irq0_ff2 <= 1'b0;
+            irq1_ff1 <= 1'b0;
+            irq1_ff2 <= 1'b0;
+        end else begin
+            irq0_ff1 <= I_INTR_H[0];//irq0
+            irq0_ff2 <= irq0_ff1;
+            irq1_ff1 <= I_INTR_H[1];//irq1
+            irq1_ff2 <= irq1_ff1;
+        end
+    end
+
+    wire irq0_sync = irq0_ff2;
+    wire irq1_sync = irq1_ff2;
 
     // ---------------------------------------------------------------------
     // Core
@@ -76,6 +100,10 @@ module kreacher_top #(
     core #(.XLEN(XLEN)) core_inst (
         .clk                (clk),
         .reset_n            (I_A_RESET_L),
+        .irq0_sync          (irq0_sync),
+        .irq1_sync          (irq1_sync),
+        .acknowledge_irq0   (O_INTR_ACK[0]),
+        .acknowledge_irq1   (O_INTR_ACK[1]),
         .EMAB               (EMAB),
         .EMCB               (EMCB),
         .EMCB_mask          (EMCB_mask),
@@ -103,6 +131,7 @@ module kreacher_top #(
     ) init_memory_controller_inst (
         .clk                 (clk),
         .reset_n             (I_A_RESET_L),
+        .interrupt           (irq0_sync),
 
         // Core interface
         .EMCB                (EMCB),
@@ -131,6 +160,7 @@ module kreacher_top #(
         .byte_addr           (byte_addr),
         .burst_len           (burst_len),
         .wdata               (wdata),
+        .init_abort          (init_abort),
 
         // PMEM interface
         .data_read           (data_read),
@@ -156,6 +186,7 @@ module kreacher_top #(
         .I_RSTN      (I_A_RESET_L),
 
         .start       (start),
+        .abort       (init_abort),
         .is_write    (is_write_SPI),
         .byte_addr   (byte_addr),
         .burst_len   (burst_len),

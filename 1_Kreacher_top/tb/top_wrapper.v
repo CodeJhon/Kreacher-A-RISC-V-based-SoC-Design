@@ -8,8 +8,8 @@ module top_wrapper#(
 )(
     input I_CLK,
     input I_A_RESET_L,
-    input I_INTR_H,
-    output O_INTR_ACK
+    input  [1:0] I_INTR_H,
+    output [1:0] O_INTR_ACK
 );
     // ----------------------------
     // SPI interconnect wires
@@ -26,11 +26,6 @@ module top_wrapper#(
     wire [DATA_W-1:0]     external_mem_wdata;
     wire [DATA_W-1:0]     external_mem_rdata;
 
-    // ----------------------------
-    // Interrupt wires
-    // ----------------------------
-    wire intr_h;
-    wire intr_ack;
 
     kreacher_top u_kreacher_top (
         .I_CLK        (I_CLK),
@@ -42,8 +37,8 @@ module top_wrapper#(
         .O_MISO       (spi_miso),
 
         // Interrupt
-        .I_INTR_H     (intr_h),
-        .O_INTR_ACK   (intr_ack)
+        .I_INTR_H     (I_INTR_H),
+        .O_INTR_ACK   (O_INTR_ACK)
     );
 
      spi_slave_interface #(

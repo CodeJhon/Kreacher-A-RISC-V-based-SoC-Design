@@ -2,62 +2,67 @@
 
 module PMEM_interface
 #(
-    parameter XLEN = 64,        // Full data width
-    parameter IXLEN = 32,       // Instruction width
-    parameter ADDR_BYTE_W = 17  //Address width
+    parameter XLEN              = 64,       //Full data width
+    parameter IXLEN             = 32,       //Instruction width
+    parameter ADDR_BYTE_W       = 17,       //Address width
+    parameter NUM_HANDLERS      = 4,        //Handler count
+    parameter PRAMS_PER_HANDLER = 2,        //PRAMS per hanler
+    parameter NUM_PRAMS         = NUM_HANDLERS * PRAMS_PER_HANDLER //PRAM count
 )
 (
     // Memory controller interface
-    input  clk,
-    input  reset_n,
-    input  [XLEN-1:0] inst_data_write,
-    input  [ADDR_BYTE_W-1:0] data_read_write_adr,
-    input  addr_data_valid,
-    input  [ADDR_BYTE_W-1:0] inst_fetch_adr,
-    input  addr_inst_valid,
-    input  is_write_PRAM,
-    input  [XLEN-1:0] init_internal_mask,
-    output reg [XLEN-1:0] data_read,
-    output [IXLEN-1:0] EIB_instruction_read,
-    output pause_to_schedule,
+    input                      clk,
+    input                      reset_n,
+    input  [XLEN-1:0]          inst_data_write,
+    input  [ADDR_BYTE_W-1:0]   data_read_write_adr,
+    input                      addr_data_valid,
+    input  [ADDR_BYTE_W-1:0]   inst_fetch_adr,
+    input                      addr_inst_valid,
+    input                      is_write_PRAM,
+	input  [XLEN-1:0] 		   init_internal_mask,
+    output [IXLEN-1:0]         EIB_instruction_read,
+    output                     pause_to_schedule,
+    output reg [XLEN-1:0]      data_read,
 
     // Odd-even handler interface
-    input  [XLEN-1:0] data_out1,
-    input  [IXLEN-1:0] inst_out1,
-    output [XLEN-1:0] data_in,
-    output [ADDR_BYTE_W-1:0] addr_handler1,
-    output [XLEN-1:0] init_internal_mask_odd_even,
-    output reg we_0,
-    output reg we_1,
-    output cs_0,
-    output cs_1,
-    output addr_data_valid_h,
-    output addr_inst_valid_h
+    input [(XLEN*NUM_HANDLERS)-1:0]          data_out,
+    input  [(IXLEN*NUM_HANDLERS)-1:0]        inst_out,
+    output  [(ADDR_BYTE_W*NUM_HANDLERS)-1:0] addr_handler,
+    
+	output [XLEN-1:0] 		   init_internal_mask_odd_even,
+    output                     addr_data_valid_h,
+    output                     addr_inst_valid_h,
+    output [NUM_PRAMS-1:0]     cs,
+    output reg [NUM_PRAMS-1:0] we,
+    output [NUM_HANDLERS-1:0]  pause_to_schedule_odd_even,
+    output [XLEN-1:0]          data_in
 );
 
 // ---------- Wire/Reg declarations ----------
-wire [1:0]data_handler_sel;
-wire [1:0] inst_handler_sel;
-// wire [2:0]data_pram_sel;
-wire [2:0] inst_pram_sel;
+wire [1:0]                    data_handler_sel;
+wire [1:0]                    inst_handler_sel;
+wire [2:0]                    inst_pram_sel;
+wire [NUM_PRAMS-1:0]          macro_cs;
 
-reg data_cs0, data_cs1;
-reg inst_cs0, inst_cs1;
-reg [1:0] old_data_read_write_adr;
-reg [1:0] old_inst_fetch_adr;
-reg [IXLEN-1:0] old_instruction_read;
-reg [IXLEN-1:0] instruction_read;
+reg [NUM_PRAMS-1:0]           data_cs;
+reg [NUM_PRAMS-1:0]           inst_cs;
+reg [1:0]                     old_data_read_write_adr;
+reg [1:0]                     old_inst_fetch_adr;
+reg [IXLEN-1:0]               old_instruction_read;
+reg [IXLEN-1:0]               instruction_read;
+
+// wire [ADDR_BYTE_W-1:0] addr_handler_p[NUM_HANDLERS-1:0];
+wire [(ADDR_BYTE_W*NUM_HANDLERS)-1:0] addr_handler_p;
 
 // ---------- Pause to schedule flag to update data valid signal ----------
 wire addr_data_valid_gated;
 wire is_write_PRAM_gated;
 reg pause_to_schedule_flag;
 
-assign data_in = inst_data_write;
-assign inst_handler_sel = inst_fetch_adr[14:13];
-assign data_handler_sel = data_read_write_adr[14:13];
-assign inst_pram_sel = {inst_handler_sel, inst_fetch_adr[2]};
-// assign data_pram_sel = {data_handler_sel, data_read_write_adr[2]};
+assign data_in              = inst_data_write;
+assign inst_handler_sel     = inst_fetch_adr[14:13];
+assign data_handler_sel     = data_read_write_adr[14:13];
+assign inst_pram_sel        = {inst_handler_sel, inst_fetch_adr[2]};
 
 always@(posedge clk or negedge reset_n)begin
     if(!reset_n)begin
@@ -67,6 +72,9 @@ always@(posedge clk or negedge reset_n)begin
         pause_to_schedule_flag <= pause_to_schedule;
     end
 end
+
+//pause the core, even if one of the pause_to_scheduler is acvtiated
+assign pause_to_schedule = |(pause_to_schedule_odd_even);
 
 //this flag is to differentiate data valid signal in the next cycle of pause scheduler
 assign addr_data_valid_gated = pause_to_schedule_flag ? 1'b0 : addr_data_valid;
@@ -82,54 +90,84 @@ assign addr_inst_valid_h     = addr_inst_valid;
 
 assign init_internal_mask_odd_even = init_internal_mask;
 
-// ---------- Address scheduler ----------
-scheduler #(.ADDR_BYTE_W(ADDR_BYTE_W)) scheduler_inst(
-    .clk(clk),
-    .reset_n(reset_n),
-    .addr_inst(inst_fetch_adr),
-    .addr_data(data_read_write_adr),
-    .addr_inst_valid(addr_inst_valid),
-    .addr_data_valid(addr_data_valid_gated),
-    .cs_odd(cs_1),
-    .cs_even(cs_0),
-    .addr_handler(addr_handler1),
-    .pause_to_schedule(pause_to_schedule)
-);
-
 // ---------- Data chip select ----------
 always @( * ) begin
-    data_cs0 = 1'b0;
-    data_cs1 = 1'b0;
+    data_cs ={NUM_PRAMS{1'b0}};
     case (data_handler_sel)
-        `HANDLER_0: begin
-            data_cs0 = addr_data_valid_gated;
-            data_cs1 = addr_data_valid_gated;
-        end
+        `HANDLER_0: 
+            data_cs[1:0] = {2{addr_data_valid_gated}};
+        `HANDLER_1: 
+            data_cs[3:2] = {2{addr_data_valid_gated}};
+        `HANDLER_2: 
+            data_cs[5:4] = {2{addr_data_valid_gated}};
+        `HANDLER_3: 
+            data_cs[7:6] = {2{addr_data_valid_gated}};
     endcase
 end
 
 // ---------- Instruction chip select ----------
 always @( * ) begin
-    inst_cs0 = 1'b0;
-    inst_cs1 = 1'b0;
+    inst_cs = {NUM_PRAMS{1'b0}};
     case (inst_pram_sel)
-        `PRAM_0: inst_cs0 = addr_inst_valid;
-        `PRAM_1: inst_cs1 = addr_inst_valid;
+        `PRAM_0: 
+            inst_cs[0] = addr_inst_valid;
+        `PRAM_1:
+            inst_cs[1] = addr_inst_valid;
+        `PRAM_2: 
+            inst_cs[2] = addr_inst_valid;
+        `PRAM_3: 
+            inst_cs[3] = addr_inst_valid;
+        `PRAM_4: 
+            inst_cs[4] = addr_inst_valid;
+        `PRAM_5: 
+            inst_cs[5] = addr_inst_valid;
+        `PRAM_6: 
+            inst_cs[6] = addr_inst_valid;
+        `PRAM_7: 
+            inst_cs[7] = addr_inst_valid;
+        default: 
+            inst_cs    = {NUM_PRAMS{1'b0}};
     endcase
 end
 
-assign cs_0 = data_cs0 | inst_cs0;
-assign cs_1 = data_cs1 | inst_cs1;
+assign macro_cs = data_cs | inst_cs;
+
+// ---------- Address scheduler ----------
+genvar s;
+generate
+    for(s = 0; s < NUM_HANDLERS; s = s + 1)begin: GEN_SCHEDULERS
+        scheduler #(
+            .ADDR_BYTE_W(ADDR_BYTE_W)
+        )scheduler_s(
+            .clk(clk),
+            .reset_n(reset_n),
+            .addr_inst(inst_fetch_adr),
+            .addr_data(data_read_write_adr),
+            .addr_inst_valid(addr_inst_valid),
+            .addr_data_valid(addr_data_valid_gated),
+            .cs_odd(macro_cs[(s*2)+1]),
+            .cs_even(macro_cs[(s*2)]),
+            .addr_handler(addr_handler_p[(s+1)*ADDR_BYTE_W-1 -: ADDR_BYTE_W]),
+            .pause_to_schedule(pause_to_schedule_odd_even[s])
+        );
+    end
+endgenerate
 
 // ---------- Write enable ----------
 always @( * ) begin
-    we_0 = 1'b0;
-    we_1 = 1'b0;
+    we = {NUM_PRAMS{1'b0}};
     case (data_handler_sel)
-        `HANDLER_0: begin
-            we_0 = is_write_PRAM_gated; 
-            we_1 = is_write_PRAM_gated;
-        end
+        `HANDLER_0: 
+            we[1:0] = {2{is_write_PRAM_gated}}; 
+        
+        `HANDLER_1: 
+            we[3:2] = {2{is_write_PRAM_gated}}; 
+        
+        `HANDLER_2:
+            we[5:4] = {2{is_write_PRAM_gated}}; 
+        
+        `HANDLER_3: 
+            we[7:6] = {2{is_write_PRAM_gated}}; 
     endcase
 end
 
@@ -143,9 +181,16 @@ end
 
 // ---------- Instruction from different handler-------
 always @( * ) begin
-    instruction_read =  {XLEN{1'b0}};
+    instruction_read         =  {IXLEN{1'b0}};
     case(old_inst_fetch_adr)
-        `HANDLER_0: instruction_read = inst_out1;
+        `HANDLER_0: 
+            instruction_read = inst_out[(IXLEN*1)-1:0];
+        `HANDLER_1: 
+            instruction_read = inst_out[(IXLEN*2)-1:(IXLEN*1)];
+        `HANDLER_2: 
+            instruction_read = inst_out[(IXLEN*3)-1:(IXLEN*2)];
+        `HANDLER_3: 
+            instruction_read = inst_out[(IXLEN*4)-1:(IXLEN*3)];
     endcase
 end
 
@@ -170,8 +215,18 @@ end
 always @( * ) begin
     data_read = {XLEN{1'b0}};
     case (old_data_read_write_adr)
-        `HANDLER_0: data_read = data_out1;
+        `HANDLER_0: 
+            data_read = data_out[(XLEN*1)-1:0];
+        `HANDLER_1: 
+            data_read = data_out[(XLEN*2)-1:(XLEN*1)];
+        `HANDLER_2: 
+            data_read = data_out[(XLEN*3)-1:(XLEN*2)];
+        `HANDLER_3: 
+            data_read = data_out[(XLEN*4)-1:(XLEN*3)];
     endcase
 end
+
+assign addr_handler = addr_handler_p;
+assign cs =  macro_cs;
 
 endmodule

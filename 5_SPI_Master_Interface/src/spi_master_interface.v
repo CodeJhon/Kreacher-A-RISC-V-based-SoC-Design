@@ -8,6 +8,7 @@ module spi_master_interface #(
   input  wire                   I_RSTN,
 
   input  wire                   start,
+  input  wire                   abort,
   input  wire                   is_write,
   input  wire [ADDR_BYTE_W-1:0] byte_addr,   // 8B aligned for DATA_W=64
   input  wire [15:0]            burst_len,   // number of DATA_W words; 0 treated as 1
@@ -42,9 +43,10 @@ module spi_master_interface #(
 
   reg [15:0] words_left, next_words_left;
   reg [4:0]  hdr_cnt,    next_hdr_cnt;
-  reg [6:0]  bit_cnt,    next_bit_cnt;
+  reg [6:0]  bit_cnt;
+  reg [7:0]  next_bit_cnt;
 
-  reg [ADDR_BYTE_W-1:0] addr_b,     next_addr_b;
+  reg [ADDR_BYTE_W:0] addr_b,     next_addr_b;
   reg [15:0]            hdr_shift,  next_hdr_shift;
 
   reg [DATA_W-1:0]      tx_shift,   next_tx_shift;
@@ -178,7 +180,11 @@ module spi_master_interface #(
         next_O_MOSI = 1'b0;
         next_busy   = 1'b1;
 
-        if (skip_sample) begin
+        if (abort) begin
+          next_state = S_CS_HIGH;
+          next_O_SS  = 1'b1;
+        end
+        else if (skip_sample) begin
           next_skip_sample = 1'b0;   // dummy turnaround
           next_rx_shift    = rx_shift;
           next_bit_cnt     = bit_cnt;
