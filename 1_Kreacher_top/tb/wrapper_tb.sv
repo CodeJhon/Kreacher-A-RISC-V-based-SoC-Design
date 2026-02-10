@@ -4,7 +4,7 @@ module tb_top_wrapper;
 
   // Parameters
   localparam XLEN = 64;
-  localparam CLK_PERIOD_NS = 20;           
+  localparam CLK_PERIOD_NS = 30;           
   localparam RESET_CYCLES = 2;            
   localparam MAX_COMMITS = 10000;       
   localparam ECALL_INSTR = 32'h7ff0801b;  
@@ -13,8 +13,6 @@ module tb_top_wrapper;
   localparam DATA_W      = 64;
   localparam external_mem_WORDS   = 8192;
   localparam external_mem_ADDR_W  = 14;
-
-  localparam INTERRUPT_TIME = 5264350;
 
   // Clock & reset_n
   reg clk;
@@ -153,30 +151,49 @@ module tb_top_wrapper;
         //print_coverage_report();
       $finish;
     end
-
-  
   end
 
   // ------------------------------------------------------------
-  // Interrupt stimulus
+  // Interrupt stimulus (halfcycle latency-based assert, ack-based deassert)
   // ------------------------------------------------------------
 
-   initial begin
-    //irq0
-    //Initialize interruot
+  parameter IRQ_ASSERT_CYCLES = 264274;
+
+  int irq_cycle_cnt;
+  bit irq_asserted;
+
+  initial begin
     irq0 <= 1'b0;
     irq1 <= 1'b0;
+    irq_cycle_cnt = 0;
+    irq_asserted  = 0;
+  end
 
-    #(INTERRUPT_TIME - 30);
-    // Assert interrupt
-    $display("[%0t ns] TB: Asserting irq0", $time);
-    irq0 <= 1'b1;
-    // Hold interrupt until core acknowledges it
-    @(posedge clk iff acknowledge_irq0);
-    // Deassert interrupt
-    $display("[%0t ns] TB: Deasserting irq0", $time);
-    irq0 <= 1'b0;
-end
+  // Count cycles only until IRQ is asserted
+  always @(posedge clk) begin
+    if (!irq_asserted)
+      irq_cycle_cnt++;
+  end
+
+  // Drive IRQ on negedge clk
+  always @(negedge clk) begin
+    // Assert IRQ when counter reaches threshold
+    if (!irq_asserted && irq_cycle_cnt >= IRQ_ASSERT_CYCLES) begin
+      $display("[%0t] TB: Asserting irq0 (cycle=%0d)", $time, irq_cycle_cnt);
+      irq0 <= 1'b1;
+      irq_asserted <= 1'b1;
+    end
+
+    // Deassert IRQ ONLY on acknowledge
+    if (irq_asserted && acknowledge_irq0) begin
+      #CLK_PERIOD_NS;
+      $display("[%0t] TB: Deasserting irq0 (acknowledged)", $time);
+      irq0 <= 1'b0;
+      irq_asserted  <= 1'b0;
+      irq_cycle_cnt <= 0;   // reset for next interrupt
+    end
+  end
+
 
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
