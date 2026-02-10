@@ -16,13 +16,6 @@ module RAM #(
 
     reg [ROW_WIDTH-1:0] memory [0:WORDS-1];
 
-    // Latches - needed to model the behaviour of the memory
-    reg [ADDR_LINES-1:0] addr_r;
-    reg [ROW_WIDTH-1:0]  data_in_r;
-    reg                  we_r;
-    reg                  cs_r;
-    integer i;
-
     //Initialize the memory with the contents of the specified file
     initial begin
         // $readmemh reads hexadecimal values from the specified file
@@ -32,21 +25,13 @@ module RAM #(
         end
     end
 
-    // Capture address, data and control on the rising edge
     always @(posedge clk) begin
-        cs_r      = cs;
-        addr_r    = addr;
-        data_in_r = data_in;
-        we_r      = we;
-    end
-    // Perform memory access on the falling edge (half-cycle later)
-    always @(negedge clk) begin
-        if (cs_r) begin
-            if (we_r) begin
-                memory[addr_r] <= data_in_r;
+        if (cs) begin
+            if (we) begin
+                memory[addr] <= data_in;
             end
             else begin
-                data_out <= memory[addr_r];
+                data_out <= memory[addr];
             end
         end
     end

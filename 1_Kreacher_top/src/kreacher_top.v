@@ -19,10 +19,53 @@ module kreacher_top #(
 );
 
     // ---------------------------------------------------------------------
-    // Clock
+    // Space for pad instantiation
     // ---------------------------------------------------------------------
-    wire clk = I_CLK;
-    wire reset_n = I_A_RESET_L;
+    wire clk;
+    wire reset_n;
+    
+    wire spi_ss;
+    wire spi_mosi;
+    wire spi_miso;
+
+    wire [1:0] intr_h;
+    wire [1:0] intr_ack;
+
+    //--Delete this when instantiating actual pads
+    assign clk          = I_CLK;
+    assign reset_n      = I_A_RESET_L;
+    
+    assign O_SS         = spi_ss;
+    assign O_MOSI       = spi_mosi;
+    assign spi_miso     = O_MISO;
+
+    assign intr_h       = I_INTR_H;
+    assign O_INTR_ACK   = intr_ack;
+
+    //--Replace with:
+    //pads pads_i (
+    //    //From-To External
+    //    .I_CLK        (I_CLK),
+    //    .I_A_RESET_L  (I_A_RESET_L),
+    //    
+    //    .O_SS         (O_SS),
+    //    .O_MOSI       (O_MOSI),
+    //    .O_MISO       (O_MISO),
+    //    
+    //    .I_INTR_H     (I_INTR_H),
+    //    .O_INTR_ACK   (O_INTR_ACK),
+    //    
+    //    //To-From Internal
+    //    .clk          (clk),
+    //    .reset_n      (reset_n),
+    //    
+    //    .ss           (spi_ss),
+    //    .mosi         (spi_mosi),
+    //    .miso         (spi_miso),
+    //    
+    //    .intr_h       (intr_h),
+    //    .intr_ack     (intr_ack)        
+    //);
 
     // ---------------------------------------------------------------------
     // Core signals
@@ -84,9 +127,9 @@ module kreacher_top #(
             irq1_ff1 <= 1'b0;
             irq1_ff2 <= 1'b0;
         end else begin
-            irq0_ff1 <= I_INTR_H[0];//irq0
+            irq0_ff1 <= intr_h[0];//irq0
             irq0_ff2 <= irq0_ff1;
-            irq1_ff1 <= I_INTR_H[1];//irq1
+            irq1_ff1 <= intr_h[1];//irq1
             irq1_ff2 <= irq1_ff1;
         end
     end
@@ -99,11 +142,11 @@ module kreacher_top #(
     // ---------------------------------------------------------------------
     core #(.XLEN(XLEN)) core_inst (
         .clk                (clk),
-        .reset_n            (I_A_RESET_L),
+        .reset_n            (reset_n),
         .irq0_sync          (irq0_sync),
         .irq1_sync          (irq1_sync),
-        .acknowledge_irq0   (O_INTR_ACK[0]),
-        .acknowledge_irq1   (O_INTR_ACK[1]),
+        .acknowledge_irq0   (intr_ack[0]),
+        .acknowledge_irq1   (intr_ack[1]),
         .EMAB               (EMAB),
         .EMCB               (EMCB),
         .EMCB_mask          (EMCB_mask),
@@ -130,7 +173,7 @@ module kreacher_top #(
         .BURST_LENGTH (BURST_LENGTH)
     ) init_memory_controller_inst (
         .clk                 (clk),
-        .reset_n             (I_A_RESET_L),
+        .reset_n             (reset_n),
         .interrupt           (irq0_sync),
 
         // Core interface
@@ -183,7 +226,7 @@ module kreacher_top #(
         .DATA_W      (XLEN)
     ) spi_master_interface_inst (
         .I_CLK       (clk),
-        .I_RSTN      (I_A_RESET_L),
+        .I_RSTN      (reset_n),
 
         .start       (start),
         .abort       (init_abort),
@@ -197,9 +240,9 @@ module kreacher_top #(
         .busy        (busy),
         .done        (done),
 
-        .O_SS        (O_SS),
-        .O_MOSI      (O_MOSI),
-        .I_MISO      (O_MISO)
+        .O_SS        (spi_ss),
+        .O_MOSI      (spi_mosi),
+        .I_MISO      (spi_miso)
     );
 
     // ---------------------------------------------------------------------
@@ -222,7 +265,7 @@ module kreacher_top #(
         .init_internal_mask   (init_internal_mask),
 
         .clk                 (clk),
-        .reset_n             (I_A_RESET_L)
+        .reset_n             (reset_n)
     );
 
 endmodule
