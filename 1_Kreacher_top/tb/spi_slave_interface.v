@@ -56,17 +56,17 @@ module spi_slave_interface #(
   assign external_mem_wdata = {rx_shift[DATA_W-2:0], I_MOSI};
 
   // ------------------------------------------------------------
-  // MISO output
+  // MISO output -> With a half-cycle delay to mimic real-life delays
   // ------------------------------------------------------------
-  always @* begin
+  always @(negedge I_CLK, negedge I_RSTN) begin
     if (!I_RSTN) begin
-      O_MISO = 1'b0;
+      O_MISO <= 1'b0;
     end else if (I_SS_N) begin
-      O_MISO = 1'b0;
+      O_MISO <= 1'b0;
     end else if ((state == S_DATA) && !is_write && !dummy_skip) begin
-      O_MISO = rd_first_bit ? external_mem_rdata[DATA_W-1] : tx_shift[DATA_W-1];
+      O_MISO <= rd_first_bit ? external_mem_rdata[DATA_W-1] : tx_shift[DATA_W-1];
     end else begin
-      O_MISO = 1'b0;
+      O_MISO <= 1'b0;
     end
   end
 
