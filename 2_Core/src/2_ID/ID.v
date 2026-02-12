@@ -107,8 +107,6 @@ wire            valid_data_read;
 wire            valid_data_write;
 
 control u_control (
-    //Global
-    .pause(pause),
 
     //---------------------- Inputs
     .canonical_instruction(IF_canonical_instruction),
@@ -194,6 +192,7 @@ csr_bank #(.XLEN(XLEN)) u_csr_bank (
     //Global
     .clk(clk),
     .reset_n(reset_n),
+    .pause(pause),
 
     //Interrupt Handler
     .acknowledge_irq0(acknowledge_irq0),

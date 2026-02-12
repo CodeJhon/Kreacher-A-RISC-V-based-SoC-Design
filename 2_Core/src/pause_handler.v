@@ -4,7 +4,7 @@ module pause_handler (
     input reset_n,
 
     //Flags
-    output reg reset_n_sync,
+    output valid_instr_fetch,
 
     // Interrupt pins (assumed to be synchronous)
     input irq0_sync,       
@@ -47,10 +47,19 @@ end
 wire sleep_mode = ~wake_up & sleep;
 
 // Reset synchronizer -> async assert / sync deassert
+reg reset_n_sync;
+
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)  reset_n_sync <= 1'b0;
     else           reset_n_sync <= 1'b1;
 end
+
+//Determination of valid instruction fetches
+assign valid_instr_fetch = ~(   sleep_mode                      |
+
+                                pause_request_initialization    |
+                                pause_request_load_store        |
+                                pause_request_partial_store);
 
 //General pause -> external or sync reset
 wire pause_core_general =   ~reset_n_sync                   |

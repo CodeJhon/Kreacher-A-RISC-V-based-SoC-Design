@@ -103,11 +103,32 @@ module Memory_controller #(
     localparam EXT_ADDR_BITS = 3'b000;
 
      // ================= Core signals =================
-    assign valid_instr_fetch_internal   = (state == `S_NORMAL_OP) & !(done ? 1'b0 : (busy | mem_sel)); 
+    assign valid_instr_fetch_internal   = (state == `S_NORMAL_OP) & ((valid_instr_fetch) & (!(done ? 1'b0 : (busy | mem_sel)))); 
     assign pause_request_initialization = state == `S_FIRST_FETCH || state == `S_WAIT || state == `S_START;
     assign pause_request_load_store     = (state == `S_PARTIAL_STORE_DONE)? 1'b0 : (done ? 1'b0 : (busy | mem_sel));
     assign pause_request_partial_store  = state == `S_PARTIAL_READ || state == `S_APPLY_MASK || state == `S_PARTIAL_WRITE;
-    assign pause_request_scheduler      = pause_to_schedule;
+    
+    reg tick_for_internal_load;
+    always @(posedge clk, negedge reset_n) begin
+        if(!reset_n)
+            tick_for_internal_load <= 1'b1;
+        else begin
+            if(state == `S_NORMAL_OP)begin
+                if((tick_for_internal_load == 1'b1) && (mem_sel == `INTERNAL) && (valid_data_read))
+                    tick_for_internal_load <= 1'b0;
+                else
+                    tick_for_internal_load <= 1'b1;
+            end
+        end
+    end
+    reg pause_to_internal;
+    always @( * ) begin
+        pause_to_internal = 1'b0;
+        if(state == `S_NORMAL_OP)
+            pause_to_internal = (tick_for_internal_load & valid_data_read & (mem_sel == `INTERNAL));
+    end
+    assign pause_request_scheduler      = pause_to_schedule | pause_to_internal;
+
     assign EIB                          = instruction_read;
     assign EMDB_read                    = mem_sel_q ? ROM_EMBD_read : PRAM_EMBD_read;
     assign addr_data_valid_c            = valid_data_read | valid_data_write;
