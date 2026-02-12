@@ -272,10 +272,12 @@ endtask
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
         clear_ex_stage;
-    else if(EX_flush)
-        clear_ex_stage;
-    else if(!pause && !pause_to_calculate)
-        write_ex_stage;
+    else if(!pause && !pause_to_calculate)begin
+        if(EX_flush)
+            clear_ex_stage;
+        else
+            write_ex_stage;
+    end
 end
 
 //Control

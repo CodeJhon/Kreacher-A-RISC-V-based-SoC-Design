@@ -1,6 +1,7 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
 module HCU #(parameter XLEN = 64)(
+
     //Interrupt Handler
     input                interrupt_taken_natural,
 

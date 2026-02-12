@@ -1,8 +1,6 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
 module control #(parameter XLEN = 64)(
-    //Global
-    input pause,
 
     //-------------------------- Inputs
     input [31:0]     canonical_instruction,
@@ -67,14 +65,13 @@ reg invalid_csr_op;
 reg invalid_csr_read;
 reg invalid_csr_write;
 
-assign illegal_instr =  ~pause & (
-                        invalid_opcode    | 
+assign illegal_instr =  invalid_opcode    | 
                         invalid_alu_op    |
                         invalid_mem_op    |
                         invalid_branch_op |
                         invalid_csr_op    |
                         invalid_csr_read  | 
-                        invalid_csr_write);
+                        invalid_csr_write;
 
 
 always@( * )begin

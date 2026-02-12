@@ -35,9 +35,6 @@ module core #(parameter XLEN = 64)(//RV64I
 
 //------------------------------------------------------------ Pause signals
 
-//Synchronized reset
-wire reset_n_sync;
-
 //Pause requests
 wire IF_pause_request;
 wire EX_pause_request;
@@ -266,7 +263,7 @@ pause_handler u_pause_handler (
     .reset_n            (reset_n),
 
     //Flags
-    .reset_n_sync       (reset_n_sync),
+    .valid_instr_fetch  (valid_instr_fetch),
 
     // Interrupt pins (assumed to be synchronous)
     .irq0_sync          (irq0_sync),
@@ -292,11 +289,13 @@ pause_handler u_pause_handler (
     .pause_MEM          (pause_MEM),
 
     //Indicator of next stage
-    .next_stage_en       (next_stage_en)
+    .next_stage_en       (next_stage_en),
+
+    //--------------------- HCU signals
+    .stall_IF_PC         (HCU_stall_PC_IF)
 );
 
 
-wire IF_valid_instr_fetch;
 IF_HK #(.XLEN(XLEN)) u_IF_HK (
     //Global
     .clk(clk),
@@ -313,8 +312,6 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     .next_program_PC(IF_next_program_PC),
     .PC_step(IF_PC_step),
 
-    //Flags
-    .IF_valid_instr_fetch(IF_valid_instr_fetch),
     
     //Buses
     .EIB(EIB),      //External Instruction Bus
@@ -653,6 +650,7 @@ interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
 
 
 HCU #(.XLEN(XLEN)) u_HCU (
+    
     // Interrupt Handler
     .interrupt_taken_natural(interrupt_taken_natural),
 
@@ -699,9 +697,6 @@ HCU #(.XLEN(XLEN)) u_HCU (
     .WB_csr_addr_wr_in (MEM_csr_addr_wr_in_WB),
     .WB_csr_we_in      (MEM_csr_we_in_WB)
 );
-
-//-------------------------- Output assignations
-assign valid_instr_fetch = IF_valid_instr_fetch | ~reset_n_sync;
 
 
 endmodule

@@ -31,7 +31,7 @@ module PMEM_interface
     
 	output [XLEN-1:0] 		   init_internal_mask_odd_even,
     output                     addr_data_valid_h,
-    output                     addr_inst_valid_h,
+    output wire                addr_inst_valid_h,
     output [NUM_PRAMS-1:0]     cs,
     output reg [NUM_PRAMS-1:0] we,
     output [NUM_HANDLERS-1:0]  pause_to_schedule_odd_even,
@@ -82,8 +82,22 @@ assign addr_data_valid_gated = pause_to_schedule_flag ? 1'b0 : addr_data_valid;
 //is to overcome the data_valid signal from the core in the next cycle of pause scheduler
 assign is_write_PRAM_gated   = pause_to_schedule_flag ? 1'b0 : is_write_PRAM;
 
+reg reserve_flag;
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)
+        reserve_flag <= 1'b0;
+    else begin
+        if(pause_to_schedule)
+            reserve_flag <= 1'b1;
+        else if(reserve_flag && !addr_inst_valid)
+            reserve_flag <= 1'b1;
+        else
+            reserve_flag <= 1'b0;
+    end
+end
+
 //old instruction during pasue handler
-assign EIB_instruction_read  = pause_to_schedule_flag ? old_instruction_read : instruction_read;
+assign EIB_instruction_read  = reserve_flag ? old_instruction_read : instruction_read;
 
 assign addr_data_valid_h     = addr_data_valid_gated;
 assign addr_inst_valid_h     = addr_inst_valid;
@@ -110,21 +124,21 @@ always @( * ) begin
     inst_cs = {NUM_PRAMS{1'b0}};
     case (inst_pram_sel)
         `PRAM_0: 
-            inst_cs[0] = addr_inst_valid;
+            inst_cs[0] = addr_inst_valid_h;
         `PRAM_1:
-            inst_cs[1] = addr_inst_valid;
+            inst_cs[1] = addr_inst_valid_h;
         `PRAM_2: 
-            inst_cs[2] = addr_inst_valid;
+            inst_cs[2] = addr_inst_valid_h;
         `PRAM_3: 
-            inst_cs[3] = addr_inst_valid;
+            inst_cs[3] = addr_inst_valid_h;
         `PRAM_4: 
-            inst_cs[4] = addr_inst_valid;
+            inst_cs[4] = addr_inst_valid_h;
         `PRAM_5: 
-            inst_cs[5] = addr_inst_valid;
+            inst_cs[5] = addr_inst_valid_h;
         `PRAM_6: 
-            inst_cs[6] = addr_inst_valid;
+            inst_cs[6] = addr_inst_valid_h;
         `PRAM_7: 
-            inst_cs[7] = addr_inst_valid;
+            inst_cs[7] = addr_inst_valid_h;
         default: 
             inst_cs    = {NUM_PRAMS{1'b0}};
     endcase
@@ -199,7 +213,7 @@ always@(posedge clk, negedge reset_n)begin
     if(!reset_n)begin
         old_instruction_read <= 32'b0;
     end
-    else begin
+    else if(addr_inst_valid && !reserve_flag) begin
         old_instruction_read <= instruction_read;
     end
 end

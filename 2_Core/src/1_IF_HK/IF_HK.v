@@ -15,9 +15,6 @@ module IF_HK #(parameter XLEN = 64)(
     
     output [XLEN-1:0]      next_program_PC,
     output wire [XLEN-1:0] PC_step,
-
-    //Flags
-    output            IF_valid_instr_fetch,
     
     //Buses
     input  [31:0]     EIB,  //External Instruction Bus
@@ -180,9 +177,6 @@ end
 
 
 // -------------------------------------- Other connections
-
-//Flags
-assign IF_valid_instr_fetch = ~pause;
 
 //Control
 assign IF_pause_request = pause_to_concatenate;

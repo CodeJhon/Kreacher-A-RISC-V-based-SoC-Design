@@ -56,14 +56,14 @@ always @( * ) begin
 
     if (state != S_TRACK)
         next_stage = S_IF;
-    else if (next_stage_en)
+    else
         next_stage = stage_tracker + 3'd1;
 end
 //Stage tracker
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)
         stage_tracker <= S_IF;
-    else
+    else if (next_stage_en)
         stage_tracker <= next_stage;
 end
 
@@ -91,7 +91,7 @@ assign take_interrupt = take_forced | take_natural;
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)
         state <= S_IDLE;
-    else
+    else if (next_stage_en)
         state <= next_state;
 end
 

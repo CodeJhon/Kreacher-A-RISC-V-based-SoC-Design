@@ -4,7 +4,7 @@ module pause_handler (
     input reset_n,
 
     //Flags
-    output reg reset_n_sync,
+    output valid_instr_fetch,
 
     // Interrupt pins (assumed to be synchronous)
     input irq0_sync,       
@@ -28,8 +28,13 @@ module pause_handler (
     output pause_ID,
     output pause_EX,
     output pause_MEM,
+    
     //Indicator of next stage
-    output next_stage_en
+    output next_stage_en,
+
+    //--------------------- HCU signals
+    input stall_IF_PC
+
 );
 
 //Sleep mode: Activated through WFI and cleared when an interrupt is received
@@ -47,10 +52,21 @@ end
 wire sleep_mode = ~wake_up & sleep;
 
 // Reset synchronizer -> async assert / sync deassert
+reg reset_n_sync;
+
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)  reset_n_sync <= 1'b0;
     else           reset_n_sync <= 1'b1;
 end
+
+//Determination of valid instruction fetches
+assign valid_instr_fetch = ~(   sleep_mode                      |
+
+                                pause_request_initialization    |
+                                pause_request_load_store        |
+                                pause_request_partial_store     |
+                                
+                                stall_IF_PC);
 
 //General pause -> external or sync reset
 wire pause_core_general =   ~reset_n_sync                   |

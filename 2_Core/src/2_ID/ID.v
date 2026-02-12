@@ -123,8 +123,6 @@ wire            valid_data_read;
 wire            valid_data_write;
 
 control u_control (
-    //Global
-    .pause(pause),
 
     //---------------------- Inputs
     .canonical_instruction(IF_canonical_instruction),
@@ -226,6 +224,7 @@ csr_bank #(.XLEN(XLEN)) u_csr_bank (
     //Global
     .clk(clk),
     .reset_n(reset_n),
+    .pause(pause),
 
     //Interrupt Handler
     .acknowledge_irq0(acknowledge_irq0),
@@ -349,10 +348,13 @@ endtask
 always @(posedge clk, negedge reset_n) begin
     if(!reset_n)
         clear_id_stage;
-    else if (ID_flush)
-        clear_id_stage;
-    else if(!pause)
-        write_id_stage;
+    else if(!pause)begin
+        if (ID_flush)
+            clear_id_stage;
+        else
+            write_id_stage;
+    end
+        
 end
 
 //HCU

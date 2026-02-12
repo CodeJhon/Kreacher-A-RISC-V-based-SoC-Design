@@ -4,6 +4,7 @@ module csr_bank  #(parameter XLEN = 64)(
     //Global
     input clk,
     input reset_n,
+    input pause,
 
     //Interrupt Handler
     input                 acknowledge_irq0,
@@ -103,9 +104,9 @@ always @( * ) begin
 end
 
 //CSR Writing
-wire trap_taken = acknowledge_irq0 | 
-                  acknowledge_irq1 | 
-                  illegal_trap;
+wire trap_taken = ~pause &( acknowledge_irq0 | 
+                            acknowledge_irq1 | 
+                            illegal_trap);
 
 always @(posedge clk, negedge reset_n) begin
 

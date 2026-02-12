@@ -45,15 +45,19 @@ always @(posedge clk, negedge reset_n) begin
     
     else begin
         
-        if(ID_flush)
-            ID_PC_EX  <= 0;
-        else if(!pause_ID) 
-            ID_PC_EX  <= IF_PC;
+        if(!pause_ID)begin
+            if(ID_flush)
+                ID_PC_EX  <= 0;
+            else
+                ID_PC_EX  <= IF_PC;
+        end 
         
-        if(EX_flush)
-            EX_PC_MEM <= 0;
-        else if(!pause_EX) 
-            EX_PC_MEM <= ID_PC_EX;
+        if(!pause_EX)begin
+            if(EX_flush)
+                EX_PC_MEM <= 0;
+            else
+                EX_PC_MEM <= ID_PC_EX;
+        end 
         
         if(!pause_MEM) MEM_PC_WB <= EX_PC_MEM;
     end
@@ -71,15 +75,19 @@ always @(posedge clk, negedge reset_n) begin
         MEM_canonical_instruction_WB <= 0;        
     end
     else begin
-        if(ID_flush)
-            ID_canonical_instruction_EX  <= 0;
-        else if(!pause_ID)
-            ID_canonical_instruction_EX  <= IF_canonical_instruction;
+        if(!pause_ID)begin
+            if(ID_flush)
+                ID_canonical_instruction_EX  <= 0;
+            else 
+                ID_canonical_instruction_EX  <= IF_canonical_instruction;
+        end
         
-        if(EX_flush)
-            EX_canonical_instruction_MEM  <= 0;
-        else if(!pause_EX)
-            EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
+        if(!pause_EX)begin
+            if(EX_flush)
+                EX_canonical_instruction_MEM  <= 0;
+            else
+                EX_canonical_instruction_MEM <= ID_canonical_instruction_EX;
+        end 
         
         if(!pause_MEM) MEM_canonical_instruction_WB <= EX_canonical_instruction_MEM;    
     end
