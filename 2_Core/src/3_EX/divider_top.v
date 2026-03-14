@@ -24,9 +24,13 @@ reg signed [XLEN-1:0] dividend;
 reg signed [XLEN-1:0] divisor;
 always @( * ) begin
     case (sel_operation)
-        `ALU_DIVW, `ALU_DIVUW, `ALU_REMW, `ALU_REMUW:begin
-            dividend = $signed(opa[31:0]);
-            divisor =  $signed(opb[31:0]);
+        `ALU_DIVW, `ALU_REMW: begin
+            dividend = $signed(opa[31:0]);    // sign-extend
+            divisor  = $signed(opb[31:0]);
+        end
+        `ALU_DIVUW, `ALU_REMUW: begin
+            dividend = $unsigned(opa[31:0]);  // zero-extend
+            divisor  = $unsigned(opb[31:0]);
         end
         default:begin
             dividend = opa;
@@ -58,8 +62,8 @@ end
 wire a_neg = rs1_is_signed & dividend[XLEN-1];
 wire b_neg = rs2_is_signed & divisor[XLEN-1];
 
-wire signed [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 64'd1) : dividend;
-wire signed [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 64'd1) : divisor;
+wire  [XLEN-1:0] dividend_abs = a_neg ? (~dividend + 64'd1) : dividend;
+wire  [XLEN-1:0] divisor_abs  = b_neg ? (~divisor  + 64'd1) : divisor;
 
 //Quick-Result cases: Allow us to throw a result in the same cycle and not use the dedicated divider module
 // Cases: Divide by zero, divisor greater than divider, divide by same number ...busy
@@ -80,7 +84,7 @@ always @( * ) begin
         flag_division_by_zero = 1'b1;
     else if((dividend == {XLEN{1'b0}}) || (divisor_abs > dividend_abs))
         flag_result_zero      = 1'b1;
-    else if((-divisor == dividend) || (divisor == dividend))
+    else if(divisor_abs == dividend_abs)
         flag_result_one       = 1'b1;
 end
 
@@ -156,10 +160,10 @@ always @( * ) begin
         quotient_result = {XLEN{1'b1}}; //Send FFFFFFFF_FFFFFFFF
 
     else if (flag_result_one)begin //Division by same magnitude
-        if(rs1_is_signed == rs2_is_signed)
+        if(dividend[XLEN-1] == divisor[XLEN-1]) // Same sign
             quotient_result = $signed(1);
         else
-            quotient_result = $signed(-1);
+            quotient_result = $signed(-1); // Different sign
     end
     else if (flag_result_zero) // Division by 0 or by a/b (b>a)
             quotient_result = {XLEN{1'b0}};

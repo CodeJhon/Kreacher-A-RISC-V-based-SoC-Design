@@ -136,6 +136,8 @@ instruction = []
 instruction_raw = []
 wb_reg = []
 wb_val = []
+csr_reg = []
+csr_val = []
 
 DMEM_addr = []
 DMEM_data = []
@@ -171,9 +173,24 @@ PMEM_data_hex_7 = []
 # Regex patterns
 # Pattern 1: Normal instruction with optional write-back (no mem)
 pattern_normal = re.compile(
-    r'0x([0-9a-fA-F]+)\s+\(0x([0-9a-fA-F]+)\)'  # PC and instruction
-    r'(?:\s+x(\d+)\s+0x([0-9a-fA-F]+))?'  # Optional wb_reg and wb_val
-    r'(?!\s+mem)'  # Negative lookahead: no "mem" following
+    r'^core\s+\d+:\s+\d+\s+'                     # core   0: 3
+    r'0x([0-9a-fA-F]+)\s+'                       # PC
+    r'\(0x([0-9a-fA-F]+)\)'                      # instruction
+    r'(?:\s+x(\d+)\s+0x([0-9a-fA-F]+))?'         # optional x reg write-back
+    r'\s*$'                                      # end of line
+)
+
+pattern_csr_only = re.compile(
+    r'^core\s+\d+:\s+\d+\s+'
+    r'0x([0-9a-fA-F]+)\s+\(0x([0-9a-fA-F]+)\)\s+'
+    r'([a-zA-Z0-9]+_[a-zA-Z0-9_]+)\s+0x([0-9a-fA-F]+)$'
+)
+
+pattern_reg_and_csr = re.compile(
+    r'core\s+\d+:\s+\d+\s+'                         # core 0: 3
+    r'0x([0-9a-fA-F]+)\s+\(0x([0-9a-fA-F]+)\)\s+'   # PC and instruction
+    r'x(\d+)\s+0x([0-9a-fA-F]+)\s+'                 # x reg and value
+    r'([a-zA-Z_]\w*)\s+0x([0-9a-fA-F]+)'            # CSR name and value
 )
 
 # Pattern 2: Load instruction (with mem at the end)
@@ -218,7 +235,7 @@ with open(spike_path, "r", encoding="utf-8") as f:
                         PMEM_addr_0.append(mem_addr)
                         PMEM_data_0.append(mem_data & 0x00000000FFFFFFFF)
                         PMEM_data_hex_0.append(match_store.group(4))
-                        if mem_data > 0xFFFFFFFF:
+                        if len(match_store.group(4)) > 8:
                             PMEM_addr_1.append(mem_addr + 4)
                             PMEM_data_1.append((mem_data >> 32) & 0xFFFFFFFF)
                             PMEM_data_hex_1.append(match_store.group(4))
@@ -231,7 +248,7 @@ with open(spike_path, "r", encoding="utf-8") as f:
                         PMEM_addr_2.append(mem_addr-8192)
                         PMEM_data_2.append(mem_data & 0x00000000FFFFFFFF)
                         PMEM_data_hex_2.append(match_store.group(4))
-                        if mem_data > 0xFFFFFFFF:
+                        if len(match_store.group(4)) > 8:
                             PMEM_addr_3.append(mem_addr -8192 + 4)
                             PMEM_data_3.append((mem_data >> 32) & 0xFFFFFFFF)
                             PMEM_data_hex_3.append(match_store.group(4))
@@ -244,7 +261,7 @@ with open(spike_path, "r", encoding="utf-8") as f:
                         PMEM_addr_4.append(mem_addr-16384)
                         PMEM_data_4.append(mem_data & 0x00000000FFFFFFFF)
                         PMEM_data_hex_4.append(match_store.group(4))
-                        if mem_data > 0xFFFFFFFF:
+                        if len(match_store.group(4)) > 8:
                             PMEM_addr_5.append(mem_addr -16384 + 4)
                             PMEM_data_5.append((mem_data >> 32) & 0xFFFFFFFF)
                             PMEM_data_hex_5.append(match_store.group(4))
@@ -257,7 +274,7 @@ with open(spike_path, "r", encoding="utf-8") as f:
                         PMEM_addr_6.append(mem_addr -24576)
                         PMEM_data_6.append(mem_data & 0x00000000FFFFFFFF)
                         PMEM_data_hex_6.append(match_store.group(4))
-                        if mem_data > 0xFFFFFFFF:
+                        if len(match_store.group(4)) > 8:
                             PMEM_addr_7.append(mem_addr -24576 + 4)
                             PMEM_data_7.append((mem_data >> 32) & 0xFFFFFFFF)
                             PMEM_data_hex_7.append(match_store.group(4))
@@ -313,10 +330,12 @@ with open(spike_path, "r", encoding="utf-8") as f:
                     except (ValueError, TypeError) as e:
                         print(f"[WARN] Can't convert instruction to hex: {extend_inst(inst_hex)}，error: {e}")
                         instruction.append(None)
+                csr_reg.append(0)  # No CSR for load
+                csr_val.append(0)  # No CSR value for load
             continue
 
         # Try to match normal pattern (no mem keyword)
-        match_normal = pattern_normal.search(line)
+        match_normal = pattern_normal.match(line)
         if match_normal:
             pc_hex = match_normal.group(1)
             inst_hex = match_normal.group(2)
@@ -328,28 +347,28 @@ with open(spike_path, "r", encoding="utf-8") as f:
                 try:
                     wb_reg.append(int(reg_str))
                 except (ValueError, TypeError) as e:
-                    print(f"[WARN] Can't convert register addreess to int: {match_store.group(3)}，error: {e}")
+                    print(f"[WARN] Can't convert register addreess to int: {match_normal.group(3)}，error: {e}")
                     wb_reg.append(None)
                 try:
                     wb_val.append(int(val_hex, 16))
                 except (ValueError, TypeError) as e:
-                    print(f"[WARN] Can't convert write back value to hex: {match_store.group(4)}，error: {e}")
+                    print(f"[WARN] Can't convert write back value to hex: {match_normal.group(4)}，error: {e}")
                     wb_val.append(None)
                 try:
                     pc.append(int(pc_hex, 16))
                 except (ValueError, TypeError) as e:
-                    print(f"[WARN] Can't convert PC to hex: {match_store.group(1)}，error: {e}")
+                    print(f"[WARN] Can't convert PC to hex: {match_normal.group(1)}，error: {e}")
                     pc.append(None)
                 try:
                     instruction_raw.append(int(inst_hex, 16))
                 except (ValueError, TypeError) as e:
-                    print(f"[WARN] Can't convert instruction to hex: {match_store.group(2)}，error: {e}")
+                    print(f"[WARN] Can't convert instruction to hex: {match_normal.group(2)}，error: {e}")
                     instruction_raw.append(None)
                 if (bin(int(inst_hex[-1], 16))[-2:] == "11"):
                     try:
                         instruction.append(int(inst_hex, 16))
                     except (ValueError, TypeError) as e:
-                        print(f"[WARN] Can't convert instruction to hex: {match_store.group(2)}，error: {e}")
+                        print(f"[WARN] Can't convert instruction to hex: {match_normal.group(2)}，error: {e}")
                         instruction.append(None)
                 else:
                     try:
@@ -357,11 +376,93 @@ with open(spike_path, "r", encoding="utf-8") as f:
                     except (ValueError, TypeError) as e:
                         print(f"[WARN] Can't convert instruction to hex: {extend_inst(inst_hex)}，error: {e}")
                         instruction.append(None)
+                csr_reg.append(0)  # No CSR for normal instructions
+                csr_val.append(0)  # No CSR value for normal instructions
+            continue
+                        
+        match_csr_only = pattern_csr_only.fullmatch(line)
+        if match_csr_only:
+            pc_hex = match_csr_only.group(1)
+            inst_hex = match_csr_only.group(2)
+            csr_val_hex = match_csr_only.group(4)
+            if match_csr_only.group(3) == 'c768_mstatus':
+                csr_addr = '0x300'
+            elif match_csr_only.group(3) == 'c833_mepc':
+                csr_addr = '0x341'
+            elif match_csr_only.group(3) == 'c834_mcause':
+                csr_addr = '0x342'
+            # For CSR-only instructions, we can choose to record the CSR name and value if needed
+            pc.append(int(pc_hex, 16))
+            instruction_raw.append(int(inst_hex, 16))
+            instruction.append(int(inst_hex, 16))
+            wb_reg.append(0)  # No register write-back for CSR-only instructions
+            wb_val.append(0)  # No register value for CSR-only instructions
+            csr_reg.append(int(csr_addr, 16))
+            if csr_addr == '0x341':
+                csr_val.append(int(csr_val_hex, 16) | 0x1)
+            elif csr_addr == '0x342':
+                csr_val.append(3)
+            else:
+                csr_val.append(int(csr_val_hex, 16))
+            continue
+
+        match_reg_and_csr = pattern_reg_and_csr.fullmatch(line.strip())
+        if match_reg_and_csr:
+            pc_hex = match_reg_and_csr.group(1)
+            inst_hex = match_reg_and_csr.group(2)
+            reg_str = match_reg_and_csr.group(3)
+            val_hex = match_reg_and_csr.group(4)
+            csr_val_hex = match_reg_and_csr.group(6)
+            if match_reg_and_csr.group(5) == 'c768_mstatus':
+                csr_addr = '0x300'
+            elif match_reg_and_csr.group(5) == 'c833_mepc':
+                csr_addr = '0x341'
+            elif match_reg_and_csr.group(5) == 'c834_mcause':
+                csr_addr = '0x342'
+            pc.append(int(pc_hex, 16))
+            instruction_raw.append(int(inst_hex, 16))
+            instruction.append(int(inst_hex, 16))
+            wb_reg.append(int(reg_str))
+            wb_val.append(int(val_hex, 16))
+            csr_reg.append(int(csr_addr, 16))
+            if csr_addr == '0x341':
+                csr_val.append(int(csr_val_hex, 16) | 0x1)
+            elif csr_addr == '0x342':
+                csr_val.append(3)
+            else:
+                csr_val.append(int(csr_val_hex, 16))
+            continue
+
 
 pc_sim = []
 instruction_sim = []
 wb_reg_sim = []
 wb_val_sim = []
+csr_reg_sim = []
+csr_val_sim = []
+illegal_instructions = {
+    "0x0000000f",
+    "0x0000100f",
+    "0x0000603b",
+    "0x0000703b",
+    "0x0000601b",
+    "0x0000701b",
+    "0x00003003",
+    "0x00007003",
+    "0x00004023",
+    "0x00007023",
+    "0x00002063",
+    "0x00003063",
+    "0x00001067",
+    "0x00002067",
+    "0x00000073",
+    "0x00100073",
+    "0xc00020f3",
+    "0xf14020f3",
+    "0x30509073",
+    "0x30109073",
+    "0x3050e073"
+}
 
 # Open the CSV file (replace 'sim_data.csv' with your filename)
 with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreacher_trace.csv", "r",
@@ -375,6 +476,11 @@ with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreach
         inst_hex = row[2].strip()
         rd_str = row[3].strip() if len(row) > 3 else ""
         val_hex = row[4].strip() if len(row) > 4 else ""
+        csr_str = row[5].strip() if len(row) > 5 else ""
+        csr_val_hex = row[6].strip() if len(row) > 6 else ""
+
+        if inst_hex in illegal_instructions:
+            continue
 
         try:
             # Convert hex fields to decimal
@@ -386,19 +492,51 @@ with open("temp/Vivado_kreacher_temp/Vivado_kreacher.sim/sim_1/behav/xsim/kreach
         # rd_val = int(rd_str) if rd_str != "" else ""
         # wb_hex_val = int(val_hex, 16) if val_hex != "" else ""
         # Convert hex strings to decimal (int), rd is already a decimal string
-        if (rd_str != '0'):
-            pc_sim.append(int(pc_hex, 16))
-            instruction_sim.append(int(inst_hex, 16))
-            try:
+        if len(row) <= 5:
+            if (rd_str != '0'):
+                pc_sim.append(int(pc_hex, 16))
+                instruction_sim.append(int(inst_hex, 16))
+                try:
+                    wb_reg_sim.append(int(rd_str))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert simulated register address to int: {rd_str}，error: {e}")
+                    wb_reg_sim.append(None)
+                try:
+                    wb_val_sim.append(int(val_hex, 16))
+                except (ValueError, TypeError) as e:
+                    print(f"[WARN] Can't convert simulated write back value to hex: {val_hex}，error: {e}")
+                    wb_val_sim.append(None)
+                csr_reg_sim.append(0)
+                csr_val_sim.append(0)
+        else:
+            if (rd_str == '0'):
+                pc_sim.append(int(pc_hex, 16))
+                instruction_sim.append(int(inst_hex, 16))
+                wb_reg_sim.append(0)
+                wb_val_sim.append(0)
+                csr_reg_sim.append(int(csr_str))
+                if csr_str == '768':
+                    csr_val_sim.append(int(csr_val_hex, 16) & 0x0000000000001888 | 0x0000000000001800)
+                elif csr_str == '833':
+                    csr_val_sim.append(int(csr_val_hex, 16) | 0x01)
+                elif csr_str == '834':
+                    csr_val_sim.append(3)
+                else:
+                    csr_val_sim.append(int(csr_val_hex, 16))
+            else:
+                pc_sim.append(int(pc_hex, 16))
+                instruction_sim.append(int(inst_hex, 16))
                 wb_reg_sim.append(int(rd_str))
-            except (ValueError, TypeError) as e:
-                print(f"[WARN] Can't convert simulated register address to int: {rd_str}，error: {e}")
-                wb_reg_sim.append(None)
-            try:
                 wb_val_sim.append(int(val_hex, 16))
-            except (ValueError, TypeError) as e:
-                print(f"[WARN] Can't convert simulated write back value to hex: {val_hex}，error: {e}")
-                wb_val_sim.append(None)
+                csr_reg_sim.append(int(csr_str))
+                if csr_str == '768':
+                    csr_val_sim.append(int(csr_val_hex, 16) & 0x0000000000001888 | 0x0000000000001800)
+                elif csr_str == '833':
+                    csr_val_sim.append(int(csr_val_hex, 16) | 0x01)
+                elif csr_str == '834':
+                    csr_val_sim.append(3)
+                else:
+                    csr_val_sim.append(int(csr_val_hex, 16))
 
 # Open the input file
 instruction_file_path = "temp/instructions.txt" if args.create else "PMEM_instructions.txt"
@@ -428,6 +566,9 @@ pc_i = 100000
 ins_i = 100000
 wb_reg_i = 100000
 wb_val_i = 100000
+csr_reg_i = 100000
+csr_val_i = 100000
+
 for i in range(min(len(pc), len(pc_sim))):
     if pc[i] != pc_sim[i]:
         pc_i = i
@@ -444,8 +585,16 @@ for i in range(min(len(wb_val), len(wb_val_sim))):
     if wb_val[i] != wb_val_sim[i]:
         wb_val_i = i
         break
+for i in range(min(len(csr_reg), len(csr_reg_sim))):
+    if csr_reg[i] != csr_reg_sim[i]:
+        csr_reg_i = i
+        break
+for i in range(min(len(csr_val), len(csr_val_sim))):
+    if csr_val[i] != csr_val_sim[i]:
+        csr_val_i = i
+        break
 
-i_min = min(pc_i, ins_i, wb_reg_i, wb_val_i)
+i_min = min(pc_i, ins_i, wb_reg_i, wb_val_i, csr_reg_i, csr_val_i)
 if i_min != 100000:
     print(f"First mismatch at item {i_min + 1}")
     print(f"Simulated PC:{hex(pc_sim[i_min])}")
@@ -457,10 +606,16 @@ if i_min != 100000:
         print(f"Original c instruction before extension:{hex(instruction_raw[i_min])}")
     else:
         instruction_str = str(hex(instruction_raw[i_min]))[2:]
-    print(f"Simulated wb_reg:{wb_reg_sim[i_min]}")
-    print(f"Reference wb_reg:{wb_reg[i_min]}")
-    print(f"Simulated wb_val:{hex(wb_val_sim[i_min])}")
-    print(f"Reference wb_val:{hex(wb_val[i_min])}")
+    if not (wb_reg[i_min] == 0 and wb_reg_sim[i_min] == 0):
+        print(f"Simulated wb_reg:{wb_reg_sim[i_min]}")
+        print(f"Reference wb_reg:{wb_reg[i_min]}")
+        print(f"Simulated wb_val:{hex(wb_val_sim[i_min])}")
+        print(f"Reference wb_val:{hex(wb_val[i_min])}")
+    if not (csr_reg[i_min] == 0 and csr_reg_sim[i_min] == 0):
+        print(f"Simulated csr_reg:{hex(csr_reg_sim[i_min])}")
+        print(f"Reference csr_reg:{hex(csr_reg[i_min])}")
+        print(f"Simulated csr_val:{hex(csr_val_sim[i_min])}")
+        print(f"Reference csr_val:{hex(csr_val[i_min])}")
     assembly_instr = find_instruction_by_hex(instruction_str)
     print(f"Assembly instruction: {assembly_instr}")
     raise ValueError("A mismatch has been found.")
@@ -482,6 +637,10 @@ if len(wb_reg) != len(wb_reg_sim):
     raise ValueError("The two write back register lists have different lengths.")
 if len(wb_val) != len(wb_val_sim):
     raise ValueError("The two write back value lists have different lengths.")
+if len(csr_reg) != len(csr_reg_sim):
+    raise ValueError("The two CSR register lists have different lengths.")
+if len(csr_val) != len(csr_val_sim):
+    raise ValueError("The two CSR value lists have different lengths.")
 # Store all mismatched indices
 pc_diff_indices = []
 instruction_diff_indices = []

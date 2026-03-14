@@ -57,6 +57,8 @@ wire            mie;
 //Outpus generated
 wire             interrupt_mepc_we;
 wire [XLEN-1:0]  interrupt_PC_to_mepc;
+wire             take_interrupt_0;
+wire             take_interrupt_1;
 
 // Outputs to HCU
 wire             interrupt_taken_natural;
@@ -306,8 +308,8 @@ IF_HK #(.XLEN(XLEN)) u_IF_HK (
     .EX_pause_request   (EX_pause_request),
     
     //Interrupt Handler
-    .acknowledge_irq0(acknowledge_irq0),
-    .acknowledge_irq1(acknowledge_irq1),
+    .take_interrupt_0(take_interrupt_0),
+    .take_interrupt_1(take_interrupt_1),
 
     .next_program_PC(IF_next_program_PC),
     .PC_step(IF_PC_step),
@@ -347,8 +349,8 @@ ID #(.XLEN(XLEN)) u_ID (
     .pause(pause_ID),
 
     //Interrupt Handler
-    .acknowledge_irq0(acknowledge_irq0),
-    .acknowledge_irq1(acknowledge_irq1),
+    .take_interrupt_0(take_interrupt_0),
+    .take_interrupt_1(take_interrupt_1),
 
     .interrupt_mepc_we(interrupt_mepc_we),
     .interrupt_PC_to_mepc(interrupt_PC_to_mepc),
@@ -618,7 +620,7 @@ WB #(.XLEN(XLEN)) u_WB (
     .MEM_csr_we_out(WB_csr_we_out_MEM)
 );
 
-wire core_program_jump = ID_control_transfer_en_IF | ID_illegal_trap_IF;
+wire core_program_jump = ID_control_transfer_en_IF;
 interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
     //Global
     .clk(clk),
@@ -643,7 +645,14 @@ interrupt_handler #(.XLEN(XLEN), .WB(3'd4)) u_interrupt_handler (
     //Outputs to core
     .interrupt_mepc_we(interrupt_mepc_we),
     .interrupt_PC_to_mepc(interrupt_PC_to_mepc),
+    .take_interrupt_0(take_interrupt_0),
+    .take_interrupt_1(take_interrupt_1),
 
+    //------------------------------------------ Inputs from HCU
+    .IF_flush(HCU_flush_IF),
+    .ID_flush(HCU_flush_ID),
+    .EX_flush(HCU_flush_EX),
+    
     //---------------------------------- Outputs to HCU
     .interrupt_taken_natural(interrupt_taken_natural)
 );

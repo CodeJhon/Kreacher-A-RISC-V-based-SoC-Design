@@ -26,6 +26,14 @@ module top_wrapper#(
     wire [DATA_W-1:0]     external_mem_wdata;
     wire [DATA_W-1:0]     external_mem_rdata;
 
+    wire interrupt_1, interrupt_2;
+    wire ack_1, ack_2;
+    assign interrupt_1 = I_INTR_H[0];
+    assign interrupt_2 = I_INTR_H[1];
+    assign ack_1 = O_INTR_ACK[0];
+    assign ack_2 = O_INTR_ACK[1];
+
+
 
     kreacher_top u_kreacher_top (
         .I_CLK        (I_CLK),

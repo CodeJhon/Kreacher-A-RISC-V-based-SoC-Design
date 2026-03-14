@@ -22,49 +22,65 @@ module interrupt_handler #(parameter XLEN = 64, parameter WB = 3'd4)(// In pipel
     // Outputs to core
     output reg              interrupt_mepc_we,    
     output reg [XLEN-1:0]   interrupt_PC_to_mepc,
+    output wire             take_interrupt_0,
+    output wire             take_interrupt_1,
 
+    //------------------------------------------ Inputs from HCU
+    input                   IF_flush,
+    input                   ID_flush,
+    input                   EX_flush,
+    
     //------------------------------------------ Outputs to HCU
     output                  interrupt_taken_natural
 );
+
+wire next_stage_valid = mie && next_stage_en;
 
 // ------------------------------------------------------------
 // Pipeline stages
 // ------------------------------------------------------------
 localparam S_IF  = 3'd0;
+localparam S_ID  = 3'd1;
 localparam S_EX  = 3'd2;
 
 // ------------------------------------------------------------
 // FSM states
 // ------------------------------------------------------------
-localparam S_IDLE               = 2'd0;
-localparam S_TRACK              = 2'd1;
-localparam S_TAKE_WAIT_CLEAR    = 2'd2;
+localparam S_IDLE                 = 2'd0;
+localparam S_TRACK                = 2'd1;
+localparam S_TAKE_WAIT_CLEAR_0    = 2'd2;
+localparam S_TAKE_WAIT_CLEAR_1    = 2'd3;
 
 reg [1:0] state, next_state;
 
-wire interrupt_active;
-assign interrupt_active = irq0_sync | irq1_sync;
+wire interrupt_request;
+assign interrupt_request = irq0_sync | irq1_sync;
 
 // ------------------------------------------------------------
 // Stage tracker
 // ------------------------------------------------------------
 reg [2:0] stage_tracker;
-reg [2:0] next_stage;
 //Next stage
-always @( * ) begin
-    next_stage = stage_tracker;
+wire [2:0] next_stage = stage_tracker + 3'd1;
 
-    if (state != S_TRACK)
-        next_stage = S_IF;
-    else
-        next_stage = stage_tracker + 3'd1;
-end
 //Stage tracker
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)
         stage_tracker <= S_IF;
-    else if (next_stage_en)
-        stage_tracker <= next_stage;
+    else if (state != S_TRACK)
+        stage_tracker <= S_IF;
+    else if (next_stage_valid) begin
+        //Flushes -> Impact on stage tracker
+        if(stage_tracker == S_IF && IF_flush)
+            stage_tracker <= S_IF;
+        else if(stage_tracker == S_ID && ID_flush)
+            stage_tracker <= S_IF;
+        else if(stage_tracker == S_EX && EX_flush)
+            stage_tracker <= S_IF;
+        
+        else
+            stage_tracker <= next_stage;
+    end
 end
 
 // ------------------------------------------------------------
@@ -82,8 +98,11 @@ assign take_forced  = // Force the finish of lifetime
     );
 
 assign take_natural = (state == S_TRACK) && (next_stage >= WB); // Lifetime finished naturally
+assign take_interrupt = mie & (take_forced | take_natural);
 
-assign take_interrupt = take_forced | take_natural;
+// Priority: irq0 > irq1
+assign take_interrupt_0 = take_interrupt & irq0_sync;
+assign take_interrupt_1 = take_interrupt & irq1_sync & ~irq0_sync;
 
 // ------------------------------------------------------------
 // FSM state register
@@ -91,7 +110,7 @@ assign take_interrupt = take_forced | take_natural;
 always @(posedge clk or negedge reset_n) begin
     if (!reset_n)
         state <= S_IDLE;
-    else if (next_stage_en)
+    else
         state <= next_state;
 end
 
@@ -105,22 +124,28 @@ always @( * ) begin
 
         S_IDLE: begin
             //Gets out of IDLE only if an interrupt occurs and it is globally enabled
-            if (interrupt_active && mie)
+            if (interrupt_request)
                 next_state = S_TRACK;
         end
 
         S_TRACK: begin
-            if (take_interrupt)
-                next_state = S_TAKE_WAIT_CLEAR;
+            if(next_stage_valid)begin
+                if (take_interrupt_0)
+                    next_state = S_TAKE_WAIT_CLEAR_0;
+                else if(take_interrupt_1)
+                    next_state = S_TAKE_WAIT_CLEAR_1;
+            end
         end
 
-        S_TAKE_WAIT_CLEAR: begin
-            if (!interrupt_active)
+        S_TAKE_WAIT_CLEAR_0: begin
+            if (!irq0_sync)
                 next_state = S_IDLE;
         end
 
-        default:
-            next_state = S_IDLE;
+        S_TAKE_WAIT_CLEAR_1: begin
+            if (!irq1_sync)
+                next_state = S_IDLE;
+        end
 
     endcase
 end
@@ -128,32 +153,56 @@ end
 // ------------------------------------------------------------
 // mepc saving logic
 // ------------------------------------------------------------
+reg [XLEN-1:0] PC_probe;
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)
+        PC_probe <= {XLEN{1'b0}};
+    // Initial probe at S_IF
+    else if (state == S_TRACK && stage_tracker == S_IF && !core_program_jump)
+        PC_probe <= PC_step;
+end
 always @( * ) begin
     //Defaults
     interrupt_mepc_we = 1'b0;
     interrupt_PC_to_mepc = {XLEN{1'b0}};
-
-    // Initial probe at S_IF
-    if (state == S_TRACK && stage_tracker == S_IF && !core_program_jump)begin
-            interrupt_PC_to_mepc = PC_step;
-            interrupt_mepc_we = 1'b1;           
+    
+    if(next_stage_valid)begin
+        // Forced finish: override with next_program_PC
+        if (take_forced)begin
+            interrupt_PC_to_mepc = next_program_PC;
+            interrupt_mepc_we = 1'b1;
         end
-
-    // Forced finish: override with next_program_PC
-    else if (take_forced)begin
-        interrupt_PC_to_mepc = next_program_PC;
-        interrupt_mepc_we = 1'b1;
+        // Natural finish -> Use the probe
+        else if (take_natural)begin
+                interrupt_PC_to_mepc = PC_probe;
+                interrupt_mepc_we = 1'b1;           
+        end
     end
-    // Natural finish: PC_saved will be the same as the one from the probe
 end
 
 // ------------------------------------------------------------
 // Acknowledge generation (one-cycle pulse)
 // ------------------------------------------------------------
-
-// Priority: irq0 > irq1
-assign acknowledge_irq0 = take_interrupt & irq0_sync;
-assign acknowledge_irq1 = take_interrupt & irq1_sync & ~irq0_sync;
+reg irq0_zrd, irq1_zrd;
+always @(posedge clk, negedge reset_n) begin
+    if(!reset_n)begin
+        irq0_zrd <= 1'b1;
+        irq1_zrd <= 1'b1;
+    end
+    else begin
+        if(state == S_TAKE_WAIT_CLEAR_0)
+            irq0_zrd <= 1'b0;
+        else
+            irq0_zrd <= 1'b1;
+        if(state == S_TAKE_WAIT_CLEAR_1)
+            irq1_zrd <= 1'b0;
+        else
+            irq1_zrd <= 1'b1;
+    end
+    
+end
+assign acknowledge_irq0 = (state == S_TAKE_WAIT_CLEAR_0) & irq0_zrd;
+assign acknowledge_irq1 = (state == S_TAKE_WAIT_CLEAR_1) & irq1_zrd;
 
 
 //----------------------------------- Outputs to HCU

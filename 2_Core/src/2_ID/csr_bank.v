@@ -7,8 +7,8 @@ module csr_bank  #(parameter XLEN = 64)(
     input pause,
 
     //Interrupt Handler
-    input                 acknowledge_irq0,
-    input                 acknowledge_irq1,
+    input                 take_interrupt_0,
+    input                 take_interrupt_1,
     
     input                 interrupt_mepc_we,
     input      [XLEN-1:0] interrupt_PC_to_mepc,
@@ -19,7 +19,6 @@ module csr_bank  #(parameter XLEN = 64)(
     input      [XLEN-1:0] PC_illegal,
 
     //MRET signals
-    input                 read_mepc,
     input                 restore_mstatus,
 
     //Inputs/Outputs from/to Zicsr HW
@@ -104,8 +103,8 @@ always @( * ) begin
 end
 
 //CSR Writing
-wire trap_taken = ~pause &( acknowledge_irq0 | 
-                            acknowledge_irq1 | 
+wire trap_taken = ~pause &( take_interrupt_0 | 
+                            take_interrupt_1 | 
                             illegal_trap);
 
 always @(posedge clk, negedge reset_n) begin
@@ -117,7 +116,7 @@ always @(posedge clk, negedge reset_n) begin
         mcause       <= {XLEN{1'b0}};
     end
     
-    else begin
+    else if(!pause) begin
         //-----------Writing done by Interrupt Hardware (Priority over Zicsr)
         if(mepc_we)begin
             mepc_reg   <= PC_to_mepc[XLEN-1:1];
@@ -129,9 +128,9 @@ always @(posedge clk, negedge reset_n) begin
             mstatus_mpie <= mstatus_mie;
 
             //mcause
-            if(acknowledge_irq0)
+            if(take_interrupt_0)
                 mcause <= `MCAUSE_IRQ0;
-            else if(acknowledge_irq1)
+            else if(take_interrupt_1)
                 mcause <= `MCAUSE_IRQ1;
             else if(illegal_trap)    
                 mcause <= `MCAUSE_ILLEGAL;
@@ -140,19 +139,22 @@ always @(posedge clk, negedge reset_n) begin
         //-----------Writing done by the MRET instruction
         else if(restore_mstatus)begin
             mstatus_mie <= mstatus_mpie;
-            mstatus_mpie <= 1'b0;
+            mstatus_mpie <= 1'b1;
         end
         
         //-------------Writing done by Zicsr
-        else if(csr_we)begin
+        if(csr_we)begin
             case (csr_addr_wr)
                 `MSTATUS_ADDR: 
+                    if(!trap_taken && !restore_mstatus)
                         {mstatus_mpie, mstatus_mie} <= {csr_data_wr[7], csr_data_wr[3]};
-                `MEPC_ADDR:    
+                `MEPC_ADDR:
+                    if(!mepc_we)    
                         mepc_reg   <= csr_data_wr[XLEN-1:1];
-                `MCAUSE_ADDR:  
-                    if (mcause_sw_writable) 
-                        mcause <= csr_data_wr;
+                `MCAUSE_ADDR:
+                    if(!trap_taken && !restore_mstatus)
+                        if (mcause_sw_writable) 
+                            mcause <= csr_data_wr;
             endcase
         end  
     end
@@ -163,11 +165,8 @@ end
 always @( * )begin
     //Default case
     csr_data_rd      = {XLEN{1'b0}};
-
-    if(read_mepc)
-                           csr_data_rd = mepc;
     
-    else if(csr_re)begin
+    if(csr_re)begin
         case (csr_addr_rd)
             `MSTATUS_ADDR: csr_data_rd = mstatus;
             `MEPC_ADDR:    csr_data_rd = mepc;
