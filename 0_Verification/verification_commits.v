@@ -5,14 +5,20 @@ module verification_commits  #(parameter XLEN = 32)(
     input [31:0]        IF_canonical_instruction,
 
     input               WB_regfile_we,
+    input               WB_csr_we,
     input [4:0]         WB_RD_addr,
     input [XLEN-1:0]    WB_RD,
+    input [11:0]        WB_csr_addr,
+    input [XLEN-1:0]    WB_csr,
 
     //Outputs used for the framework
     output              commit_valid,
+    output              commit_csr_valid,
     output [XLEN-1:0]   commit_PC,
     output [4:0]        commit_rd_addr,
     output [XLEN-1:0]   commit_rd_value,
+    output [11:0]       commit_csr_addr,
+    output [XLEN-1:0]   commit_csr_value,
     output [31:0]       commit_instruction
 );
 
@@ -42,5 +48,10 @@ assign commit_PC          = MEM_PC_WB;
 assign commit_rd_addr     = WB_RD_addr;
 assign commit_rd_value    = WB_RD;
 assign commit_instruction = MEM_canonical_instruction_WB;
+
+//----------------------------Assignation of signals related to CSR commits
+assign commit_csr_valid     = WB_csr_we;
+assign commit_csr_addr      = WB_csr_addr;
+assign commit_csr_value     = WB_csr;
 
 endmodule

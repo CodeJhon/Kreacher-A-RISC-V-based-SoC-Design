@@ -18,10 +18,15 @@ module tb_core_and_mem;
   // Wires to connect to DUT
 `ifndef SYNTHESIS
   wire           commit_valid;
+  wire         commit_csr_valid;
   wire [XLEN-1:0] commit_PC;
-  wire [31:0]   commit_instruction;
   wire [4:0]     commit_rd_addr;
   wire [XLEN-1:0] commit_rd_value;
+  wire [11:0]    commit_csr_addr;
+  wire [XLEN-1:0] commit_csr_value;
+  wire [31:0]   commit_instruction;
+
+ 
 `endif
 
   // Instantiate DUT (core_and_mem)
@@ -48,15 +53,23 @@ module tb_core_and_mem;
     
     //Commit signals going to the regfile
     .WB_regfile_we(dut.core_inst.u_ID.u_regfile.regfile_we),
+    .WB_csr_we(dut.core_inst.u_ID.u_csr_bank.csr_we),
     .WB_RD_addr(dut.core_inst.u_ID.u_regfile.RD_addr),
     .WB_RD(dut.core_inst.u_ID.u_regfile.RD),
+    .WB_csr_addr(dut.core_inst.u_ID.u_csr_bank.csr_addr_wr),
+    .WB_csr(dut.core_inst.u_ID.u_csr_bank.csr_data_wr),
 
     //Commit signals ready to print
     .commit_valid(commit_valid),
+    .commit_csr_valid(commit_csr_valid),
     .commit_PC(commit_PC),
-    .commit_instruction(commit_instruction),
     .commit_rd_addr(commit_rd_addr),
-    .commit_rd_value(commit_rd_value)
+    .commit_rd_value(commit_rd_value),
+    .commit_csr_addr(commit_csr_addr),
+    .commit_csr_value(commit_csr_value),
+    .commit_instruction(commit_instruction)
+    
+    
   );
 
   // clock generation
@@ -109,7 +122,27 @@ module tb_core_and_mem;
       end
       
       else begin
-      if (commit_valid && (commit_PC >= 32'h80000008)) begin
+      if(commit_csr_valid && commit_valid && (commit_PC >= 32'h8000002c)) begin
+        // Print to console for interactive debugging
+        $display("[%0t ns] CSR COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h csr_addr=0x%0d csr_val=0x%0h",
+                 $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value, commit_csr_addr, commit_csr_value);
+
+        // Write a CSV line: time (ns), PC, instruction, rd, rd_value, csr_addr, csr_val
+        // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
+        $fwrite(trace_fd, "%0d,0x%08h,0x%08h,%0d,0x%0h,%0d,0x%0h\n",
+                $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value, commit_csr_addr, commit_csr_value);
+      end
+      else if(commit_csr_valid && (commit_PC >= 32'h8000002c)) begin
+        // Print to console for interactive debugging
+        $display("[%0t ns] CSR COMMIT: PC=0x%08h INST=0x%08h csr_addr=0x%0d csr_val=0x%0h",
+                 $time, commit_PC, commit_instruction, commit_csr_addr, commit_csr_value);
+
+        // Write a CSV line: time (ns), PC, instruction, csr_addr, csr_val
+        // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
+        $fwrite(trace_fd, "%0d,0x%08h,0x%08h,%0d,0x%0h\n",
+                $time, commit_PC, commit_instruction, commit_csr_addr, commit_csr_value);
+      end
+      else if (commit_valid && (commit_PC >= 32'h8000002c)) begin
         // Print to console for interactive debugging
         $display("[%0t ns] COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h",
                  $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);

@@ -10,8 +10,8 @@ module IF_HK #(parameter XLEN = 64)(
     input EX_pause_request,
 
     //Interrupt Handler
-    input acknowledge_irq0,
-    input acknowledge_irq1,
+    input take_interrupt_0,
+    input take_interrupt_1,
     
     output [XLEN-1:0]      next_program_PC,
     output wire [XLEN-1:0] PC_step,
@@ -51,7 +51,10 @@ wire concatenate_flag;
 wire instr_type;
 wire sel_PC_step;
 
-wire core_jump = ID_control_transfer_en | acknowledge_irq0 | acknowledge_irq1;
+wire core_jump =    ID_control_transfer_en | 
+                    take_interrupt_0       | 
+                    take_interrupt_1       | 
+                    ID_illegal_trap;
 
 mini_controller u_mini_controller (
     // Global
@@ -106,8 +109,8 @@ housekeeping #(.XLEN(XLEN)) u_housekeeping (
     .EX_pause_request   (EX_pause_request),
 
     //Interrupt Handler
-    .acknowledge_irq0(acknowledge_irq0),
-    .acknowledge_irq1(acknowledge_irq1),
+    .take_interrupt_0(take_interrupt_0),
+    .take_interrupt_1(take_interrupt_1),
 
     // Control
     .control_transfer_en       (ID_control_transfer_en),

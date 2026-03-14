@@ -3,10 +3,10 @@
     `define CORE_CONSTANTS_VH
 
     // PC constants
-    `define PC_IRQ0    64'h00000000_80000000
-    `define PC_IRQ1    64'h00000000_80000004
-    `define PC_RESET   64'h00000000_80000008
-    `define PC_ILLEGAL 64'h00000000_8000000C
+    `define PC_IRQ0    64'h00000000_00000000
+    `define PC_IRQ1    64'h00000000_00000004
+    `define PC_RESET   64'h00000000_00000008
+    `define PC_ILLEGAL 64'h00000000_0000000C
 
     //---------- Instruction Fetch (IF) stage constants ---------
     //sel_PC_step
@@ -91,45 +91,47 @@
 
     // ---- ALU CONSTANTS ----
     `define ALU_ADD         6'b000000
-    `define ALU_SUB         6'b000001
-    `define ALU_SLT         6'b000010
-    `define ALU_SLTU        6'b000011
-    `define ALU_AND         6'b000100
-    `define ALU_OR          6'b000101
-    `define ALU_XOR         6'b000110
+    `define ALU_ADDW        6'b000001
+    `define ALU_SUB         6'b000010
+    `define ALU_SUBW        6'b000011
+    `define ALU_SLT         6'b000100
+    `define ALU_SLTU        6'b000101
+    `define ALU_AND         6'b000110
+    `define ALU_OR          6'b000111
+    `define ALU_XOR         6'b001000
 
-    `define ALU_SLL         6'b000111
-    `define ALU_SLLW        6'b001000
-    `define ALU_SRL         6'b001001
-    `define ALU_SRLW        6'b001010
-    `define ALU_SRA         6'b001011
-    `define ALU_SRAW        6'b001100
+    `define ALU_SLL         6'b001001
+    `define ALU_SLLW        6'b001010
+    `define ALU_SRL         6'b001011
+    `define ALU_SRLW        6'b001100
+    `define ALU_SRA         6'b001101
+    `define ALU_SRAW        6'b001110
 
-    `define ALU_FORWARD_A   6'b001101
-    `define ALU_FORWARD_B   6'b001110
-    `define ALU_EQ          6'b001111
-    `define ALU_NE          6'b010000
-    `define ALU_LT          6'b010001
-    `define ALU_GE          6'b010010
-    `define ALU_LTU         6'b010011
-    `define ALU_GEU         6'b010100
+    `define ALU_FORWARD_A   6'b001111
+    `define ALU_FORWARD_B   6'b010000
+    `define ALU_EQ          6'b010001
+    `define ALU_NE          6'b010010
+    `define ALU_LT          6'b010011
+    `define ALU_GE          6'b010100
+    `define ALU_LTU         6'b010101
+    `define ALU_GEU         6'b100000
 
-    `define ALU_CSRRC       6'b010101
+    `define ALU_CSRRC       6'b100001
 
-    `define ALU_MUL         6'b100000
-    `define ALU_MULH        6'b100001
-    `define ALU_MULHSU      6'b100010
-    `define ALU_MULHU       6'b100011
-    `define ALU_DIV         6'b100100
-    `define ALU_DIVU        6'b100101
-    `define ALU_REM         6'b100110
-    `define ALU_REMU        6'b100111
+    `define ALU_MUL         6'b100010
+    `define ALU_MULH        6'b100011
+    `define ALU_MULHSU      6'b100100
+    `define ALU_MULHU       6'b100101
+    `define ALU_DIV         6'b100110
+    `define ALU_DIVU        6'b100111
+    `define ALU_REM         6'b101000
+    `define ALU_REMU        6'b101001
 
-    `define ALU_MULW        6'b101000
-    `define ALU_DIVW        6'b101001
-    `define ALU_DIVUW       6'b101010
-    `define ALU_REMW        6'b101011
-    `define ALU_REMUW       6'b101100
+    `define ALU_MULW        6'b101010
+    `define ALU_DIVW        6'b101011
+    `define ALU_DIVUW       6'b101100
+    `define ALU_REMW        6'b101101
+    `define ALU_REMUW       6'b101110
 
     // --- CONTROL CONSTANTS ----
     //Global (for 1 bit signals)

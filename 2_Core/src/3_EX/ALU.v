@@ -102,6 +102,9 @@ wire opa_less_than_opb_unsigned = $unsigned(opa) < $unsigned(opb);
 wire opa_less_than_opb          = (opa[XLEN-1] == opb[XLEN-1]) ? opa_less_than_opb_unsigned : opa[XLEN-1];
 wire opa_equal_opb              = opa == opb;
 
+wire signed [XLEN-1:0] opa_plus_opb = opa + opb;
+wire signed [XLEN-1:0] opa_minus_opb = opa - opb;
+
 //Internal ALU result assignation
 reg signed [XLEN-1:0] internal_alu_result;
 always@( * ) begin
@@ -116,8 +119,10 @@ always@( * ) begin
         `ALU_FORWARD_A:          internal_alu_result = opa;
         `ALU_FORWARD_B:          internal_alu_result = opb;
         //Operations
-        `ALU_ADD:                internal_alu_result = opa + opb;
-        `ALU_SUB:                internal_alu_result = opa - opb;
+        `ALU_ADD:                internal_alu_result = opa_plus_opb;
+        `ALU_ADDW:               internal_alu_result = $signed(opa_plus_opb[31:0]);
+        `ALU_SUB:                internal_alu_result = opa_minus_opb;
+        `ALU_SUBW:               internal_alu_result = $signed(opa_minus_opb[31:0]);
         `ALU_SLT:                internal_alu_result = $unsigned(opa_less_than_opb); 
         `ALU_SLTU:               internal_alu_result = $unsigned(opa_less_than_opb_unsigned);
         `ALU_AND:                internal_alu_result = opa & opb;
@@ -125,7 +130,7 @@ always@( * ) begin
         `ALU_XOR:                internal_alu_result = opa ^ opb;
         
         `ALU_SLL:                internal_alu_result = sll_result;
-        `ALU_SLLW:               internal_alu_result = sllw_result;
+        `ALU_SLLW:               internal_alu_result = $signed(sllw_result[31:0]);
 
         `ALU_SRL:                internal_alu_result = srl_result;
         `ALU_SRLW:               internal_alu_result = $unsigned(srlw_result);

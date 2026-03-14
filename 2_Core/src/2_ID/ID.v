@@ -7,8 +7,8 @@ module ID #(parameter XLEN = 64)(
     input pause,
 
     //Interrupt Handler
-    input             acknowledge_irq0,
-    input             acknowledge_irq1,
+    input             take_interrupt_0,
+    input             take_interrupt_1,
 
     input             interrupt_mepc_we,
     input [XLEN-1:0]  interrupt_PC_to_mepc,
@@ -186,8 +186,16 @@ wire [XLEN-1:0] csr_data_rd;
 wire in_csr_we = EX_csr_we_in && !pause;
 //Logic to save in mepc the PC of the illegal instruction in the case that both cases happen at the same time 
 // -> Which means we will re-execute the illegal instruction after doing MRET in the interrupt handler
-wire [XLEN-1:0] interrupt_PC_to_mepc_f = illegal_trap ? IF_PC : interrupt_PC_to_mepc;
+reg [XLEN-1:0] interrupt_PC_to_mepc_f;
+always @( * ) begin
+    interrupt_PC_to_mepc_f = interrupt_PC_to_mepc;
+    if(illegal_trap && !take_interrupt_1 && !take_interrupt_0)
+        interrupt_PC_to_mepc_f = IF_PC;
+end
 
+wire [11:0] csr_addr_rd = read_mepc ? `MEPC_ADDR : IF_canonical_instruction[31:20];
+
+wire csr_re_to_bank = csr_re | read_mepc;
 csr_bank #(.XLEN(XLEN)) u_csr_bank (
     //Global
     .clk(clk),
@@ -195,8 +203,8 @@ csr_bank #(.XLEN(XLEN)) u_csr_bank (
     .pause(pause),
 
     //Interrupt Handler
-    .acknowledge_irq0(acknowledge_irq0),
-    .acknowledge_irq1(acknowledge_irq1),
+    .take_interrupt_0(take_interrupt_0),
+    .take_interrupt_1(take_interrupt_1),
     .interrupt_mepc_we(interrupt_mepc_we),
     .interrupt_PC_to_mepc(interrupt_PC_to_mepc_f),
 
@@ -207,14 +215,13 @@ csr_bank #(.XLEN(XLEN)) u_csr_bank (
     .PC_illegal(IF_PC),
 
     //MRET signals
-    .read_mepc(read_mepc),
     .restore_mstatus(EX_restore_mstatus_in),
 
     //Inputs/Outputs from/to Zicsr HW
     .csr_we(in_csr_we),        //Write-enable
-    .csr_re(csr_re),        //Read-enable
+    .csr_re(csr_re_to_bank),        //Read-enable
 
-    .csr_addr_rd(IF_canonical_instruction[31:20]),
+    .csr_addr_rd(csr_addr_rd),
     .csr_addr_wr(EX_csr_addr_wr_in),
     .csr_data_wr(EX_csr_data_wr),
     .csr_data_rd(csr_data_rd)
@@ -237,7 +244,7 @@ assign EX_RS2               = RS2;
 assign EX_RD_addr_out       = IF_canonical_instruction[11:7];
 assign EX_imm               = imm;
 assign EX_csr_data_rd       = csr_data_rd;
-assign EX_csr_addr_wr_out   = IF_canonical_instruction[31:20];
+assign EX_csr_addr_wr_out   = csr_addr_rd;
     //Control
 assign EX_sel_opa           = sel_opa;
 assign EX_sel_opb           = sel_opb;

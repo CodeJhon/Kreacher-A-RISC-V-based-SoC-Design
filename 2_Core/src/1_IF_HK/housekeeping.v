@@ -10,8 +10,8 @@ module housekeeping #(parameter XLEN = 64)(
     input EX_pause_request,
 
     //Interrupt Handler
-    input acknowledge_irq0,
-    input acknowledge_irq1,
+    input take_interrupt_0,
+    input take_interrupt_1,
     
     //Control
     input                 control_transfer_en,
@@ -58,9 +58,9 @@ always @( * ) begin
     if(pause_to_concatenate || EX_pause_request)
             next_PC = PC;
     else begin
-        if(acknowledge_irq0)
+        if(take_interrupt_0)
             next_PC = `PC_IRQ0;
-        else if(acknowledge_irq1)
+        else if(take_interrupt_1)
             next_PC = `PC_IRQ1;
         else
             next_PC = next_program_PC;

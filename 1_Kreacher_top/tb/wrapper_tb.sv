@@ -23,10 +23,13 @@ module tb_top_wrapper;
   // Wires to connect to DUT
 `ifndef SYNTHESIS
   wire           commit_valid;
+  wire         commit_csr_valid;
   wire [XLEN-1:0] commit_PC;
-  wire [31:0]   commit_instruction;
   wire [4:0]     commit_rd_addr;
   wire [XLEN-1:0] commit_rd_value;
+  wire [11:0]    commit_csr_addr;
+  wire [XLEN-1:0] commit_csr_value;
+  wire [31:0]   commit_instruction;
 `endif
 
   // Instantiate DUT (kreacher_top and external mem)
@@ -55,15 +58,31 @@ module tb_top_wrapper;
     
     //Commit signals going to the regfile
     .WB_regfile_we(dut.u_kreacher_top.core_inst.u_ID.u_regfile.regfile_we),
+    .WB_csr_we(dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.csr_we),
     .WB_RD_addr(dut.u_kreacher_top.core_inst.u_ID.u_regfile.RD_addr),
     .WB_RD(dut.u_kreacher_top.core_inst.u_ID.u_regfile.RD),
+    .WB_csr(dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.csr_data_wr),
+    //In SSC, csr_addr_rd = csr_addr_wr (Change the line below depending on the core used)
+    .WB_csr_addr(dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.csr_addr_rd),
 
     //Commit signals ready to print
     .commit_valid(commit_valid),
+    .commit_csr_valid(commit_csr_valid),
     .commit_PC(commit_PC),
-    .commit_instruction(commit_instruction),
     .commit_rd_addr(commit_rd_addr),
-    .commit_rd_value(commit_rd_value)
+    .commit_rd_value(commit_rd_value),
+    .commit_csr_addr(commit_csr_addr),
+    .commit_csr_value(commit_csr_value),
+    .commit_instruction(commit_instruction)       
+  );
+
+  random_interrupt_gen u_random_interrupt_gen(
+      .clk(clk),
+      .rst_n(reset_n),
+      .ack_0(acknowledge_irq0),
+      .interrupt_0(irq0),
+      .ack_1(acknowledge_irq1),
+      .interrupt_1(irq1)
   );
 
   // clock generation
@@ -74,7 +93,7 @@ module tb_top_wrapper;
 
   // Simulation control: reset_n, waveform, trace file
   integer commit_count;
-  integer trace_fd;
+  integer trace_fd, irq_fd; 
 
   initial begin
     //check waveform
@@ -87,10 +106,15 @@ module tb_top_wrapper;
       $display("ERROR: Could not open kreacher_trace.csv for writing.");
       $finish;
     end
-
+    
+    //irq_fd = $fopen("irq_trace.csv", "w");
+    //if (irq_fd == 0) begin
+    //  $display("ERROR: Could not open irq_trace.csv for writing.");
+    //  $finish;
+    //end
     // Write CSV header
-    $fwrite(trace_fd, "time_ns,pc,inst,rd,rd_value\n");
-
+    $fwrite(trace_fd, "time_ns,pc,inst,rd,rd_value,csr,csr_value\n");
+    //$fwrite(irq_fd, "time_ns,pc,inst,irq_0,irq_1,ack_0,ack_1,commit_valid,csr_valid,mie,mcause\n");
     // Apply reset_n
     
     reset_n = 0;
@@ -114,9 +138,32 @@ module tb_top_wrapper;
           //print_coverage_report();
           $finish;
       end
-      
       else begin
-      if (commit_valid && (commit_PC >= 32'h8000002c)) begin
+      if (~(commit_PC == 32'h00000008 && commit_instruction!=32'h0000206f)) begin
+      //$fwrite(irq_fd, "%0d,0x%08h,0x%08h,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d\n",
+      //          $time, commit_PC, commit_instruction, dut.u_kreacher_top.irq0_sync, dut.u_kreacher_top.irq1_sync, acknowledge_irq0, acknowledge_irq1, commit_valid, commit_csr_valid, dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.mie, dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.mcause);
+      end
+      if(commit_csr_valid && commit_valid && (commit_PC >= 32'h00002034)) begin
+        // Print to console for interactive debugging
+        $display("[%0t ns] CSR COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h csr_addr=0x%0d csr_val=0x%0h",
+                 $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value, commit_csr_addr, commit_csr_value);
+
+        // Write a CSV line: time (ns), PC, instruction, rd, rd_value, csr_addr, csr_val
+        // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
+        $fwrite(trace_fd, "%0d,0x%08h,0x%08h,%0d,0x%0h,%0d,0x%0h\n",
+                $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value, commit_csr_addr, commit_csr_value);
+      end
+      else if(commit_csr_valid && (commit_PC >= 32'h00002034)) begin
+        // Print to console for interactive debugging
+        $display("[%0t ns] CSR COMMIT: PC=0x%08h INST=0x%08h csr_addr=0x%0d csr_val=0x%0h",
+                 $time, commit_PC, commit_instruction, commit_csr_addr, commit_csr_value);
+
+        // Write a CSV line: time (ns), PC, instruction, csr_addr, csr_val
+        // Use fixed-width hex for PC and inst for easy diffing (08h for 32-bit)
+        $fwrite(trace_fd, "%0d,0x%08h,0x%08h,0,0,%0d,0x%0h\n",
+                $time, commit_PC, commit_instruction, commit_csr_addr, commit_csr_value);
+      end
+      else if (commit_valid && (commit_PC >= 32'h00002034)) begin
         // Print to console for interactive debugging
         $display("[%0t ns] COMMIT: PC=0x%08h INST=0x%08h rd=%0d rd_val=0x%0h",
                  $time, commit_PC, commit_instruction, commit_rd_addr, commit_rd_value);
@@ -140,51 +187,10 @@ module tb_top_wrapper;
     end
   end
 
-  // ------------------------------------------------------------
-  // Interrupt stimulus (halfcycle latency-based assert, ack-based deassert)
-  // ------------------------------------------------------------
-
-  parameter IRQ_ASSERT_CYCLES = 264274;
-
-  int irq_cycle_cnt;
-  bit irq_asserted;
-
-  initial begin
-    irq0 <= 1'b0;
-    irq1 <= 1'b0;
-    irq_cycle_cnt = 0;
-    irq_asserted  = 0;
-  end
-
-  // Count cycles only until IRQ is asserted
-  always @(posedge clk) begin
-    if (!irq_asserted)
-      irq_cycle_cnt++;
-  end
-
-  // Drive IRQ on negedge clk
-  always @(negedge clk) begin
-    // Assert IRQ when counter reaches threshold
-    if (!irq_asserted && irq_cycle_cnt >= IRQ_ASSERT_CYCLES) begin
-      $display("[%0t] TB: Asserting irq0 (cycle=%0d)", $time, irq_cycle_cnt);
-      irq0 <= 1'b1;
-      irq_asserted <= 1'b1;
-    end
-
-    // Deassert IRQ ONLY on acknowledge
-    if (irq_asserted && acknowledge_irq0) begin
-      #CLK_PERIOD_NS;
-      $display("[%0t] TB: Deasserting irq0 (acknowledged)", $time);
-      irq0 <= 1'b0;
-      irq_asserted  <= 1'b0;
-      irq_cycle_cnt <= 0;   // reset for next interrupt
-    end
-  end
-
-
   // Optional: print final stats at simulation end (will appear before $finish)
   final begin
     $writememh("DMEM_result.mem", dut.external_memory.memory);
+    //PMEM printing for RTL simulations
     $writememh("PMEM_result_0.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[0].PRAM_even.sram_core_i.memory);
     $writememh("PMEM_result_1.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[0].PRAM_odd.sram_core_i.memory);
     $writememh("PMEM_result_2.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[1].PRAM_even.sram_core_i.memory);
@@ -193,6 +199,16 @@ module tb_top_wrapper;
     $writememh("PMEM_result_5.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[2].PRAM_odd.sram_core_i.memory);
     $writememh("PMEM_result_6.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS[3].PRAM_even.sram_core_i.memory);
     $writememh("PMEM_result_7.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS[3].PRAM_odd.sram_core_i.memory);
+    
+    //PMEM printing for Post-Synthesis / Post Implementation simulations
+    //$writememh("PMEM_result_0.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS_0__PRAM_even.sram_core_i.memory);
+    //$writememh("PMEM_result_1.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS_0__PRAM_odd.sram_core_i.memory);
+    //$writememh("PMEM_result_2.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS_1__PRAM_even.sram_core_i.memory);
+    //$writememh("PMEM_result_3.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS_1__PRAM_odd.sram_core_i.memory);
+    //$writememh("PMEM_result_4.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS_2__PRAM_even.sram_core_i.memory);
+    //$writememh("PMEM_result_5.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS_2__PRAM_odd.sram_core_i.memory);
+    //$writememh("PMEM_result_6.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_EVEN_MACROS_3__PRAM_even.sram_core_i.memory);
+    //$writememh("PMEM_result_7.mem", dut.u_kreacher_top.PMEM_interface_top_inst.GEN_ODD_MACROS_3__PRAM_odd.sram_core_i.memory);
     
     $display("Simulation finished at time %0t ns, cycles = %0d", $time, commit_count);
   end

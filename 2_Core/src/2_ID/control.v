@@ -26,7 +26,7 @@ module control #(parameter XLEN = 64)(
     output reg [1:0]  sel_opa,
     output reg [1:0]  sel_opb,
     output reg [5:0]  sel_op,
-    output       reg  regfile_we,
+    output            regfile_we,
 
     output reg        sel_exec_result,
 
@@ -73,6 +73,8 @@ assign illegal_instr =  invalid_opcode    |
                         invalid_csr_read  | 
                         invalid_csr_write;
 
+reg regfile_write_en;
+assign regfile_we = regfile_write_en & (~illegal_instr);
 
 always@( * )begin
     is_privileged      = 1'b0;
@@ -89,7 +91,7 @@ always@( * )begin
     //Default control - disable everything
     jump = `DISABLE;
     branch  = `DISABLE;
-    regfile_we = `DISABLE;
+    regfile_write_en = `DISABLE;
     imm_type = `IMM_NOT_USED;
     sel_exec_result = `exec_result_ALU;
     sel_opb = `OPB_IMM;
@@ -139,7 +141,7 @@ always@( * )begin
             `INT_REG_REG:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `IMM_NOT_USED;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -192,7 +194,7 @@ always@( * )begin
             `INT_REG_REG_W:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `IMM_NOT_USED;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -228,9 +230,9 @@ always@( * )begin
                         end
                         `ADD_SUB_MUL:begin
                             if(funct7[5])
-                                            sel_op = `ALU_SUB;
+                                            sel_op = `ALU_SUBW;
                             else
-                                            sel_op = `ALU_ADD;
+                                            sel_op = `ALU_ADDW;
                         end
                         default:
                             invalid_alu_op = 1'b1;
@@ -242,7 +244,7 @@ always@( * )begin
             `INT_REG_IMM:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `I_IMMEDIATE;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -267,7 +269,7 @@ always@( * )begin
             `INT_REG_IMM_W:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `I_IMMEDIATE;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -278,7 +280,7 @@ always@( * )begin
                 sel_writeback = `WBACK_EXEC_RESULT;
                 result_type = `RESULT_32;
                 case(funct3)
-                    `ADDI:      sel_op = `ALU_ADD;
+                    `ADDI:      sel_op = `ALU_ADDW;
                     `SLLI:      sel_op = `ALU_SLLW;
                     `SRLI_SRAI: sel_op = imm_I_10 ? `ALU_SRAW : `ALU_SRLW;
                     default:
@@ -289,7 +291,7 @@ always@( * )begin
             `LOAD:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `I_IMMEDIATE;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -316,7 +318,7 @@ always@( * )begin
             `STORE:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we =  `DISABLE;
+                regfile_write_en =  `DISABLE;
                 imm_type = `S_IMMEDIATE;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -340,7 +342,7 @@ always@( * )begin
             `BRANCH:begin
                 jump = `DISABLE;
                 branch  = `ENABLE;
-                regfile_we = `DISABLE;
+                regfile_write_en = `DISABLE;
                 imm_type = `B_IMMEDIATE;
                 sel_exec_result = `exec_result_PC_plus_imm;
                 sel_opa = `OPA_RS1;
@@ -387,11 +389,11 @@ always@( * )begin
                         //CSR read -> Regfile write
                         if(RD_addr != 5'd0)begin
                             csr_re     = `ENABLE;
-                            regfile_we = `ENABLE;
+                            regfile_write_en = `ENABLE;
                         end 
                         else begin
                             csr_re     = `DISABLE;
-                            regfile_we = `DISABLE;
+                            regfile_write_en = `DISABLE;
                         end
                     end
                     `CSRRS: begin
@@ -405,7 +407,7 @@ always@( * )begin
                         
                         //CSR read -> Regfile write
                         csr_re     = `ENABLE;
-                        regfile_we = `ENABLE;
+                        regfile_write_en = `ENABLE;
                     end
                     `CSRRC: begin
                         sel_opb = `OPB_RS1;
@@ -418,7 +420,7 @@ always@( * )begin
                         
                         //CSR read -> Regfile write
                         csr_re     = `ENABLE;
-                        regfile_we = `ENABLE;
+                        regfile_write_en = `ENABLE;
                     end
 
                     `CSRRWI: begin
@@ -432,11 +434,11 @@ always@( * )begin
                         //CSR read -> Regfile write
                         if(RD_addr != 5'd0)begin
                             csr_re     = `ENABLE;
-                            regfile_we = `ENABLE;
+                            regfile_write_en = `ENABLE;
                         end 
                         else begin
                             csr_re     = `DISABLE;
-                            regfile_we = `DISABLE;
+                            regfile_write_en = `DISABLE;
                         end
                     end
                     `CSRRSI: begin
@@ -450,7 +452,7 @@ always@( * )begin
                         
                         //CSR read -> Regfile write
                         csr_re     = `ENABLE;
-                        regfile_we = `ENABLE;
+                        regfile_write_en = `ENABLE;
                     end
                     `CSRRCI: begin
                         sel_opb = `OPB_IMM;
@@ -463,7 +465,7 @@ always@( * )begin
                         
                         //CSR read -> Regfile write
                         csr_re     = `ENABLE;
-                        regfile_we = `ENABLE;
+                        regfile_write_en = `ENABLE;
                     end
                     default:
                         invalid_csr_op = 1'b1;
@@ -499,7 +501,7 @@ always@( * )begin
             `LUI: begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `U_IMMEDIATE;
                 sel_exec_result = `exec_result_ALU;
                 sel_opa = `OPA_RS1;
@@ -515,7 +517,7 @@ always@( * )begin
             `AUIPC:begin
                 jump = `DISABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `U_IMMEDIATE;
                 sel_exec_result = `exec_result_PC_plus_imm;
                 sel_opa = `OPA_RS1;
@@ -531,7 +533,7 @@ always@( * )begin
             `JAL:begin
                 jump = `ENABLE;
                 branch  = `DISABLE;
-                regfile_we = `ENABLE;
+                regfile_write_en = `ENABLE;
                 imm_type = `J_IMMEDIATE;
                 sel_exec_result = `exec_result_PC_plus_imm;
                 sel_opa = `OPA_RS1;
@@ -548,7 +550,7 @@ always@( * )begin
                 if(funct3 == 3'b000)begin
                     jump = `ENABLE;
                     branch  = `DISABLE;
-                    regfile_we = `ENABLE;
+                    regfile_write_en = `ENABLE;
                     imm_type = `I_IMMEDIATE;
                     sel_exec_result = `exec_result_ALU;
                     sel_opa = `OPA_RS1;

@@ -2,6 +2,6 @@
 Vivado_Kreacher/
 .vscode/
 DMEM_result_rearranged.mem
-temp/
+temp*/
 run_logs/
 Playground/
