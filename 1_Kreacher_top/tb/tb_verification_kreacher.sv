@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_top_wrapper;
+module tb_verification_kreacher;
 
   // Parameters
   localparam XLEN = 64;
@@ -17,8 +17,6 @@ module tb_top_wrapper;
   // Clock & reset_n
   reg clk;
   reg reset_n;
-  // reg I_INTR_H;
-  // reg O_INTR_ACK;
 
   // Wires to connect to DUT
 `ifndef SYNTHESIS
@@ -39,7 +37,7 @@ module tb_top_wrapper;
   wire acknowledge_irq0;
   wire acknowledge_irq1;
   
-  top_wrapper #(
+  verification_kreacher #(
   .ADDR_BYTE_W(ADDR_BYTE_W),
   .DATA_W(DATA_W),
   .external_mem_WORDS(external_mem_WORDS),
@@ -96,9 +94,6 @@ module tb_top_wrapper;
   integer trace_fd, irq_fd; 
 
   initial begin
-    //check waveform
-    
-    //$wlfdump("kreacher_tb.wdb");  // 
 
     // Open trace file (CSV)
     trace_fd = $fopen("kreacher_trace.csv", "w");
@@ -107,16 +102,9 @@ module tb_top_wrapper;
       $finish;
     end
     
-    //irq_fd = $fopen("irq_trace.csv", "w");
-    //if (irq_fd == 0) begin
-    //  $display("ERROR: Could not open irq_trace.csv for writing.");
-    //  $finish;
-    //end
-    // Write CSV header
     $fwrite(trace_fd, "time_ns,pc,inst,rd,rd_value,csr,csr_value\n");
-    //$fwrite(irq_fd, "time_ns,pc,inst,irq_0,irq_1,ack_0,ack_1,commit_valid,csr_valid,mie,mcause\n");
+
     // Apply reset_n
-    
     reset_n = 0;
     commit_count = 0;
     repeat (RESET_CYCLES) @(posedge clk);
@@ -135,13 +123,10 @@ module tb_top_wrapper;
             // Clean up
           $fclose(trace_fd);
         #100; // let final events settle
-          //print_coverage_report();
           $finish;
       end
       else begin
       if (~(commit_PC == 32'h00000008 && commit_instruction!=32'h0000206f)) begin
-      //$fwrite(irq_fd, "%0d,0x%08h,0x%08h,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d\n",
-      //          $time, commit_PC, commit_instruction, dut.u_kreacher_top.irq0_sync, dut.u_kreacher_top.irq1_sync, acknowledge_irq0, acknowledge_irq1, commit_valid, commit_csr_valid, dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.mie, dut.u_kreacher_top.core_inst.u_ID.u_csr_bank.mcause);
       end
       if(commit_csr_valid && commit_valid && (commit_PC >= 32'h00002034)) begin
         // Print to console for interactive debugging
@@ -182,12 +167,11 @@ module tb_top_wrapper;
       $display("Maximum commit count (%0d) reached. Terminating simulation.", MAX_COMMITS);
       $fclose(trace_fd);
       #100; // let final events settle
-        //print_coverage_report();
       $finish;
     end
   end
 
-  // Optional: print final stats at simulation end (will appear before $finish)
+  // Print final stats at simulation end (will appear before $finish)
   final begin
     $writememh("DMEM_result.mem", dut.external_memory.memory);
     //PMEM printing for RTL simulations
