@@ -14,7 +14,7 @@ module RAM #(
     output reg [ROW_WIDTH-1:0] data_out
 );
 
-    reg [ROW_WIDTH-1:0] memory [0:WORDS-1];
+    reg [31:0] memory [0:WORDS-1];
 
     //Initialize the memory with the contents of the specified file
     initial begin
@@ -28,10 +28,10 @@ module RAM #(
     always @(posedge clk) begin
         if (cs) begin
             if (we) begin
-                memory[addr] <= data_in;
+                {memory[2*addr+1],memory[2*addr]} <= data_in;
             end
             else begin
-                data_out <= memory[addr];
+                data_out <= {memory[2*addr+1],memory[2*addr]};
             end
         end
     end

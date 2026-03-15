@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module top_wrapper#(
+module verification_kreacher#(
   parameter ADDR_BYTE_W = 17,
   parameter DATA_W      = 64,
   parameter external_mem_WORDS   = 8192,
@@ -70,7 +70,7 @@ module top_wrapper#(
    
     RAM #(
         .ADDR_LINES(14),
-        .WORDS  (8192),
+        .WORDS  (16384),
         .FILE_LOAD(1),
         .ROW_WIDTH(64),
         .MEM_FILE("DMEM_content.mem")
