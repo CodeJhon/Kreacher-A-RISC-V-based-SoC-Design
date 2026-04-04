@@ -1,5 +1,13 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
+// =============================================================================
+// File        : csr_bank.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Implements the CSR register bank with synchronous write access and CSR read/write semantics.
+// =============================================================================
+
 module csr_bank  #(parameter XLEN = 64)(
     //Global
     input clk,

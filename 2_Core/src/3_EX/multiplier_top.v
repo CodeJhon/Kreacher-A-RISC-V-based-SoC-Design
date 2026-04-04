@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : multiplier_top.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Top-level multiplication unit coordinating radix-4 Booth multiplication and multiply control signals.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module multiplier_top #(

@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : core_tb.sv
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   SystemVerilog testbench for overall pipelined core operation and memory interface verification.
+// =============================================================================
+
 `timescale 1ns/1ps
 
 module tb_core_and_mem;

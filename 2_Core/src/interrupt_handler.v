@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : interrupt_handler.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Monitors interrupt signals and controls interrupt entry, MEPC updates, acknowledge outputs, and take conditions.
+// =============================================================================
+
 module interrupt_handler #(parameter XLEN = 64, parameter WB = 3'd4)(// In pipelined cores = 4 ; in single cycle cores = 1
     //Global
     input clk,
@@ -37,7 +45,7 @@ module interrupt_handler #(parameter XLEN = 64, parameter WB = 3'd4)(// In pipel
 wire next_stage_valid = mie && next_stage_en;
 
 // ------------------------------------------------------------
-// Pipeline stages
+// Stage tracking
 // ------------------------------------------------------------
 localparam S_IF  = 3'd0;
 localparam S_ID  = 3'd1;

@@ -1,5 +1,13 @@
 `include "../../include/CORE_CONSTANTS.vh"
 
+// =============================================================================
+// File        : radix_4_divider.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Implements a radix-4 division algorithm for multi-cycle integer division and remainder operations.
+// =============================================================================
+
 module radix_4_divider#(
     parameter XLEN = 64
 )(

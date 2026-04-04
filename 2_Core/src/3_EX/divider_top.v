@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : divider_top.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Implements signed/unsigned division and remainder operations with quick-result detection and pause signaling.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module divider_top #(parameter XLEN = 64)(

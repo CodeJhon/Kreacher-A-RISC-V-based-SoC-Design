@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : build_imm.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Constructs sign-extended immediate operands from instruction fields for the execute stage.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module build_imm #(parameter XLEN = 64)(

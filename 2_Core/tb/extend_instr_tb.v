@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : extend_instr_tb.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Testbench verifying compressed instruction expansion into canonical instruction encodings.
+// =============================================================================
+
 `timescale 1ns / 1ps
 
 module extend_instr_tb;

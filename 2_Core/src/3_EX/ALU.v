@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : ALU.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Performs arithmetic, logic, multiplication, division, and shift operations in the execute stage.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module ALU #(parameter XLEN = 64)(

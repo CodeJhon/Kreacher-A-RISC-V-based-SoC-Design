@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : MEM.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Handles memory stage data path, external memory bus interface, and forwarding between MEM and WB stages.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module MEM #(parameter XLEN = 64)(

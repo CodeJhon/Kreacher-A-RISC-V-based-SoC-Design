@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : CORE_CONSTANTS.vh
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Defines core-wide constants, parameters, and bit-field macros used throughout the pipelined core design.
+// =============================================================================
+
     // Execution Unit constants
     `ifndef CORE_CONSTANTS_VH
     `define CORE_CONSTANTS_VH

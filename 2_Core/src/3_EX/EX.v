@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : EX.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Executes operands, selects ALU/divider/multiplier results, and coordinates execute-stage signals to memory.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module EX #(parameter XLEN = 64)(

@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : pause_handler.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Manages core pause and sleep conditions, generating stage-level pause signals and valid fetch control.
+// =============================================================================
+
 module pause_handler (
     //Global
     input clk,

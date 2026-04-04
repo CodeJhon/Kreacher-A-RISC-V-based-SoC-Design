@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : extension_wr.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Performs write-data extension and generates byte/half-word write masks for memory stores.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module extension_wr #(parameter XLEN = 64)(

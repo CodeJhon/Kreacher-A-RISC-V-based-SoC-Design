@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : fetch.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Fetches instruction words from the external instruction bus and supplies canonical instructions plus PC control signals.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module fetch (

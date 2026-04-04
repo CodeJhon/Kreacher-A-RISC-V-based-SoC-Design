@@ -1,4 +1,10 @@
-    // extend_instruction constants
+// =============================================================================
+// File        : INSTR_EXTENSION.vh
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Declares instruction extension encodings, support macros, and extension-related constants for compressed and custom instructions.
+// =============================================================================
     `ifndef INSTR_EXTENSION_VH
     `define INSTR_EXTENSION_VH
     

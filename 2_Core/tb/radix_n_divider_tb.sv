@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : radix_n_divider_tb.sv
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   SystemVerilog testbench validating the radix-4 divider unit and multi-cycle divide/remainder behavior.
+// =============================================================================
+
 `timescale 1ns/1ps
 
 module tb_radix_4_divider_edge64_no_div0;

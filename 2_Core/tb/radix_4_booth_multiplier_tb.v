@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : radix_4_booth_multiplier_tb.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Testbench validating behavior of the radix-4 Booth multiplier unit.
+// =============================================================================
+
 `timescale 1ns/1ps
 
 module radix_4_booth_multiplier_tb;

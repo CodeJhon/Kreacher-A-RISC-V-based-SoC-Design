@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : IF_HK.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Combines instruction fetch and housekeeping logic for the IF/HK unit in the pipelined core.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module IF_HK #(parameter XLEN = 64)(

@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : opa_shift.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Performs operand shifting, alignment, and rotation support for execute-stage operations.
+// =============================================================================
+
 module opa_shift #(parameter XLEN = 64)(
     //Inputs
     input signed [XLEN-1:0]  opa,

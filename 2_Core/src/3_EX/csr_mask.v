@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : csr_mask.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Generates CSR access masks and privilege filtering for CSR operations in the pipelined core.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module csr_mask #(parameter XLEN = 64)(

@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : HCU.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Hazard Control Unit for the pipelined core, generating stage stalls, flushes, and forwarding control.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module HCU #(parameter XLEN = 64)(
