@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : control.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Decodes canonical instructions and generates control signals for ALU, memory, CSR, branch, and writeback behavior.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module control #(parameter XLEN = 64)(

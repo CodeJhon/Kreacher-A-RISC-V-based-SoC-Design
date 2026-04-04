@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : WB.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Performs final writeback selection and forwards register file and CSR write signals to adjacent stages.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module WB #(parameter XLEN = 64)(

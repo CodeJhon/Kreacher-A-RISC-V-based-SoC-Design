@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : ALU_tb.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Testbench for verifying ALU arithmetic, logic, and control behavior.
+// =============================================================================
+
 `timescale 1ns / 1ps
 
 `include "../include/CORE_CONSTANTS.vh"

@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : extension_rd.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Performs sign or zero extension of readback data based on selected byte/half-word addresses.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module extension_rd #(parameter XLEN = 64)(

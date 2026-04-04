@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : extend_instruction.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Expands compressed instructions into full 32-bit canonical instruction encodings.
+// =============================================================================
+
 `include "../../include/INSTR_EXTENSION.vh"
 `include "../../include/CORE_CONSTANTS.vh"
 

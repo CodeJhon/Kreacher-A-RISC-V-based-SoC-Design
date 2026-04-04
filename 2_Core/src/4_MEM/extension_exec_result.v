@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : extension_exec_result.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Extends execution results to 32 or 64 bits based on result type control.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module extension_exec_result #(parameter XLEN = 64) (

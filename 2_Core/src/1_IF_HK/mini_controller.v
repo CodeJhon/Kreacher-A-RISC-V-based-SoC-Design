@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : mini_controller.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Generates IF/HK control signals for instruction concatenation, pause handling, and branch/jump coordination.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module mini_controller (

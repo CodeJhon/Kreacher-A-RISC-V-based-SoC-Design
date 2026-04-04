@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : regfile.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Implements the general-purpose register file with asynchronous read ports and synchronous writeback.
+// =============================================================================
+
 module regfile #(parameter XLEN = 64)(
     //global
     input clk,

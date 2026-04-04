@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : core_and_mem.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Integration testbench wiring the core to external instruction and data memory models.
+// =============================================================================
+
 module core_and_mem #(parameter XLEN = 64)(    
     //Global
     input clk,

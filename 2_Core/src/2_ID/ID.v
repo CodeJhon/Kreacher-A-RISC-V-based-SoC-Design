@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : ID.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Performs instruction decode, register operand selection, CSR handling, and control signal propagation to the execute stage.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module ID #(parameter XLEN = 64)(

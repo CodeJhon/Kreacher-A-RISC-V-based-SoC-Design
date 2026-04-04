@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : housekeeping.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Implements PC update, interrupt selection, and program counter housekeeping for the fetch stage.
+// =============================================================================
+
 `include "../../include/CORE_CONSTANTS.vh"
 
 module housekeeping #(parameter XLEN = 64)(

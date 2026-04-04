@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : core.v
+// Author      : Jhon Steven Pinto Hernandez
+// Email       : jhonstevenpintoh@gmail.com
+// Description :
+//   Top-level single-cycle core wrapper connecting instruction fetch, decode, execute, memory, writeback, interrupt, and pause control.
+// =============================================================================
+
 module core #(parameter XLEN = 64)(//RV64I
     //Global
     input clk,
