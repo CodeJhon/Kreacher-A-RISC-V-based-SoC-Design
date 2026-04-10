@@ -149,7 +149,7 @@ parameter INITFILE = "none";
     genvar j;
     generate
         for (j = 0; j < NUM_HANDLERS; j = j + 1) begin : GEN_EVEN_MACROS
-            HM_1P_GF28SLP_1024x32_1cr #(
+            HM_1P_1024x32_1cr #(
                 .INITFILE (INITFILE)
             ) PRAM_even (
                 .CLK_I(clk),
@@ -170,7 +170,7 @@ parameter INITFILE = "none";
     genvar k;
     generate
         for (k = 0; k < NUM_HANDLERS; k = k + 1) begin : GEN_ODD_MACROS
-            HM_1P_GF28SLP_1024x32_1cr #(
+            HM_1P_1024x32_1cr #(
                 .INITFILE (INITFILE)
             ) PRAM_odd (
                 .CLK_I(clk),
