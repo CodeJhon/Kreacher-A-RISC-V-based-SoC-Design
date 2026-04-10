@@ -32,7 +32,7 @@ module PMEM_MACRO#(
 
 endmodule
 
-module HM_1P_GF28SLP_1024x32_1cr #(
+module HM_1P_1024x32_1cr #(
     parameter ADDR_LINES = 10,
     parameter WORDS      = 1024,
     parameter FILE_LOAD  = 0,
