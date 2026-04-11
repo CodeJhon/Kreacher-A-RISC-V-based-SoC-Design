@@ -5,7 +5,7 @@
 
 
 
-![Variants](https://img.shields.io/badge/Core%20Variants-Single--Cycle%20%7C%205--Stage-green)
+![Variants](https://img.shields.io/badge/Core%20Variants-Single--Cycle%20%7C%205--Stage--Pipelined-green)
 ![Max Frequency](https://img.shields.io/badge/Max_Frequency-%20_84%20MHz-orange)
 ![Verification Coverage](https://img.shields.io/badge/Verification_Coverage-95%25%20\-brightgreen)
 ![Technology](https://img.shields.io/badge/Technology-28nm-lightgrey)
