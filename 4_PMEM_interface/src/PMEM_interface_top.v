@@ -1,4 +1,12 @@
-`timescale 1ns/1ps
+// =============================================================================
+// File        : PMEM_interface_top.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module integrates the PMEM interface, odd-even memory handlers, and multiple 
+// PRAM macros to manage instruction and data memory accesses, address distribution, 
+// and masked read/write operations across internal memory banks.
+// =============================================================================
 `include "MEMORY_CONSTANT.vh"
 
 module PMEM_interface_top

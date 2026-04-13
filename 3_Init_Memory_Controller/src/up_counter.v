@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : up_counter.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module implements a parameterized address counter that increments by a fixed 
+// step on enable and wraps back to a base address when the maximum limit is reached.
+// =============================================================================
 module up_counter #(
     parameter integer ADDR_W         = 17,  
     parameter [ADDR_W-1:0] INCR       = 8, 

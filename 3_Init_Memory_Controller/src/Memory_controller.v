@@ -1,4 +1,12 @@
-`timescale 1ns/1ps
+// =============================================================================
+// File        : Memory_controller.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module manages memory accesses between the core, internal PRAM, and external 
+// SPI ROM by controlling initialization, load/store operations, instruction fetches, 
+// and masked partial read/write transactions.
+// =============================================================================
 `include "INIT_MEM_CONSTANTS.vh"
 
 module Memory_controller #(
