@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : MEMORY_CONSTANTS.vh
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   Defines unique name for each memory macro and handlers to differentiate macros.
+// =============================================================================
+
 // -------------------------
 // Handler Codes
 // -------------------------

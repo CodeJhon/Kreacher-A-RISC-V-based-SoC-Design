@@ -1,3 +1,11 @@
+ // =============================================================================
+// File        : INIT_MEM_CONSTANTS.vh
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   Defines constants for the memory controller FSM states and SPI interface control modes.
+// =============================================================================
+
  // ================= Memory Controller States =================
 `define S_IDLE                 4'd0
 `define S_START                4'd1

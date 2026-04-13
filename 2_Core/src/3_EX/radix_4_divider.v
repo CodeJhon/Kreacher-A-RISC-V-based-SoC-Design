@@ -2,8 +2,8 @@
 
 // =============================================================================
 // File        : radix_4_divider.v
-// Author      : Jhon Steven Pinto Hernandez
-// Email       : jhonstevenpintoh@gmail.com
+// Author      : Jhon Steven Pinto Hernandez and Sanjai Palanisamy
+// Email       : jhonstevenpintoh@gmail.com, sanjai.palanisamy171@gmail.com
 // Description :
 //   Implements a radix-4 division algorithm for multi-cycle integer division and remainder operations.
 // =============================================================================

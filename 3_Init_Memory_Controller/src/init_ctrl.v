@@ -1,7 +1,15 @@
-`timescale 1ns / 1ps
+// =============================================================================
+// File        : init_ctrl.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module implements the control FSM for memory initialization and normal memory 
+// operations, managing address generation, instruction prefetch, and partial read/write 
+// masking through appropriate control signals.
+// =============================================================================
 
 module init_ctrl #(
-  parameter integer ADDR_W         = 17,        // PRAM address width
+  parameter integer ADDR_W         = 17,         // PRAM address width
   parameter [ADDR_W-1:0] BASE_ADDR = 17'h00000,  // init start address
   parameter [ADDR_W-1:0] MEM_LIMIT = 17'h07FFF,   // MEM_LIMIT is an exclusive upper bound (init runs while addr < MEM_LIMIT)
   parameter [ADDR_W-1:0] INCR      = 17'd8

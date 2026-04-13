@@ -1,3 +1,11 @@
+// =============================================================================
+// File        : scheduler.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module arbitrates between instruction fetch and data access requests by scheduling 
+// addresses to the memory handler and issuing a pause signal when both accesses conflict.
+// =============================================================================
 module scheduler#(
     parameter ADDR_BYTE_W = 17
 )(

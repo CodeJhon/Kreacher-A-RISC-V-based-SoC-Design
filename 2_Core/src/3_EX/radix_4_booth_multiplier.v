@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : radix_4_booth_multiplier.v
-// Author      : Jhon Steven Pinto Hernandez
-// Email       : jhonstevenpintoh@gmail.com
+// Author      : Jhon Steven Pinto Hernandez and Sanjai Palanisamy
+// Email       : jhonstevenpintoh@gmail.com, sanjai.palanisamy171@gmail.com
 // Description :
 //   Implements a radix-4 Booth multiplier FSM for multi-cycle signed and unsigned multiplication.
 // =============================================================================

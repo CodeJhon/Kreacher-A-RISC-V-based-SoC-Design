@@ -1,4 +1,11 @@
-`timescale 1ns/1ps
+// =============================================================================
+// File        : init_memory_controller.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module integrates the initialization control FSM and the main memory controller to manage memory initialization, 
+// SPI data transfers, instruction/data memory accesses, and partial write operations for the system.
+// =============================================================================
 `include "INIT_MEM_CONSTANTS.vh"
 
 module init_memory_controller #(

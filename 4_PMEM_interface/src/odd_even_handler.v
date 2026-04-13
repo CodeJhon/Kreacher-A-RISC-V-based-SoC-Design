@@ -1,4 +1,12 @@
-`timescale 1ns/1ps
+// =============================================================================
+// File        : odd_even_handler.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   Routes memory access signals by determining whether the address maps to the odd or 
+// even memory macro and directing the signal flow accordingly.
+// =============================================================================
+
 module odd_even_handler
 #(
     parameter IXLEN         = 32,      // Instruction width

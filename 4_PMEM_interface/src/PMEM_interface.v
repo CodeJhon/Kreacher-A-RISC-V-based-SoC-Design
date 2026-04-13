@@ -1,3 +1,12 @@
+// =============================================================================
+// File        : PMEM_interface.v
+// Author      : Sanjai Palanisamy
+// Email       : sanjai.palanisamy171@gmail.com
+// Description :
+//   This module connects instruction and data memory requests from the memory controller
+// to the appropriate memory handlers and PRAM banks, managing chip select, write enable, 
+// address scheduling, and read data multiplexing.
+// =============================================================================
 `include "MEMORY_CONSTANT.vh"
 
 module PMEM_interface
